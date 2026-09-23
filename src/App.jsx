@@ -1,91 +1,155 @@
-import React, { useEffect, useState } from "react";
-import { supabase } from "./lib/supabaseClient";
-import UploadForm from "./components/UploadForm";
-import ProfileForm from "./components/ProfileForm";
+import React, { useState, useEffect } from "react";
 import Gallery from "./components/Gallery";
+import UploadForm from "./components/UploadForm";
 import CreatifsPage from "./components/CreatifsPage";
-import "./App.css";
+import PremiumPage from "./components/PremiumPage";
+import ForumPage from "./components/ForumPage"; // Crée ce composant ou intègre-le ci-dessous
 
 export default function App() {
-  const [photos, setPhotos] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activePage, setActivePage] = useState("home");
+  const [activeTab, setActiveTab] = useState("gallery");
+  
+  const [photos, setPhotos] = useState([
+    {
+      id: 1,
+      title: "Portrait Studio Mode & Lumière",
+      author: "Marc Vancans",
+      price: "180 €",
+      image_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+      likes: 42
+    },
+    {
+      id: 2,
+      title: "Regard Serein - Noir & Blanc",
+      author: "Sophie Laurent",
+      price: "120 €",
+      image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+      likes: 76
+    },
+    {
+      id: 3,
+      title: "Échappée Sauvage en Montagne",
+      author: "Lucas Explore",
+      price: "250 €",
+      image_url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80",
+      likes: 129
+    },
+    {
+      id: 4,
+      title: "Néon Cyberpunk Tokyo",
+      author: "Kenji Sato",
+      price: "300 €",
+      image_url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80",
+      likes: 95
+    },
+    {
+      id: 5,
+      title: "Architecture Minimaliste & Lignes",
+      author: "Elena Rostova",
+      price: "150 €",
+      image_url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
+      likes: 64
+    },
+    {
+      id: 6,
+      title: "Vague Océanique Puissante",
+      author: "Tom Surf",
+      price: "220 €",
+      image_url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=800&q=80",
+      likes: 112
+    }
+  ]);
 
+  // SÉCURITÉ : Désactivation globale du clic droit et du glisser-déposer pour empêcher le vol d'images
   useEffect(() => {
-    fetchPhotos();
+    const handleContextMenu = (e) => {
+      if (e.target.tagName === "IMG") {
+        e.preventDefault();
+      }
+    };
+
+    const handleDragStart = (e) => {
+      if (e.target.tagName === "IMG") {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("dragstart", handleDragStart);
+
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("dragstart", handleDragStart);
+    };
   }, []);
 
-  async function fetchPhotos() {
-    try {
-      const { data, error } = await supabase
-        .from("photos")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Erreur Supabase:", error);
-      } else if (data) {
-        setPhotos(data);
-      }
-    } catch (err) {
-      console.error("Erreur lors du chargement des photos:", err);
-    }
+  function handleNewPhoto(newPhoto) {
+    setPhotos([newPhoto, ...photos]);
   }
 
-  const filteredPhotos = photos.filter((photo) =>
-    (photo.title || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <div style={{ minHeight: "100vh", background: "#020817", color: "white", paddingBottom: "50px" }}>
-      <header style={{ textAlign: "center", padding: "30px" }}>
-        <img src="/logo1-output.png" alt="BOKE ONE" style={{ maxWidth: "500px", width: "100%" }} />
+    <div style={{ background: "#020617", minHeight: "100vh", color: "white", paddingBottom: "30px", fontSize: "14px" }}>
+      {/* En-tête / Header avec Logo Officiel */}
+      <header style={{ textAlign: "center", padding: "15px 10px", background: "#0f172a", borderBottom: "2px solid #06b6d4" }}>
+        
+        <div style={{ marginBottom: "12px", display: "flex", justifyContent: "center" }}>
+          <img 
+            src="/logo1-output.png" 
+            alt="Boke One Logo" 
+            style={{ 
+              maxHeight: "65px", 
+              width: "auto", 
+              objectFit: "contain",
+              filter: "drop-shadow(0 0 8px rgba(6, 182, 212, 0.4))",
+              pointerEvents: "none"
+            }} 
+          />
+        </div>
 
-        <h2 style={{ color: "#67e8f9", letterSpacing: "8px", marginTop: "10px" }}>
-          CREATORS CONNECTED
-        </h2>
-
-        <nav style={{ display: "flex", justifyContent: "center", gap: "15px", flexWrap: "wrap", marginTop: "20px" }}>
-          <button onClick={() => setActivePage("home")} style={{ padding: "8px 16px", cursor: "pointer" }}>🏠 Accueil</button>
-          <button onClick={() => setActivePage("gallery")} style={{ padding: "8px 16px", cursor: "pointer" }}>📷 Galerie</button>
-          <button onClick={() => setActivePage("collab")} style={{ padding: "8px 16px", cursor: "pointer" }}>🤝 Collaborations</button>
-          <button onClick={() => setActivePage("profile")} style={{ padding: "8px 16px", cursor: "pointer" }}>👤 Profils</button>
-          <button onClick={() => setActivePage("messages")} style={{ padding: "8px 16px", cursor: "pointer" }}>💬 Messages</button>
-          <button onClick={() => setActivePage("premium")} style={{ padding: "8px 16px", cursor: "pointer" }}>💎 Premium</button>
+        <nav style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
+          <button onClick={() => setActiveTab("gallery")} style={navButtonStyle(activeTab === "gallery")}>
+            🖼️ Galerie ({photos.length})
+          </button>
+          <button onClick={() => setActiveTab("creatifs")} style={navButtonStyle(activeTab === "creatifs")}>
+            👥 Profils
+          </button>
+          <button onClick={() => setActiveTab("premium")} style={navButtonStyle(activeTab === "premium")}>
+            💎 Premium / Pro
+          </button>
+          <button onClick={() => setActiveTab("forum")} style={navButtonStyle(activeTab === "forum")}>
+            💬 Forum
+          </button>
         </nav>
       </header>
 
-      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-        {activePage === "home" && (
+      <main style={{ maxWidth: "1400px", margin: "20px auto", padding: "0 15px" }}>
+        {activeTab === "gallery" && (
           <>
-            <UploadForm onUploaded={fetchPhotos} />
-            <div style={{ marginTop: "30px" }}>
-              <Gallery photos={filteredPhotos} />
-            </div>
+            <UploadForm onUploaded={handleNewPhoto} />
+            <Gallery photos={photos} />
           </>
         )}
 
-        {activePage === "gallery" && (
-          <Gallery photos={filteredPhotos} />
-        )}
+        {activeTab === "creatifs" && <CreatifsPage />}
 
-        {activePage === "profile" && <ProfileForm />}
-        {activePage === "collab" && <CreatifsPage />}
+        {activeTab === "premium" && <PremiumPage />}
 
-        {activePage === "messages" && (
-          <div style={{ textAlign: "center", marginTop: "50px" }}>
-            <h2>💬 Messages</h2>
-            <p>Espace de messagerie bientôt disponible.</p>
-          </div>
-        )}
-
-        {activePage === "premium" && (
-          <div style={{ textAlign: "center", marginTop: "50px" }}>
-            <h2>💎 Premium</h2>
-            <p>Espace exclusif pour les membres premium.</p>
-          </div>
-        )}
+        {activeTab === "forum" && <ForumPage />}
       </main>
     </div>
   );
+}
+
+function navButtonStyle(isActive) {
+  return {
+    background: isActive ? "#0891b2" : "#1e293b",
+    color: "white",
+    border: isActive ? "2px solid #67e8f9" : "1px solid #475569",
+    padding: "8px 16px",
+    borderRadius: "8px",
+    fontWeight: "bold",
+    fontSize: "13px",
+    cursor: "pointer",
+    boxShadow: isActive ? "0 0 12px rgba(103, 232, 249, 0.4)" : "none",
+    transition: "all 0.2s",
+  };
 }
