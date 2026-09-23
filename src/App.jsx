@@ -16,12 +16,20 @@ export default function App() {
   }, []);
 
   async function fetchPhotos() {
-    const { data } = await supabase
-      .from("photos")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("photos")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (data) setPhotos(data);
+      if (error) {
+        console.error("Erreur Supabase:", error);
+      } else if (data) {
+        setPhotos(data);
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement des photos:", err);
+    }
   }
 
   const filteredPhotos = photos.filter((photo) =>
