@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "./lib/supabaseClient";
 import UploadForm from "./components/UploadForm";
 import ProfileForm from "./components/ProfileForm";
+import Gallery from "./components/Gallery";
+import CreatifsPage from "./components/CreatifsPage";
 import "./App.css";
 
 export default function App() {
@@ -27,40 +29,55 @@ export default function App() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#020817", color: "white" }}>
+    <div style={{ minHeight: "100vh", background: "#020817", color: "white", paddingBottom: "50px" }}>
       <header style={{ textAlign: "center", padding: "30px" }}>
         <img src="/logo1-output.png" alt="BOKE ONE" style={{ maxWidth: "500px", width: "100%" }} />
 
-        <h2 style={{ color: "#67e8f9", letterSpacing: "8px" }}>
+        <h2 style={{ color: "#67e8f9", letterSpacing: "8px", marginTop: "10px" }}>
           CREATORS CONNECTED
         </h2>
 
-        <nav style={{ display: "flex", justifyContent: "center", gap: "15px", flexWrap: "wrap" }}>
-          <button onClick={() => setActivePage("home")}>🏠 Accueil</button>
-          <button onClick={() => setActivePage("gallery")}>📷 Galerie</button>
-          <button onClick={() => setActivePage("collab")}>🤝 Collaborations</button>
-          <button onClick={() => setActivePage("profile")}>👤 Profils</button>
-          <button onClick={() => setActivePage("messages")}>💬 Messages</button>
-          <button onClick={() => setActivePage("premium")}>💎 Premium</button>
+        <nav style={{ display: "flex", justifyContent: "center", gap: "15px", flexWrap: "wrap", marginTop: "20px" }}>
+          <button onClick={() => setActivePage("home")} style={{ padding: "8px 16px", cursor: "pointer" }}>🏠 Accueil</button>
+          <button onClick={() => setActivePage("gallery")} style={{ padding: "8px 16px", cursor: "pointer" }}>📷 Galerie</button>
+          <button onClick={() => setActivePage("collab")} style={{ padding: "8px 16px", cursor: "pointer" }}>🤝 Collaborations</button>
+          <button onClick={() => setActivePage("profile")} style={{ padding: "8px 16px", cursor: "pointer" }}>👤 Profils</button>
+          <button onClick={() => setActivePage("messages")} style={{ padding: "8px 16px", cursor: "pointer" }}>💬 Messages</button>
+          <button onClick={() => setActivePage("premium")} style={{ padding: "8px 16px", cursor: "pointer" }}>💎 Premium</button>
         </nav>
-
-        <p>Page active : {activePage}</p>
       </header>
 
-      {activePage === "profile" && <ProfileForm />}
+      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
+        {activePage === "home" && (
+          <>
+            <UploadForm onUploaded={fetchPhotos} />
+            <div style={{ marginTop: "30px" }}>
+              <Gallery photos={filteredPhotos} />
+            </div>
+          </>
+        )}
 
-      {(activePage === "home" || activePage === "gallery") && (
-        <>
-          <UploadForm onUploaded={fetchPhotos} />
-          {filteredPhotos.map((photo) => (
-            <div key={photo.id}>{photo.title}</div>
-          ))}
-        </>
-      )}
+        {activePage === "gallery" && (
+          <Gallery photos={filteredPhotos} />
+        )}
 
-      {activePage === "collab" && <h2>🤝 Collaborations</h2>}
-      {activePage === "messages" && <h2>💬 Messages</h2>}
-      {activePage === "premium" && <h2>💎 Premium</h2>}
+        {activePage === "profile" && <ProfileForm />}
+        {activePage === "collab" && <CreatifsPage />}
+
+        {activePage === "messages" && (
+          <div style={{ textAlign: "center", marginTop: "50px" }}>
+            <h2>💬 Messages</h2>
+            <p>Espace de messagerie bientôt disponible.</p>
+          </div>
+        )}
+
+        {activePage === "premium" && (
+          <div style={{ textAlign: "center", marginTop: "50px" }}>
+            <h2>💎 Premium</h2>
+            <p>Espace exclusif pour les membres premium.</p>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
