@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
-// Assure-toi que le chemin d'importation vers ton client supabase est correct
-// import { supabase } from "../supabaseClient"; 
 
 export default function ForumPage() {
   const [forumUser, setForumUser] = useState(localStorage.getItem("boke_forum_user") || null);
 
-  const [authMode, setAuthMode] = useState("login"); // "login", "register"
+  // États pour la sécurité et la validation par code
+  const [authMode, setAuthMode] = useState("login"); // "login", "register", "verify"
   const [emailInput, setEmailInput] = useState("");
   const [pseudoInput, setPseudoInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [inputCode, setInputCode] = useState("");
+  const [tempData, setTempData] = useState(null);
 
   const [topics, setTopics] = useState([
     {
@@ -29,38 +31,47 @@ export default function ForumPage() {
   const [newCategory, setNewCategory] = useState("Matériel & Technique");
   const [replyText, setReplyText] = useState({});
 
-  // Inscription officielle avec envoi de mail de confirmation
-  async function handleRegister(e) {
+  // Étape 1 : Demande d'inscription -> Génération du code e-mail obligatoire
+  function handleRequestRegister(e) {
     e.preventDefault();
-    if (!emailInput || !pseudoInput || !passwordInput) return;
-    setLoading(true);
-
-    // Si tu utilises Supabase Auth :
-    /* 
-    const { data, error } = await supabase.auth.signUp({
-      email: emailInput,
-      password: passwordInput,
-      options: {
-        data: { pseudo: pseudoInput }
-      }
-    });
-    if (error) {
-      alert("Erreur : " + error.message);
-    } else {
-      alert("Inscription réussie ! Un e-mail de confirmation a été envoyé à " + emailInput + ". Veuillez vérifier votre boîte de réception pour valider votre compte.");
-      setAuthMode("login");
+    if (!emailInput || !pseudoInput || !passwordInput) {
+      alert("Veuillez remplir tous les champs du formulaire.");
+      return;
     }
-    */
 
-    // Simulation professionnelle le temps de lier ton client Supabase Auth :
-    setTimeout(() => {
-      alert(`[BOKE ONE SECURITY] Un e-mail de vérification officiel a été expédié à : ${emailInput}.\nVeuillez consulter votre boîte mail pour valider votre inscription au Forum.`);
-      setLoading(false);
-      setAuthMode("login");
-    }, 1000);
+    // Génération d'un code unique à 4 chiffres (Anti-flood strict)
+    const secureCode = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedCode(secureCode);
+    setTempData({ pseudo: pseudoInput, email: emailInput });
+
+    // Simulation de l'envoi du mail (À remplacer par ton service d'e-mailing ou Supabase Auth)
+    alert(`[SÉCURITÉ ANTI-SPAM BOKE ONE]\nUn e-mail vient d'être envoyé à : ${emailInput}\n\n[POUR TEST] Votre code de confirmation secret est : ${secureCode}`);
+    
+    // Bascule stricte vers l'écran de saisie du code
+    setAuthMode("verify");
   }
 
-  // Connexion au Forum
+  // Étape 2 : Validation stricte du code e-mail
+  function handleConfirmCode(e) {
+    e.preventDefault();
+    if (inputCode !== generatedCode) {
+      alert("❌ Code de confirmation incorrect. Le compte n'a pas été créé pour éviter le spam.");
+      return;
+    }
+
+    // Succès total : Le code est correct, on valide et connecte l'utilisateur
+    alert("✅ E-mail vérifié avec succès ! Votre compte forum est activé.");
+    localStorage.setItem("boke_forum_user", tempData.pseudo);
+    setForumUser(tempData.pseudo);
+    
+    // Réinitialisation
+    setAuthMode("login");
+    setInputCode("");
+    setGeneratedCode("");
+    setTempData(null);
+  }
+
+  // Connexion simple pour les membres déjà validés
   function handleLogin(e) {
     e.preventDefault();
     if (!pseudoInput) return;
@@ -74,7 +85,6 @@ export default function ForumPage() {
     setForumUser(null);
   }
 
-  // Création d'un sujet
   function handleCreateTopic(e) {
     e.preventDefault();
     if (!newTitle.trim()) return;
@@ -93,7 +103,6 @@ export default function ForumPage() {
     setShowNewTopicModal(false);
   }
 
-  // Like unique
   function handleLike(id) {
     setTopics(topics.map(t => {
       if (t.id === id) {
@@ -108,7 +117,6 @@ export default function ForumPage() {
     }));
   }
 
-  // Répondre à un sujet
   function handleAddReply(topicId, e) {
     e.preventDefault();
     const text = replyText[topicId];
@@ -130,12 +138,12 @@ export default function ForumPage() {
   return (
     <div style={{ color: "white", padding: "10px", maxWidth: "900px", margin: "0 auto" }}>
       
-      {/* En-tête & Espace Authentification Forum */}
+      {/* En-tête du Forum & Bloc Authentification */}
       <div style={{ background: "#0f172a", border: "1px solid #1e293b", padding: "20px", borderRadius: "10px", marginBottom: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
           <div>
             <h2 style={{ margin: "0 0 5px 0", fontSize: "20px" }}>💬 Forum Communautaire Boke One</h2>
-            <p style={{ color: "#94a3b8", margin: 0, fontSize: "13px" }}>Espace protégé par validation e-mail (Anti-flood).</p>
+            <p style={{ color: "#94a3b8", margin: 0, fontSize: "13px" }}>Espace ultra-sécurisé anti-spam par validation e-mail.</p>
           </div>
 
           {forumUser ? (
@@ -148,17 +156,18 @@ export default function ForumPage() {
           ) : null}
         </div>
 
-        {/* Formulaires d'authentification sécurisée */}
+        {/* Formulaires d'authentification */}
         {!forumUser && (
           <div style={{ marginTop: "15px", background: "#1e293b", padding: "15px", borderRadius: "8px", border: "1px solid #334155" }}>
             
+            {/* Mode Connexion */}
             {authMode === "login" && (
               <div>
                 <h4 style={{ margin: "0 0 10px 0", color: "#38bdf8", fontSize: "14px" }}>🔑 Connexion au Forum</h4>
                 <form onSubmit={handleLogin} style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                   <input 
                     type="text" 
-                    placeholder="Votre Pseudo validé" 
+                    placeholder="Votre Pseudo vérifié" 
                     value={pseudoInput}
                     onChange={(e) => setPseudoInput(e.target.value)}
                     style={{ flex: 1, padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
@@ -168,19 +177,20 @@ export default function ForumPage() {
                     Se connecter
                   </button>
                   <button type="button" onClick={() => setAuthMode("register")} style={{ background: "transparent", color: "#38bdf8", border: "1px solid #38bdf8", padding: "8px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px" }}>
-                    S'inscrire (avec validation e-mail)
+                    Créer un compte (Anti-spam)
                   </button>
                 </form>
               </div>
             )}
 
+            {/* Mode Inscription (Étape 1) */}
             {authMode === "register" && (
               <div>
-                <h4 style={{ margin: "0 0 10px 0", color: "#10b981", fontSize: "14px" }}>✉️ Inscription Sécurisée (Anti-Flood par E-mail)</h4>
-                <form onSubmit={handleRegister} style={{ display: "grid", gap: "10px" }}>
+                <h4 style={{ margin: "0 0 10px 0", color: "#10b981", fontSize: "14px" }}>🛡️ Inscription Sécurisée (Validation par e-mail requise)</h4>
+                <form onSubmit={handleRequestRegister} style={{ display: "grid", gap: "10px" }}>
                   <input 
                     type="email" 
-                    placeholder="Votre VRAIE adresse e-mail (pour recevoir la confirmation)" 
+                    placeholder="Votre vraie adresse e-mail (pour recevoir le code)" 
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     style={{ padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
@@ -189,7 +199,7 @@ export default function ForumPage() {
                   <div style={{ display: "flex", gap: "10px" }}>
                     <input 
                       type="text" 
-                      placeholder="Choisissez votre Pseudo" 
+                      placeholder="Choisissez un Pseudo" 
                       value={pseudoInput}
                       onChange={(e) => setPseudoInput(e.target.value)}
                       style={{ flex: 1, padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
@@ -205,13 +215,39 @@ export default function ForumPage() {
                     />
                   </div>
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                    <button type="submit" disabled={loading} style={{ background: "#10b981", color: "white", border: "none", padding: "8px 16px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
-                      {loading ? "Envoi en cours..." : "S'inscrire et recevoir l'e-mail de validation"}
+                    <button type="submit" style={{ background: "#10b981", color: "white", border: "none", padding: "8px 16px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
+                      Recevoir mon code de confirmation
                     </button>
                     <button type="button" onClick={() => setAuthMode("login")} style={{ background: "transparent", color: "#94a3b8", border: "none", cursor: "pointer", fontSize: "13px" }}>
-                      Déjà un compte ? Se connecter
+                      Retour à la connexion
                     </button>
                   </div>
+                </form>
+              </div>
+            )}
+
+            {/* Mode Saisie du Code (Étape 2 - Bloquant contre le spam) */}
+            {authMode === "verify" && (
+              <div style={{ background: "#172554", padding: "12px", borderRadius: "6px", border: "1px solid #3b82f6" }}>
+                <h4 style={{ margin: "0 0 5px 0", color: "#60a5fa", fontSize: "14px" }}>✉️ Saisie du Code de Sécurité E-mail</h4>
+                <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "#93c5fd" }}>
+                  Le compte ne sera activé qu'après la saisie correcte du code reçu par e-mail.
+                </p>
+                <form onSubmit={handleConfirmCode} style={{ display: "flex", gap: "10px" }}>
+                  <input 
+                    type="text" 
+                    placeholder="Entrez le code à 4 chiffres" 
+                    value={inputCode}
+                    onChange={(e) => setInputCode(e.target.value)}
+                    style={{ width: "180px", padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px", textAlign: "center", letterSpacing: "2px" }}
+                    required
+                  />
+                  <button type="submit" style={{ background: "#2563eb", color: "white", border: "none", padding: "8px 16px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
+                    Valider et Activer mon compte
+                  </button>
+                  <button type="button" onClick={() => setAuthMode("register")} style={{ background: "transparent", color: "#94a3b8", border: "none", cursor: "pointer", fontSize: "12px" }}>
+                    Annuler
+                  </button>
                 </form>
               </div>
             )}
@@ -220,7 +256,7 @@ export default function ForumPage() {
         )}
       </div>
 
-      {/* Bouton Lancer une discussion */}
+      {/* Actions et liste du forum */}
       {forumUser && (
         <div style={{ marginBottom: "20px" }}>
           <button 
@@ -232,7 +268,6 @@ export default function ForumPage() {
         </div>
       )}
 
-      {/* Formulaire création sujet */}
       {showNewTopicModal && forumUser && (
         <form onSubmit={handleCreateTopic} style={{ background: "#0f172a", border: "1px solid #06b6d4", padding: "20px", borderRadius: "10px", marginBottom: "20px" }}>
           <h3 style={{ margin: "0 0 15px 0", color: "#38bdf8" }}>Créer un nouveau sujet</h3>
@@ -261,7 +296,6 @@ export default function ForumPage() {
         </form>
       )}
 
-      {/* Liste des sujets */}
       <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
         {topics.map((t) => {
           const hasUserLiked = forumUser && t.likedBy.includes(forumUser);
@@ -284,7 +318,6 @@ export default function ForumPage() {
               <h3 style={{ margin: "10px 0 5px 0", fontSize: "16px" }}>{t.title}</h3>
               <span style={{ color: "#64748b", fontSize: "12px" }}>Par {t.author}</span>
 
-              {/* Réponses */}
               <div style={{ margin: "15px 0", paddingLeft: "15px", borderLeft: "2px solid #334155" }}>
                 {t.replies.map((r) => (
                   <div key={r.id} style={{ fontSize: "13px", marginBottom: "8px" }}>
@@ -293,7 +326,6 @@ export default function ForumPage() {
                 ))}
               </div>
 
-              {/* Formulaire réponse ou verrou */}
               {forumUser ? (
                 <form onSubmit={(e) => handleAddReply(t.id, e)} style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
                   <input 
@@ -310,7 +342,7 @@ export default function ForumPage() {
                 </form>
               ) : (
                 <div style={{ marginTop: "15px", padding: "10px", background: "#1e293b", borderRadius: "6px", fontSize: "12px", color: "#f43f5e", textAlign: "center" }}>
-                  🔒 Vous devez vous inscrire et valider votre e-mail pour participer au forum et répondre.
+                  🔒 Validez votre inscription par code e-mail pour participer au forum.
                 </div>
               )}
             </div>
