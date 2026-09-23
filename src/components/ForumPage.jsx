@@ -1,9 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+// Assure-toi que le chemin vers ton client supabase est correct
+// import { supabase } from "../supabaseClient"; 
 
 export default function ForumPage() {
-  // État de l'utilisateur connecté (simulé localement ou via un pseudo)
-  const [currentUser, setCurrentUser] = useState(localStorage.getItem("boke_user") || "");
-  const [tempPseudo, setTempPseudo] = useState("");
+  // Récupération de l'utilisateur authentifié (depuis Supabase ou ton state global)
+  // Pour l'instant, on vérifie si un utilisateur est enregistré via ton espace Profils/Connexion
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    // Exemple : Vérification dans le localStorage ou via Supabase session
+    const savedUser = localStorage.getItem("boke_logged_user") || localStorage.getItem("boke_user");
+    if (savedUser) {
+      setCurrentUser(savedUser);
+    }
+  }, []);
 
   const [topics, setTopics] = useState([
     {
@@ -11,7 +21,7 @@ export default function ForumPage() {
       title: "Quel objectif privilégier pour du portrait en studio avec faible recul ?",
       author: "Marc Vancans",
       category: "Matériel & Technique",
-      likedBy: [], // Liste des pseudos qui ont liké
+      likedBy: [],
       replies: [
         { id: 1, author: "Sophie Laurent", text: "Un 35mm ou un 50mm fait parfaitement l'affaire !" }
       ]
@@ -23,23 +33,13 @@ export default function ForumPage() {
   const [newCategory, setNewCategory] = useState("Matériel & Technique");
   const [replyText, setReplyText] = useState({});
 
-  // Gestion de la connexion / inscription rapide par pseudo
-  function handleLogin(e) {
-    e.preventDefault();
-    if (!tempPseudo.trim()) return;
-    localStorage.setItem("boke_user", tempPseudo);
-    setCurrentUser(tempPseudo);
-    setTempPseudo("");
-  }
-
-  function handleLogout() {
-    localStorage.removeItem("boke_user");
-    setCurrentUser("");
-  }
-
-  // Ajouter une discussion
+  // Ajouter une discussion (Uniquement si connecté officiellement)
   function handleCreateTopic(e) {
     e.preventDefault();
+    if (!currentUser) {
+      alert("Accès refusé : Vous devez vous inscrire et vous connecter officiellement sur Boke One pour créer un sujet.");
+      return;
+    }
     if (!newTitle.trim()) return;
 
     const topic = {
@@ -56,10 +56,10 @@ export default function ForumPage() {
     setShowNewTopicModal(false);
   }
 
-  // Gérer le Like unique (1 like par utilisateur par sujet)
+  // Gérer le Like unique
   function handleLike(id) {
     if (!currentUser) {
-      alert("Veuillez vous inscrire ou vous connecter pour aimer une publication.");
+      alert("Veuillez vous connecter à votre compte officiel pour aimer une publication.");
       return;
     }
 
@@ -67,10 +67,8 @@ export default function ForumPage() {
       if (t.id === id) {
         const hasLiked = t.likedBy.includes(currentUser);
         if (hasLiked) {
-          // Retirer le like si déjà liké
           return { ...t, likedBy: t.likedBy.filter(user => user !== currentUser) };
         } else {
-          // Ajouter le like
           return { ...t, likedBy: [...t.likedBy, currentUser] };
         }
       }
@@ -78,9 +76,13 @@ export default function ForumPage() {
     }));
   }
 
-  // Ajouter une réponse (uniquement si connecté)
+  // Ajouter une réponse
   function handleAddReply(topicId, e) {
     e.preventDefault();
+    if (!currentUser) {
+      alert("Veuillez vous connecter pour répondre.");
+      return;
+    }
     const text = replyText[topicId];
     if (!text || !text.trim()) return;
 
@@ -100,38 +102,27 @@ export default function ForumPage() {
   return (
     <div style={{ color: "white", padding: "10px", maxWidth: "900px", margin: "0 auto" }}>
       
-      {/* Barre d'authentification / Inscription */}
-      <div style={{ background: "#0f172a", border: "1px solid #1e293b", padding: "15px", borderRadius: "10px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+      {/* En-tête du Forum */}
+      <div style={{ background: "#0f172a", border: "1px solid #1e293b", padding: "20px", borderRadius: "10px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
         <div>
           <h2 style={{ margin: "0 0 5px 0", fontSize: "20px" }}>💬 Forum Communautaire Boke One</h2>
-          <p style={{ color: "#94a3b8", margin: 0, fontSize: "13px" }}>Discutez technique, partagez vos astuces et échangez entre créatifs.</p>
+          <p style={{ color: "#94a3b8", margin: 0, fontSize: "13px" }}>Espace d'échange sécurisé réservé aux membres inscrits.</p>
         </div>
 
+        {/* Affichage de l'état de connexion officiel */}
         {currentUser ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "14px", color: "#38bdf8" }}>👤 Connecté en tant que : <strong>{currentUser}</strong></span>
-            <button onClick={handleLogout} style={{ background: "#ef4444", color: "white", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>
-              Se déconnecter
-            </button>
+          <div style={{ background: "#1e293b", padding: "8px 15px", borderRadius: "8px", border: "1px solid #334155" }}>
+            <span style={{ fontSize: "13px", color: "#38bdf8" }}>👤 Membre : <strong>{currentUser}</strong></span>
           </div>
         ) : (
-          <form onSubmit={handleLogin} style={{ display: "flex", gap: "8px" }}>
-            <input 
-              type="text" 
-              placeholder="Votre pseudo pour participer..." 
-              value={tempPseudo}
-              onChange={(e) => setTempPseudo(e.target.value)}
-              style={{ padding: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
-              required
-            />
-            <button type="submit" style={{ background: "#06b6d4", color: "#0f172a", border: "none", padding: "8px 14px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
-              S'inscrire / Entrer
-            </button>
-          </form>
+          <div style={{ background: "#1e293b", padding: "12px", borderRadius: "8px", border: "1px solid #f43f5e", textAlign: "center" }}>
+            <span style={{ fontSize: "13px", color: "#f43f5e", display: "block", marginBottom: "5px" }}>🔒 Vous n'êtes pas connecté</span>
+            <span style={{ fontSize: "12px", color: "#94a3b8" }}>Veuillez vous inscrire via l'onglet <strong>Profils</strong> pour participer.</span>
+          </div>
         )}
       </div>
 
-      {/* Bouton pour lancer une discussion (Actif si connecté) */}
+      {/* Bouton pour lancer une discussion (Actif uniquement si connecté) */}
       {currentUser && (
         <div style={{ marginBottom: "20px" }}>
           <button 
@@ -202,14 +193,14 @@ export default function ForumPage() {
                 ))}
               </div>
 
-              {/* Formulaire de réponse (Bloqué si non inscrit) */}
+              {/* Formulaire de réponse conditionnel */}
               {currentUser ? (
                 <form onSubmit={(e) => handleAddReply(t.id, e)} style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
                   <input 
                     type="text" 
                     placeholder="Écrire une réponse..." 
                     value={replyText[t.id] || ""}
-                    onChange={(e) => setReplyText({ ...replyTest, [t.id]: e.target.value })}
+                    onChange={(e) => setReplyText({ ...replyText, [t.id]: e.target.value })}
                     style={{ flex: 1, padding: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
                     required
                   />
@@ -218,8 +209,8 @@ export default function ForumPage() {
                   </button>
                 </form>
               ) : (
-                <div style={{ marginTop: "15px", padding: "10px", background: "#1e293b", borderRadius: "6px", fontSize: "12px", color: "#94a3b8", textAlign: "center" }}>
-                  🔒 Veuillez entrer un pseudo en haut pour participer à la discussion et répondre.
+                <div style={{ marginTop: "15px", padding: "10px", background: "#1e293b", borderRadius: "6px", fontSize: "12px", color: "#f43f5e", textAlign: "center" }}>
+                  🔒 Vous devez être inscrit et connecté via l'onglet <strong>Profils</strong> pour répondre à cette discussion.
                 </div>
               )}
             </div>
