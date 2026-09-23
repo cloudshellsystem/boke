@@ -5,14 +5,13 @@ export default function ForumPage() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // États d'authentification
-  const [authMode, setAuthMode] = useState("login"); // "login" ou "register"
+  // Vrais états d'authentification par e-mail / mot de passe obligatoires
+  const [authMode, setAuthMode] = useState("login"); 
   const [emailInput, setEmailInput] = useState("");
-  const [pseudoInput, setPseudoInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
+  const [pseudoInput, setPseudoInput] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
-  // États du forum
   const [topics, setTopics] = useState([
     {
       id: 1,
@@ -31,8 +30,8 @@ export default function ForumPage() {
   const [newCategory, setNewCategory] = useState("Matériel & Technique");
   const [replyText, setReplyText] = useState({});
 
-  // Vérification de la session active au chargement
   useEffect(() => {
+    // Vérification stricte de la session Supabase active
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
@@ -48,7 +47,6 @@ export default function ForumPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Inscription ultra-sécurisée avec e-mail de confirmation obligatoire
   async function handleRegister(e) {
     e.preventDefault();
     if (!emailInput || !pseudoInput || !passwordInput) return;
@@ -66,7 +64,7 @@ export default function ForumPage() {
       if (error) {
         alert("Erreur d'inscription : " + error.message);
       } else {
-        alert("🛡️ Inscription réussie ! Un e-mail de confirmation vient d'être envoyé à " + emailInput + ". Vous devez valider cet e-mail pour pouvoir vous connecter.");
+        alert("🛡️ Inscription réussie ! Un e-mail de confirmation a été envoyé à " + emailInput + ". Validez-le pour activer votre accès.");
         setAuthMode("login");
         setEmailInput("");
         setPasswordInput("");
@@ -79,7 +77,6 @@ export default function ForumPage() {
     }
   }
 
-  // Connexion sécurisée (bloquée si l'e-mail n'est pas confirmé)
   async function handleLogin(e) {
     e.preventDefault();
     if (!emailInput || !passwordInput) return;
@@ -92,7 +89,7 @@ export default function ForumPage() {
       });
 
       if (error) {
-        alert("❌ Connexion refusée : " + error.message + " (Avez-vous bien validé votre e-mail ?)");
+        alert("❌ Accès refusé : " + error.message);
       } else {
         setEmailInput("");
         setPasswordInput("");
@@ -108,66 +105,8 @@ export default function ForumPage() {
     await supabase.auth.signOut();
   }
 
-  function handleCreateTopic(e) {
-    e.preventDefault();
-    if (!newTitle.trim() || !session) return;
-
-    const pseudoUser = session.user.user_metadata?.pseudo || session.user.email.split("@")[0];
-
-    const topic = {
-      id: Date.now(),
-      title: newTitle,
-      author: pseudoUser,
-      category: newCategory,
-      likedBy: [],
-      replies: []
-    };
-
-    setTopics([topic, ...topics]);
-    setNewTitle("");
-    setShowNewTopicModal(false);
-  }
-
-  function handleLike(id) {
-    if (!session) return;
-    const pseudoUser = session.user.user_metadata?.pseudo || session.user.email.split("@")[0];
-
-    setTopics(topics.map(t => {
-      if (t.id === id) {
-        const hasLiked = t.likedBy.includes(pseudoUser);
-        if (hasLiked) {
-          return { ...t, likedBy: t.likedBy.filter(u => u !== pseudoUser) };
-        } else {
-          return { ...t, likedBy: [...t.likedBy, pseudoUser] };
-        }
-      }
-      return t;
-    }));
-  }
-
-  function handleAddReply(topicId, e) {
-    e.preventDefault();
-    if (!session) return;
-    const text = replyText[topicId];
-    if (!text || !text.trim()) return;
-
-    const pseudoUser = session.user.user_metadata?.pseudo || session.user.email.split("@")[0];
-
-    setTopics(topics.map(t => {
-      if (t.id === topicId) {
-        return {
-          ...t,
-          replies: [...t.replies, { id: Date.now(), author: pseudoUser, text }]
-        };
-      }
-      return t;
-    }));
-
-    setReplyText({ ...replyText, [topicId]: "" });
-  }
-
   if (loading) {
-    return <div style={{ color: "white", textAlign: "center", padding: "40px" }}>Chargement de la sécurité...</div>;
+    return <div style={{ color: "white", textAlign: "center", padding: "40px" }}>Vérification des sécurités du forum...</div>;
   }
 
   const currentPseudo = session?.user?.user_metadata?.pseudo || session?.user?.email?.split("@")[0];
@@ -175,166 +114,116 @@ export default function ForumPage() {
   return (
     <div style={{ color: "white", padding: "10px", maxWidth: "900px", margin: "0 auto" }}>
       
-      {/* En-tête du Forum */}
       <div style={{ background: "#0f172a", border: "1px solid #1e293b", padding: "20px", borderRadius: "10px", marginBottom: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
           <div>
             <h2 style={{ margin: "0 0 5px 0", fontSize: "20px" }}>💬 Forum Communautaire Boke One</h2>
-            <p style={{ color: "#94a3b8", margin: 0, fontSize: "13px" }}>Espace protégé : Accès strictement réservé aux membres validés par e-mail.</p>
+            <p style={{ color: "#ef4444", margin: 0, fontSize: "13px" }}>⚠️ Espace ultra-sécurisé : Aucun accès anonyme autorisé.</p>
           </div>
 
-          {session ? (
+          {session && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#1e293b", padding: "8px 15px", borderRadius: "8px", border: "1px solid #334155" }}>
-              <span style={{ fontSize: "13px", color: "#38bdf8" }}>👤 Connecté en tant que : <strong>{currentPseudo}</strong></span>
+              <span style={{ fontSize: "13px", color: "#38bdf8" }}>👤 Membre : <strong>{currentPseudo}</strong></span>
               <button onClick={handleLogout} style={{ background: "#ef4444", color: "white", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", fontSize: "11px" }}>
                 Déconnexion
               </button>
             </div>
-          ) : null}
+          )}
         </div>
 
-        {/* Bloc Authentification Obligatoire */}
+        {/* SI PAS DE SESSION : AFFICHAGE OBLIGATOIRE DU FORMULAIRE SUPABASE */}
         {!session && (
-          <div style={{ marginTop: "15px", background: "#1e293b", padding: "15px", borderRadius: "8px", border: "1px solid #334155" }}>
-            
+          <div style={{ marginTop: "15px", background: "#1e293b", padding: "20px", borderRadius: "8px", border: "2px solid #ef4444" }}>
+            <h3 style={{ margin: "0 0 10px 0", color: "#ef4444", fontSize: "15px" }}>🔒 Authentification e-mail obligatoire pour entrer</h3>
+            <p style={{ color: "#94a3b8", fontSize: "13px", marginBottom: "15px" }}>
+              Il est strictement impossible d'entrer ou de poster un message sans posséder un compte vérifié par e-mail.
+            </p>
+
             {authMode === "login" ? (
-              <div>
-                <h4 style={{ margin: "0 0 10px 0", color: "#38bdf8", fontSize: "14px" }}>🔑 Connexion Sécurisée au Forum</h4>
-                <form onSubmit={handleLogin} style={{ display: "grid", gap: "10px" }}>
-                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                    <input 
-                      type="email" 
-                      placeholder="Votre e-mail" 
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      style={{ flex: 1, padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
-                      required
-                    />
-                    <input 
-                      type="password" 
-                      placeholder="Mot de passe" 
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      style={{ flex: 1, padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
-                      required
-                    />
-                  </div>
-                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                    <button type="submit" disabled={authLoading} style={{ background: "#06b6d4", color: "#0f172a", border: "none", padding: "8px 16px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
-                      {authLoading ? "Connexion..." : "Se connecter"}
-                    </button>
-                    <button type="button" onClick={() => setAuthMode("register")} style={{ background: "transparent", color: "#38bdf8", border: "1px solid #38bdf8", padding: "8px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px" }}>
-                      Créer un compte (Anti-spam e-mail)
-                    </button>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <div>
-                <h4 style={{ margin: "0 0 10px 0", color: "#10b981", fontSize: "14px" }}>🛡️ Inscription Anti-Spam (Vérification e-mail obligatoire)</h4>
-                <form onSubmit={handleRegister} style={{ display: "grid", gap: "10px" }}>
+              <form onSubmit={handleLogin} style={{ display: "grid", gap: "10px" }}>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                   <input 
                     type="email" 
-                    placeholder="Votre vraie adresse e-mail" 
+                    placeholder="Entrez votre e-mail enregistré..." 
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
-                    style={{ padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
+                    style={{ flex: 1, padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
                     required
                   />
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <input 
-                      type="text" 
-                      placeholder="Votre Pseudo unique" 
-                      value={pseudoInput}
-                      onChange={(e) => setPseudoInput(e.target.value)}
-                      style={{ flex: 1, padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
-                      required
-                    />
-                    <input 
-                      type="password" 
-                      placeholder="Mot de passe" 
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      style={{ flex: 1, padding: "8px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
-                      required
-                    />
-                  </div>
-                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                    <button type="submit" disabled={authLoading} style={{ background: "#10b981", color: "white", border: "none", padding: "8px 16px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
-                      {authLoading ? "Envoi..." : "S'inscrire (Recevoir l'e-mail de validation)"}
-                    </button>
-                    <button type="button" onClick={() => setAuthMode("login")} style={{ background: "transparent", color: "#94a3b8", border: "none", cursor: "pointer", fontSize: "13px" }}>
-                      Déjà un compte ? Se connecter
-                    </button>
-                  </div>
-                </form>
-              </div>
+                  <input 
+                    type="password" 
+                    placeholder="Mot de passe..." 
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    style={{ flex: 1, padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
+                    required
+                  />
+                </div>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "5px" }}>
+                  <button type="submit" disabled={authLoading} style={{ background: "#06b6d4", color: "#0f172a", border: "none", padding: "10px 20px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
+                    {authLoading ? "Vérification..." : "Se connecter au Forum"}
+                  </button>
+                  <button type="button" onClick={() => setAuthMode("register")} style={{ background: "transparent", color: "#38bdf8", border: "1px solid #38bdf8", padding: "10px 15px", borderRadius: "6px", cursor: "pointer", fontSize: "13px" }}>
+                    Pas de compte ? S'inscrire par e-mail
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} style={{ display: "grid", gap: "10px" }}>
+                <input 
+                  type="email" 
+                  placeholder="Votre vraie adresse e-mail..." 
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  style={{ padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
+                  required
+                />
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <input 
+                    type="text" 
+                    placeholder="Votre Pseudo unique..." 
+                    value={pseudoInput}
+                    onChange={(e) => setPseudoInput(e.target.value)}
+                    style={{ flex: 1, padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
+                    required
+                  />
+                  <input 
+                    type="password" 
+                    placeholder="Créer un mot de passe..." 
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    style={{ flex: 1, padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
+                    required
+                  />
+                </div>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "5px" }}>
+                  <button type="submit" disabled={authLoading} style={{ background: "#10b981", color: "white", border: "none", padding: "10px 20px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>
+                    {authLoading ? "Envoi..." : "S'inscrire (Requis : Validation e-mail)"}
+                  </button>
+                  <button type="button" onClick={() => setAuthMode("login")} style={{ background: "transparent", color: "#94a3b8", border: "none", cursor: "pointer", fontSize: "13px" }}>
+                    Déjà inscrit ? Se connecter
+                  </button>
+                </div>
+              </form>
             )}
-
           </div>
         )}
       </div>
 
-      {/* Actions réservées uniquement aux membres connectés et validés */}
-      {session && (
-        <div style={{ marginBottom: "20px" }}>
-          <button 
-            onClick={() => setShowNewTopicModal(!showNewTopicModal)}
-            style={{ background: "#06b6d4", color: "#0f172a", border: "none", padding: "10px 18px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
-          >
-            🔥 Lancer une discussion
-          </button>
-        </div>
-      )}
-
-      {showNewTopicModal && session && (
-        <form onSubmit={handleCreateTopic} style={{ background: "#0f172a", border: "1px solid #06b6d4", padding: "20px", borderRadius: "10px", marginBottom: "20px" }}>
-          <h3 style={{ margin: "0 0 15px 0", color: "#38bdf8" }}>Créer un nouveau sujet</h3>
-          <div style={{ display: "grid", gap: "10px", marginBottom: "15px" }}>
-            <input 
-              type="text" 
-              placeholder="Titre de la discussion..." 
-              value={newTitle} 
-              onChange={(e) => setNewTitle(e.target.value)}
-              style={{ padding: "10px", background: "#1e293b", border: "1px solid #475569", color: "white", borderRadius: "6px" }}
-              required 
-            />
-            <select 
-              value={newCategory} 
-              onChange={(e) => setNewCategory(e.target.value)}
-              style={{ padding: "10px", background: "#1e293b", border: "1px solid #475569", color: "white", borderRadius: "6px" }}
-            >
-              <option>Matériel & Technique</option>
-              <option>Business & Juridique</option>
-              <option>Montage & Étalonnage</option>
-            </select>
+      {/* CONTENU DU FORUM (Masqué ou bloqué si non connecté) */}
+      <div style={{ opacity: session ? 1 : 0.4, pointerEvents: session ? "auto" : "none" }}>
+        {!session && (
+          <div style={{ textAlign: "center", padding: "20px", background: "#7f1d1d", borderRadius: "8px", marginBottom: "20px", color: "white" }}>
+            🔒 Vous devez vous authentifier ci-dessus pour interagir, créer des sujets ou répondre.
           </div>
-          <button type="submit" style={{ background: "#10b981", color: "white", border: "none", padding: "8px 16px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer" }}>
-            Publier le sujet
-          </button>
-        </form>
-      )}
+        )}
 
-      {/* Liste des discussions */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-        {topics.map((t) => {
-          const hasUserLiked = session && t.likedBy.includes(currentPseudo);
-          return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+          {topics.map((t) => (
             <div key={t.id} style={{ background: "#0f172a", border: "1px solid #1e293b", padding: "20px", borderRadius: "10px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ background: "#1e293b", color: "#38bdf8", padding: "4px 10px", borderRadius: "4px", fontSize: "11px", border: "1px solid #334155" }}>
-                  {t.category}
-                </span>
-                {session && (
-                  <button 
-                    onClick={() => handleLike(t.id)} 
-                    style={{ background: hasUserLiked ? "#f43f5e" : "#1e293b", color: hasUserLiked ? "white" : "#f43f5e", border: "1px solid #475569", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}
-                  >
-                    ❤️ {t.likedBy.length} {hasUserLiked ? "(Liké)" : "J'aime"}
-                  </button>
-                )}
-              </div>
-
+              <span style={{ background: "#1e293b", color: "#38bdf8", padding: "4px 10px", borderRadius: "4px", fontSize: "11px", border: "1px solid #334155" }}>
+                {t.category}
+              </span>
               <h3 style={{ margin: "10px 0 5px 0", fontSize: "16px" }}>{t.title}</h3>
               <span style={{ color: "#64748b", fontSize: "12px" }}>Par {t.author}</span>
 
@@ -345,30 +234,11 @@ export default function ForumPage() {
                   </div>
                 ))}
               </div>
-
-              {session ? (
-                <form onSubmit={(e) => handleAddReply(t.id, e)} style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-                  <input 
-                    type="text" 
-                    placeholder="Écrire une réponse..." 
-                    value={replyText[t.id] || ""}
-                    onChange={(e) => setReplyText({ ...replyText, [t.id]: e.target.value })}
-                    style={{ flex: 1, padding: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
-                    required
-                  />
-                  <button type="submit" style={{ background: "#0891b2", color: "white", border: "none", padding: "8px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px" }}>
-                    Répondre
-                  </button>
-                </form>
-              ) : (
-                <div style={{ marginTop: "15px", padding: "12px", background: "#1e293b", borderRadius: "6px", fontSize: "13px", color: "#f43f5e", textAlign: "center", border: "1px solid #7f1d1d" }}>
-                  🔒 <strong>Accès restreint :</strong> Vous devez créer un compte et valider votre e-mail pour participer aux discussions et poster des messages.
-                </div>
-              )}
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
+
     </div>
   );
 }
