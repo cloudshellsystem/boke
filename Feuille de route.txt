@@ -1,0 +1,23 @@
+>points d'améliorations potentielles et les prochaines étapes stratégiques à soumettre pour faire évoluer l'application web Boke One vers un outil de référence de haute valeur :
+
+1. Consolidation du Socle Actuel & Sécurité (Priorité Haute)
+
+    Finalisation des politiques RLS Supabase : S'assurer que chaque table (galeries, profils, messages du forum) dispose de règles de sécurité strictes empêchant toute modification ou suppression non autorisée par un tiers.
+
+    Gestion propre des statuts d'utilisateurs : Remplacer ou compléter le contournement par e-mail en dur par une gestion native des rôles dans la base de données (ex: table profiles liée à auth.users avec un champ is_founder ou role).
+
+    Parcours d'authentification fluide : Gérer proprement les états de chargement et les messages d'erreur lors de l'inscription et de la validation par e-mail pour éviter les sessions "fantômes".
+
+2. Expérience Utilisateur et Vitrine des Créateurs (Phase 2)
+
+    Édition du Profil & Mini-Page : Permettre aux membres fondateurs de modifier leur bio, leurs liens sociaux et de choisir les œuvres phares à afficher sur leur vitrine publique.
+
+    Galerie filtrable par niche : Permettre aux visiteurs de trier les œuvres selon la spécialité des créateurs (ex: réplicateurs de toiles, portraits studio, etc.) pour renforcer la pertinence de l'annuaire.
+
+    Mise en relation directe sécurisée : Remplacer le bouton d'achat simulé par un bouton de contact direct fonctionnel (e-mail pré-rempli ou redirection vers un canal validé) pour respecter l'engagement "zéro fausse simulation".
+
+3. Intégration des Paiements Réels (MVP Vente)
+
+    Passerelle de paiement Stripe Checkout : Lorsque le positionnement de vente directe sera acté, intégrer un lien de paiement Stripe officiel pour les œuvres ou les abonnements Pro, évitant tout risque juridique lié à des formulaires fictifs.
+
+Quel point de cette liste souhaites-tu détailler ou préparer en premier avec un bloc de code ou un script SQL ?

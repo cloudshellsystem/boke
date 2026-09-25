@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../supabaseClient"; // ⚠️ ASSOMPTION structure - vérifie ce chemin si ton arbo diffère
 
 export default function UploadForm({ onUploaded }) {
   const [title, setTitle] = useState("");

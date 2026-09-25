@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../supabaseClient"; // ⚠️ ASSOMPTION structure - vérifie ce chemin si ton arbo diffère
 
 // Profils initiaux style annuaire pro (avec matériel et équipement)
 const mockProProfiles = [

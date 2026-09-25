@@ -1,6 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://ljtzzzkyahmZqkbomzjwe.supabase.co'
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_AsRjuAKZJGOn6_JyfHVs-g_Say7ADVS'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Les variables Supabase sont manquantes !");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)

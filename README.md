@@ -1,47 +1,52 @@
-# Boké One — MVP dépôt de photos
+Boké One — L'Annuaire de Référence des Créatifs (MVP)
 
-Application réelle (React + Supabase) : un photographe dépose une photo (fichier +
-titre + prix optionnel), elle apparaît immédiatement dans la galerie publique.
+Boké One est la plateforme professionnelle de mise en relation et de vitrine dédiée aux créatifs de niche (photographes, plasticiens, artisans d'art, réplicateurs de toiles anciennes, etc.), combinant les forces d'un réseau professionnel, d'un portfolio interactif et d'un annuaire de référence. L'application repose sur une stack moderne et sécurisée : React (Vite), Supabase (PostgreSQL) et Vercel.
+Philosophie & Vision (Zéro Hallucination)
 
-## Installation
+    Intégrité de la marque : Pas de simulation de paiement ou de fausses fonctionnalités trompeuses pour préserver la confiance absolue de la communauté.
 
-```
-npm install
-npm run dev
-```
+    Programme Early Adopters : Un accès bêta privé et des conditions privilégiées sur-mesure sont réservés aux 95 premiers abonnés fondateurs (badges exclusifs, avantages permanents sur les commissions).
 
-Sans configuration Supabase, l'app tourne avec une photo de démonstration à la place
-d'une vraie galerie.
+Structure et Installation en Local
 
-## Configurer Supabase (votre projet existant)
+    Cloner le projet sur votre poste de travail.
 
-1. **Base de données** : SQL Editor → coller le contenu de `supabase-schema.sql` → Run.
-   Cela crée la table `photos`.
-2. **Stockage des fichiers** (obligatoire, ne se fait PAS en SQL) :
-   - Menu de gauche → **Storage** → **New bucket**
-   - Nom : `photos`
-   - Cocher **Public bucket**
-   - Create bucket
-3. **Clés de connexion** : Project Settings → API → copier Project URL et la clé
-   `anon public`.
-4. Créer un fichier `.env` (copie de `.env.example`) avec ces deux valeurs.
-5. Relancer `npm run dev`.
+    Installer les dépendances nécessaires via le terminal :
+    Bash
 
-## Tester
+    npm install
 
-Cliquez sur "+ Déposer une photo" dans l'app, remplissez le formulaire, envoyez un
-fichier image. Elle doit apparaître dans la galerie juste en dessous, et dans
-Supabase : Table Editor → `photos` (la ligne) + Storage → `photos` (le fichier).
+    Configurer le fichier d'environnement à la racine (.env) en y renseignant vos clés de connexion sécurisées (attention à ne jamais versionner ce fichier) :
 
-## Ce qui manque avant un vrai lancement
+        VITE_SUPABASE_URL
 
-- Authentification (actuellement n'importe qui peut déposer une photo sous n'importe
-  quel nom — pas de compte réel).
-- Paiement réel si vous voulez vendre les photos (le champ prix n'est qu'informatif
-  pour l'instant, aucune intégration de paiement).
-- Modération des dépôts avant publication.
+        VITE_SUPABASE_ANON_KEY
 
-## Déployer sur Vercel
+    Lancer l'environnement de développement en local :
+    Bash
 
-Même procédure que pour NikahCircle : compte Vercel, connecter le dossier, ajouter
-les deux variables d'environnement dans les réglages du projet, déployer.
+    npm run dev
+
+Configuration et Migration Supabase
+
+    Base de données : Rendez-vous dans le tableau de bord Supabase, ouvrez l'éditeur SQL (SQL Editor), puis collez et exécutez le script du schéma global (supabase-schema.sql) ainsi que la migration dédiée aux comptes fondateurs.
+
+    Stockage des fichiers : Créez un nouveau bucket de stockage nommé photos en veillant à l'activer en mode Public bucket pour permettre l'affichage des portfolios.
+
+    Sécurité (RLS) : Assurez-vous que les politiques de sécurité Row Level Security (RLS) sont actives sur l'ensemble des tables relationnelles de la base de données.
+
+Architecture du Projet
+
+    src/components/ : Contient les composants modulaires et les pages clés de l'application (ex. : Creatifspage.jsx, Uploadform.jsx, Premiumpage.jsx).
+
+    src/pages/ : Vues et gabarits principaux de navigation.
+
+    Fichiers de configuration racine : vite.config.js, vercel.json et le schéma de base de données supabase-schema.sql.
+
+Déploiement en Production (Vercel)
+
+    Connectez votre dépôt Git à la plateforme Vercel.
+
+    Configurez les variables d'environnement de production (VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY) dans les paramètres du projet.
+
+    Validez le déploiement continu.
