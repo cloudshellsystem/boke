@@ -5,33 +5,31 @@ export default function ForumPage() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Vrais états d'authentification par e-mail / mot de passe obligatoires
-  const [authMode, setAuthMode] = useState("login"); 
+  const [authMode, setAuthMode] = useState("login");
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [pseudoInput, setPseudoInput] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
+  // Topics initiaux de démonstration (seront remplacés par Supabase plus tard)
   const [topics, setTopics] = useState([
     {
       id: 1,
       title: "Quel objectif privilégier pour du portrait en studio avec faible recul ?",
       author: "Marc Vancans",
       category: "Matériel & Technique",
-      likedBy: [],
       replies: [
         { id: 1, author: "Sophie Laurent", text: "Un 35mm ou un 50mm fait parfaitement l'affaire !" }
       ]
     }
   ]);
 
-  const [showNewTopicModal, setShowNewTopicModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState("Matériel & Technique");
   const [replyText, setReplyText] = useState({});
+  const [showNewTopicForm, setShowNewTopicForm] = useState(false);
 
   useEffect(() => {
-    // Vérification stricte de la session Supabase active
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
@@ -105,6 +103,47 @@ export default function ForumPage() {
     await supabase.auth.signOut();
   }
 
+  // Fonction pour ajouter un nouveau sujet
+  function handleCreateTopic(e) {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+
+    const currentPseudo = session?.user?.user_metadata?.pseudo || session?.user?.email?.split("@")[0];
+    
+    const newTopicItem = {
+      id: Date.now(),
+      title: newTitle,
+      author: currentPseudo,
+      category: newCategory,
+      replies: []
+    };
+
+    setTopics([newTopicItem, ...topics]);
+    setNewTitle("");
+    setShowNewTopicForm(false);
+  }
+
+  // Fonction pour ajouter une réponse à un sujet
+  function handleAddReply(topicId, e) {
+    e.preventDefault();
+    const text = replyText[topicId];
+    if (!text || !text.trim()) return;
+
+    const currentPseudo = session?.user?.user_metadata?.pseudo || session?.user?.email?.split("@")[0];
+
+    setTopics(topics.map(t => {
+      if (t.id === topicId) {
+        return {
+          ...t,
+          replies: [...t.replies, { id: Date.now(), author: currentPseudo, text }]
+        };
+      }
+      return t;
+    }));
+
+    setReplyText({ ...replyText, [topicId]: "" });
+  }
+
   if (loading) {
     return <div style={{ color: "white", textAlign: "center", padding: "40px" }}>Vérification des sécurités du forum...</div>;
   }
@@ -113,7 +152,7 @@ export default function ForumPage() {
 
   return (
     <div style={{ color: "white", padding: "10px", maxWidth: "900px", margin: "0 auto" }}>
-      
+
       <div style={{ background: "#0f172a", border: "1px solid #1e293b", padding: "20px", borderRadius: "10px", marginBottom: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "15px" }}>
           <div>
@@ -131,7 +170,6 @@ export default function ForumPage() {
           )}
         </div>
 
-        {/* SI PAS DE SESSION : AFFICHAGE OBLIGATOIRE DU FORMULAIRE SUPABASE */}
         {!session && (
           <div style={{ marginTop: "15px", background: "#1e293b", padding: "20px", borderRadius: "8px", border: "2px solid #ef4444" }}>
             <h3 style={{ margin: "0 0 10px 0", color: "#ef4444", fontSize: "15px" }}>🔒 Authentification e-mail obligatoire pour entrer</h3>
@@ -142,17 +180,17 @@ export default function ForumPage() {
             {authMode === "login" ? (
               <form onSubmit={handleLogin} style={{ display: "grid", gap: "10px" }}>
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  <input 
-                    type="email" 
-                    placeholder="Entrez votre e-mail enregistré..." 
+                  <input
+                    type="email"
+                    placeholder="Entrez votre e-mail enregistré..."
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     style={{ flex: 1, padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
                     required
                   />
-                  <input 
-                    type="password" 
-                    placeholder="Mot de passe..." 
+                  <input
+                    type="password"
+                    placeholder="Mot de passe..."
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
                     style={{ flex: 1, padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
@@ -170,26 +208,26 @@ export default function ForumPage() {
               </form>
             ) : (
               <form onSubmit={handleRegister} style={{ display: "grid", gap: "10px" }}>
-                <input 
-                  type="email" 
-                  placeholder="Votre vraie adresse e-mail..." 
+                <input
+                  type="email"
+                  placeholder="Votre vraie adresse e-mail..."
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   style={{ padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
                   required
                 />
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  <input 
-                    type="text" 
-                    placeholder="Votre Pseudo unique..." 
+                  <input
+                    type="text"
+                    placeholder="Votre Pseudo unique..."
                     value={pseudoInput}
                     onChange={(e) => setPseudoInput(e.target.value)}
                     style={{ flex: 1, padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
                     required
                   />
-                  <input 
-                    type="password" 
-                    placeholder="Créer un mot de passe..." 
+                  <input
+                    type="password"
+                    placeholder="Créer un mot de passe..."
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
                     style={{ flex: 1, padding: "10px", background: "#0f172a", border: "1px solid #475569", color: "white", borderRadius: "6px", fontSize: "13px" }}
@@ -210,11 +248,40 @@ export default function ForumPage() {
         )}
       </div>
 
-      {/* CONTENU DU FORUM (Masqué ou bloqué si non connecté) */}
+      {/* CONTENU DU FORUM (Actif si connecté) */}
       <div style={{ opacity: session ? 1 : 0.4, pointerEvents: session ? "auto" : "none" }}>
-        {!session && (
-          <div style={{ textAlign: "center", padding: "20px", background: "#7f1d1d", borderRadius: "8px", marginBottom: "20px", color: "white" }}>
-            🔒 Vous devez vous authentifier ci-dessus pour interagir, créer des sujets ou répondre.
+        {session && (
+          <div style={{ marginBottom: "20px" }}>
+            {!showNewTopicForm ? (
+              <button onClick={() => setShowNewTopicForm(true)} style={{ background: "#10b981", color: "white", border: "none", padding: "10px 20px", borderRadius: "6px", fontWeight: "bold", cursor: "pointer" }}>
+                + Créer un nouveau sujet
+              </button>
+            ) : (
+              <form onSubmit={handleCreateTopic} style={{ background: "#0f172a", border: "1px solid #334155", padding: "15px", borderRadius: "8px", display: "grid", gap: "10px" }}>
+                <h4 style={{ margin: "0", color: "#38bdf8" }}>Nouveau sujet de discussion</h4>
+                <input
+                  type="text"
+                  placeholder="Titre de votre sujet..."
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  style={{ padding: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", borderRadius: "4px" }}
+                  required
+                />
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  style={{ padding: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", borderRadius: "4px" }}
+                >
+                  <option value="Matériel & Technique">Matériel & Technique</option>
+                  <option value="Business & Tarifs">Business & Tarifs</option>
+                  <option value="Critique & Portfolio">Critique & Portfolio</option>
+                </select>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button type="submit" style={{ background: "#10b981", color: "white", border: "none", padding: "6px 15px", borderRadius: "4px", cursor: "pointer" }}>Publier</button>
+                  <button type="button" onClick={() => setShowNewTopicForm(false)} style={{ background: "transparent", color: "#94a3b8", border: "none", cursor: "pointer" }}>Annuler</button>
+                </div>
+              </form>
+            )}
           </div>
         )}
 
@@ -234,6 +301,23 @@ export default function ForumPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Formulaire pour répondre */}
+              {session && (
+                <form onSubmit={(e) => handleAddReply(t.id, e)} style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                  <input
+                    type="text"
+                    placeholder="Écrire une réponse..."
+                    value={replyText[t.id] || ""}
+                    onChange={(e) => setReplyText({ ...replyText, [t.id]: e.target.value })}
+                    style={{ flex: 1, padding: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", borderRadius: "4px", fontSize: "12px" }}
+                    required
+                  />
+                  <button type="submit" style={{ background: "#38bdf8", color: "#0f172a", border: "none", padding: "6px 12px", borderRadius: "4px", fontWeight: "bold", cursor: "pointer", fontSize: "12px" }}>
+                    Répondre
+                  </button>
+                </form>
+              )}
             </div>
           ))}
         </div>

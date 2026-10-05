@@ -3,11 +3,23 @@ import Gallery from "./components/Gallery";
 import UploadForm from "./components/UploadForm";
 import CreatifsPage from "./components/CreatifsPage";
 import PremiumPage from "./components/PremiumPage";
-import ForumPage from "./components/ForumPage"; // Crée ce composant ou intègre-le ci-dessous
+import ForumPage from "./components/ForumPage";
+import HomePage from "./components/HomePage";
+
+// Onglets : l'accueil (landing marketplace) est désormais la page d'arrivée
+const TABS = [
+  { id: "home", label: "🏠 Accueil" },
+  { id: "gallery", label: "🖼️ Portfolios" },
+  { id: "creatifs", label: "👥 Créatifs" },
+  { id: "forum", label: "💬 Forum" },
+  { id: "premium", label: "💎 Espace Pro" },
+];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("gallery");
-  
+  const [activeTab, setActiveTab] = useState("home");
+  // Signal envoyé à HomePage pour ouvrir le formulaire depuis le bouton du header
+  const [requestSignal, setRequestSignal] = useState({ count: 0, cat: null });
+
   const [photos, setPhotos] = useState([
     {
       id: 1,
@@ -86,42 +98,46 @@ export default function App() {
     setPhotos([newPhoto, ...photos]);
   }
 
+  function goTo(tab) {
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function openRequestForm() {
+    setActiveTab("home");
+    setRequestSignal((s) => ({ count: s.count + 1, cat: null }));
+  }
+
   return (
     <div style={{ background: "#020617", minHeight: "100vh", color: "white", paddingBottom: "30px", fontSize: "14px" }}>
-      {/* En-tête / Header avec Logo Officiel */}
-      <header style={{ textAlign: "center", padding: "15px 10px", background: "#0f172a", borderBottom: "2px solid #06b6d4" }}>
-        
-        <div style={{ marginBottom: "12px", display: "flex", justifyContent: "center" }}>
-          <img 
-            src="/logo1-output.png" 
-            alt="Boke One Logo" 
-            style={{ 
-              maxHeight: "65px", 
-              width: "auto", 
-              objectFit: "contain",
-              filter: "drop-shadow(0 0 8px rgba(6, 182, 212, 0.4))",
-              pointerEvents: "none"
-            }} 
+      <header style={{ padding: "10px 14px 0", background: "#0f172a", borderBottom: "2px solid #06b6d4" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+          <img
+            src="/logo1-output.png"
+            alt="Boke One - retour à l'accueil"
+            onClick={() => goTo("home")}
+            style={{ maxHeight: "48px", width: "auto", objectFit: "contain", cursor: "pointer", filter: "drop-shadow(0 0 8px rgba(6, 182, 212, 0.4))" }}
           />
+          <button
+            onClick={openRequestForm}
+            style={{ background: "#22c55e", color: "#052e16", border: "none", padding: "10px 16px", borderRadius: "10px", fontWeight: 800, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap" }}
+          >
+            ＋ Déposer un besoin
+          </button>
         </div>
 
-        <nav style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
-          <button onClick={() => setActiveTab("gallery")} style={navButtonStyle(activeTab === "gallery")}>
-            🖼️ Galerie ({photos.length})
-          </button>
-          <button onClick={() => setActiveTab("creatifs")} style={navButtonStyle(activeTab === "creatifs")}>
-            👥 Profils
-          </button>
-          <button onClick={() => setActiveTab("premium")} style={navButtonStyle(activeTab === "premium")}>
-            💎 Premium / Pro
-          </button>
-          <button onClick={() => setActiveTab("forum")} style={navButtonStyle(activeTab === "forum")}>
-            💬 Forum
-          </button>
+        <nav style={{ maxWidth: "1400px", margin: "10px auto 0", display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "10px", scrollbarWidth: "none" }}>
+          {TABS.map((t) => (
+            <button key={t.id} onClick={() => goTo(t.id)} style={navButtonStyle(activeTab === t.id)}>
+              {t.label}
+            </button>
+          ))}
         </nav>
       </header>
 
       <main style={{ maxWidth: "1400px", margin: "20px auto", padding: "0 15px" }}>
+        {activeTab === "home" && <HomePage onNavigate={goTo} requestSignal={requestSignal} />}
+
         {activeTab === "gallery" && (
           <>
             <UploadForm onUploaded={handleNewPhoto} />
@@ -149,6 +165,8 @@ function navButtonStyle(isActive) {
     fontWeight: "bold",
     fontSize: "13px",
     cursor: "pointer",
+    whiteSpace: "nowrap",
+    flexShrink: 0,
     boxShadow: isActive ? "0 0 12px rgba(103, 232, 249, 0.4)" : "none",
     transition: "all 0.2s",
   };
