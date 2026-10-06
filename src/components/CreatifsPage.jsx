@@ -1,375 +1,109 @@
-import React, { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient"; // ⚠️ ASSOMPTION structure - vérifie ce chemin si ton arbo diffère
+// src/components/CreatifsPage.jsx
+import React, { useState } from "react";
 
-// Profils initiaux style annuaire pro (avec matériel et équipement)
-const mockProProfiles = [
-  {
-    id: "mock-1",
-    pseudo: "Thomas Leroy",
-    categorie: "Photographe",
-    specialite: "Mode & Éditorial Haute Couture",
-    materiel: "Sony A1 + 85mm f/1.4 GM, Éclairages Profoto B10",
-    ville: "Paris, France",
-    niveau: "Expert VIP",
-    experience: "8 ans d'exp.",
-    bio: "Spécialisé dans les shootings éditoriaux et campagnes publicitaires de mode.",
-    avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    instagram: "@thomas_photo",
-  },
-  {
-    id: "mock-2",
-    pseudo: "Sarah Benali",
-    categorie: "Vidéaste",
-    specialite: "Clips musicaux & Publicité",
-    materiel: "FX6 + Optiques Cine Sigma Art, DJI Ronin RS3 Pro",
-    ville: "Lyon, France",
-    niveau: "Confirmé",
-    experience: "5 ans d'exp.",
-    bio: "Création de clips musicaux et de contenus immersifs pour marques.",
-    avatar_url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
-    instagram: "@sarah_cut",
-  },
-  {
-    id: "mock-3",
-    pseudo: "Marc Vander",
-    categorie: "Photographe",
-    specialite: "Drone & Paysages Extrêmes",
-    materiel: "DJI Mavic 3 Pro, Nikon Z9 + 24-70mm f/2.8",
-    ville: "Bruxelles, Belgique",
-    niveau: "Membre Actif",
-    experience: "4 ans d'exp.",
-    bio: "Captures aériennes et reportages grands espaces haute résolution.",
-    avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    instagram: "@marvander",
-  },
-];
+export default function CreatifsPage({ userProfile }) {
+  const [filtreRole, setFiltreRole] = useState("TOUS");
 
-export default function CreatifsPage() {
-  const [profiles, setProfiles] = useState(mockProProfiles);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategorie, setSelectedCategorie] = useState("");
-  
-  // État pour le formulaire d'ajout de profil
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newPseudo, setNewPseudo] = useState("");
-  const [newCategorie, setNewCategorie] = useState("Photographe");
-  const [newSpecialite, setNewSpecialite] = useState("");
-  const [newMateriel, setNewMateriel] = useState("");
-  const [newVille, setNewVille] = useState("");
-  const [newBio, setNewBio] = useState("");
-
-  useEffect(() => {
-    fetchSupabaseProfiles();
-  }, []);
-
-  async function fetchSupabaseProfiles() {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (!error && data && data.length > 0) {
-        setProfiles([...data, ...mockProProfiles]);
-      }
-    } catch (e) {
-      console.error(e);
+  // Données fictives des créateurs de l'annuaire
+  const creatifs = [
+    {
+      id: 1,
+      nom: "Alexandre Gaultier",
+      role: "PILOTE DRONE",
+      bio: "Télépilote certifié S1/S3. Captation aérienne haute résolution.",
+      email: "alex@drone-vision.fr",
+      telephone: "06 45 88 22 11",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
+    },
+    {
+      id: 2,
+      nom: "Sarah Lemaire",
+      role: "VIDÉASTE",
+      bio: "Réalisatrice de clips publicitaires et de contenus brandés pour les réseaux.",
+      email: "sarah@lemaire-prod.com",
+      telephone: "07 82 33 19 44",
+      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80"
+    },
+    {
+      id: 3,
+      nom: "Marc Vane",
+      role: "PHOTOGRAPHE",
+      bio: "Photographe de mode, portrait et lifestyle corporate.",
+      email: "marc@bokeone.com",
+      telephone: "06 12 34 56 78",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80"
     }
-  }
+  ];
 
-  async function handleCreateProfile(e) {
-    e.preventDefault();
-    if (!newPseudo || !newSpecialite) {
-      alert("Veuillez remplir au moins votre nom et votre spécialité.");
-      return;
-    }
-
-    const newProfileObj = {
-      id: `local-${Date.now()}`,
-      pseudo: newPseudo,
-      categorie: newCategorie,
-      specialite: newSpecialite,
-      materiel: newMateriel || "Non renseigné",
-      ville: newVille || "France",
-      niveau: "Nouveau Membre",
-      experience: "1 an d'exp.",
-      bio: newBio || "Créateur passionné sur Boke One.",
-      avatar_url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-    };
-
-    setProfiles([newProfileObj, ...profiles]);
-    setShowAddForm(false);
-    setNewPseudo("");
-    setNewSpecialite("");
-    setNewMateriel("");
-    setNewVille("");
-    setNewBio("");
-    alert("🎉 Votre profil pro a été ajouté à l'annuaire !");
-  }
-
-  // Filtrage généraliste
-  const filteredProfiles = profiles.filter((profile) => {
-    const pseudo = profile.pseudo || "";
-    const ville = profile.ville || "";
-    const specialite = profile.specialite || "";
-    const categorie = profile.categorie || "Photographe";
-    const materiel = profile.materiel || "";
-
-    const matchesSearch = 
-      pseudo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ville.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      specialite.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      materiel.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesCategorie = 
-      selectedCategorie === "" || categorie.toLowerCase() === selectedCategorie.toLowerCase();
-
-    return matchesSearch && matchesCategorie;
-  });
+  const creatifsFiltres = filtreRole === "TOUS" 
+    ? creatifs 
+    : creatifs.filter(c => c.role.includes(filtreRole));
 
   return (
-    <div style={{ padding: "10px 15px", color: "white", maxWidth: "900px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "15px", textAlign: "center", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
-        <div style={{ textAlign: "left" }}>
-          <h2 style={{ color: "#67e8f9", fontSize: "18px", margin: "0 0 4px 0" }}>👥 Annuaire Professionnel des Talents</h2>
-          <p style={{ color: "#94a3b8", fontSize: "12px", margin: 0 }}>
-            Trouvez les meilleurs photographes et experts par matériel ou spécialité.
-          </p>
+    <div className="space-y-6 font-sans">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-xl font-black text-white">📖 Annuaire des Créateurs BOKE ONE</h2>
+          <p className="text-xs text-slate-400 mt-1">Mettez en relation vos projets avec les meilleurs talents de l'écosystème.</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          style={{
-            background: "#0891b2",
-            color: "white",
-            border: "none",
-            padding: "8px 14px",
-            borderRadius: "6px",
-            fontWeight: "bold",
-            fontSize: "12px",
-            cursor: "pointer",
-          }}
-        >
-          {showAddForm ? "✕ Fermer" : "➕ Créer mon Profil Pro"}
-        </button>
+
+        {/* Filtres par spécialité */}
+        <div className="flex flex-wrap gap-2 bg-[#0e1424] p-1.5 rounded-xl border border-slate-800">
+          {["TOUS", "PHOTOGRAPHE", "VIDÉASTE", "DRONE"].map((role) => (
+            <button
+              key={role}
+              onClick={() => setFiltreRole(role)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                filtreRole === role 
+                  ? "bg-amber-500 text-slate-950 shadow-md" 
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+              }`}
+            >
+              {role}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Formulaire d'inscription de profil rapide */}
-      {showAddForm && (
-        <form
-          onSubmit={handleCreateProfile}
-          style={{
-            background: "#0f172a",
-            border: "1px solid #06b6d4",
-            borderRadius: "8px",
-            padding: "15px",
-            marginBottom: "20px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          <h3 style={{ color: "#67e8f9", fontSize: "14px", margin: 0 }}>📝 Fiche Technique Professionnelle</h3>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <input
-              type="text"
-              placeholder="Votre Nom / Pseudo"
-              value={newPseudo}
-              onChange={(e) => setNewPseudo(e.target.value)}
-              style={{ flex: 1, minWidth: "180px", padding: "8px", borderRadius: "6px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "12px" }}
-            />
-            <select
-              value={newCategorie}
-              onChange={(e) => setNewCategorie(e.target.value)}
-              style={{ padding: "8px", borderRadius: "6px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "12px", cursor: "pointer" }}
-            >
-              <option value="Photographe">Photographe</option>
-              <option value="Vidéaste">Vidéaste</option>
-              <option value="Studio">Studio / DA</option>
-              <option value="Drone">Pilote Drone</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Ville (ex: Paris, France)"
-              value={newVille}
-              onChange={(e) => setNewVille(e.target.value)}
-              style={{ flex: 1, minWidth: "150px", padding: "8px", borderRadius: "6px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "12px" }}
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <input
-              type="text"
-              placeholder="Spécificité (ex: Portrait Studio, Mariage, Mode...)"
-              value={newSpecialite}
-              onChange={(e) => setNewSpecialite(e.target.value)}
-              style={{ flex: 1, minWidth: "200px", padding: "8px", borderRadius: "6px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "12px" }}
-            />
-            <input
-              type="text"
-              placeholder="Matériel & Équipement (ex: Sony A7IV + 24-70mm)"
-              value={newMateriel}
-              onChange={(e) => setNewMateriel(e.target.value)}
-              style={{ flex: 1, minWidth: "200px", padding: "8px", borderRadius: "6px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "12px" }}
-            />
-          </div>
-
-          <input
-            type="text"
-            placeholder="Courte biographie ou description de vos services"
-            value={newBio}
-            onChange={(e) => setNewBio(e.target.value)}
-            style={{ padding: "8px", borderRadius: "6px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "12px" }}
-          />
-
-          <button
-            type="submit"
-            style={{ background: "#06b6d4", color: "#020617", border: "none", padding: "8px", borderRadius: "6px", fontWeight: "bold", fontSize: "12px", cursor: "pointer", alignSelf: "flex-end" }}
-          >
-            Enregistrer mon profil
-          </button>
-        </form>
-      )}
-
-      {/* Barre de recherche et filtre généraliste */}
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          marginBottom: "15px",
-          background: "#0f172a",
-          padding: "10px 15px",
-          borderRadius: "8px",
-          border: "1px solid #334155",
-          flexWrap: "wrap",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="🔍 Rechercher par nom, ville, ou matériel (ex: Sony, Paris)..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            flex: "1",
-            minWidth: "220px",
-            padding: "8px 12px",
-            borderRadius: "6px",
-            border: "1px solid #475569",
-            background: "#1e293b",
-            color: "white",
-            outline: "none",
-            fontSize: "12px",
-          }}
-        />
-
-        {/* Filtre généraliste propre */}
-        <select
-          value={selectedCategorie}
-          onChange={(e) => setSelectedCategorie(e.target.value)}
-          style={{
-            padding: "8px 12px",
-            borderRadius: "6px",
-            border: "1px solid #475569",
-            background: "#1e293b",
-            color: "white",
-            outline: "none",
-            cursor: "pointer",
-            fontSize: "12px",
-          }}
-        >
-          <option value="">Tous les métiers (Général)</option>
-          <option value="Photographe">Photographe</option>
-          <option value="Vidéaste">Vidéaste</option>
-          <option value="Studio">Studio / DA</option>
-          <option value="Drone">Pilote Drone</option>
-        </select>
-      </div>
-
-      {/* Liste des profils pros */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {filteredProfiles.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "20px", color: "#94a3b8", fontSize: "12px" }}>
-            <p>Aucun profil ne correspond à votre recherche.</p>
-          </div>
-        ) : (
-          filteredProfiles.map((profile) => (
-            <div
-              key={profile.id}
-              style={{
-                background: "#0f172a",
-                border: "1px solid #334155",
-                borderRadius: "8px",
-                padding: "12px 15px",
-                display: "flex",
-                alignItems: "center",
-                gap: "15px",
-                flexWrap: "wrap",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              {/* Avatar */}
-              <div style={{ flexShrink: 0 }}>
-                <img
-                  src={profile.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80"}
-                  alt={profile.pseudo}
-                  style={{
-                    width: "55px",
-                    height: "55px",
-                    objectFit: "cover",
-                    borderRadius: "50%",
-                    border: "2px solid #06b6d4",
-                  }}
-                />
-              </div>
-
-              {/* Infos détaillées (Spécialité + Matériel) */}
-              <div style={{ flex: "1", minWidth: "220px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
-                  <h3 style={{ fontSize: "14px", color: "#67e8f9", margin: 0 }}>
-                    {profile.pseudo}
-                  </h3>
-                  <span style={{ fontSize: "10px", background: "#1e293b", color: "#38bdf8", border: "1px solid #475569", padding: "1px 6px", borderRadius: "4px" }}>
-                    {profile.categorie || "Photographe"}
+      {/* Grille des profils */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {creatifsFiltres.map((creatif) => (
+          <div key={creatif.id} className="bg-[#0e1424] border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <img src={creatif.avatar} alt={creatif.nom} className="w-12 h-12 rounded-full object-cover border-2 border-amber-500/40" />
+                <div>
+                  <h3 className="text-sm font-bold text-white">{creatif.nom}</h3>
+                  <span className="text-[10px] font-black bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">
+                    {creatif.role}
                   </span>
                 </div>
-
-                <p style={{ color: "#34d399", fontSize: "12px", fontWeight: "bold", margin: "0 0 3px 0" }}>
-                  🎯 {profile.specialite}
-                </p>
-
-                <p style={{ color: "#facc15", fontSize: "11px", margin: "0 0 3px 0" }}>
-                  📷 <strong>Matériel :</strong> {profile.materiel || "Non spécifié"}
-                </p>
-
-                <p style={{ color: "#94a3b8", fontSize: "11px", margin: "0 0 3px 0" }}>
-                  📍 {profile.ville || "France"} | 💼 {profile.experience || "Expérience pro"}
-                </p>
-
-                <p style={{ color: "#cbd5e1", fontSize: "11px", fontStyle: "italic", margin: 0 }}>
-                  "{profile.bio}"
-                </p>
               </div>
-
-              {/* Bouton Contacter */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <a
-                  href={`mailto:contact@bokeone.com?subject=Contact%20professionnel%20-%20${encodeURIComponent(profile.pseudo)}`}
-                  style={{
-                    background: "#0891b2",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "5px",
-                    fontSize: "11px",
-                    textDecoration: "none",
-                    fontWeight: "bold",
-                    textAlign: "center",
-                  }}
-                >
-                  💬 Contacter
-                </a>
-              </div>
+              <p className="text-xs text-slate-300 font-light leading-relaxed">{creatif.bio}</p>
             </div>
-          ))
-        )}
+
+            {/* Bloc Contacts conditionné par la connexion */}
+            <div className="bg-[#070b12] p-3 rounded-xl border border-slate-800/80 space-y-2 text-xs">
+              {userProfile ? (
+                <>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span>✉️</span>
+                    <span className="font-mono text-[11px] text-amber-300">{creatif.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span>📞</span>
+                    <span className="font-mono text-[11px] text-emerald-400 font-bold">{creatif.telephone}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-2 space-y-1">
+                  <p className="text-[11px] text-amber-400/90 font-medium">🔒 Coordonnées masquées</p>
+                  <p className="text-[10px] text-slate-500">Connectez-vous à l'Espace Pro pour révéler les contacts directs.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
