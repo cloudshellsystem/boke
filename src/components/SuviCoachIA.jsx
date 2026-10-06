@@ -1,33 +1,22 @@
-import React, { useState } from 'react';
+// Extrait à intégrer dans votre composant SuviCoachIA.jsx
+<div className="bg-[#0e1424] border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+  <div className="flex items-center justify-between">
+    <h3 className="text-sm font-black text-amber-400 flex items-center gap-2">
+      <span>🦊</span> SUVI COACH IA — Veille & Opportunités
+    </h3>
+    <span className="text-[10px] font-mono bg-slate-900 text-slate-400 px-2.5 py-1 rounded-md border border-slate-800">
+      🔍 Sources : Flux RSS Pro, Indeed & Actualités Île-de-France
+    </span>
+  </div>
 
-export default function SuviCoachIA() {
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState(null);
-
-  const lancerScan = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setData({
-        accroches: ["Trois recrutements ouverts sur Indeed", "Showroom inauguré récemment"],
-        conseil: "Utilise l'accroche obligatoire : 'J'ai vu que...'"
-      });
-      setLoading(false);
-    }, 1200);
-  };
-
-  return (
-    <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl font-sans text-slate-100">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">🐱 Suvi Coach IA</h4>
-        <button onClick={lancerScan} className="bg-amber-500 text-slate-950 text-xs font-black px-3 py-1.5 rounded-lg">⚡ Scanner l'actu</button>
-      </div>
-      {loading && <p className="text-xs text-slate-500 animate-pulse font-mono">Suvi travaille...</p>}
-      {data && (
-        <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2 text-xs font-mono text-slate-300">
-          {data.accroches.map((a, i) => <p key={i}>• {a}</p>)}
-          <p className="text-amber-400 font-bold mt-2">{data.conseil}</p>
-        </div>
-      )}
+  <div className="bg-[#070b12] p-4 rounded-xl border border-slate-800/80 space-y-2 text-xs text-slate-300">
+    <p className="font-bold text-white">Derniers signaux faibles détectés :</p>
+    <ul className="list-disc list-inside space-y-1 text-slate-400">
+      <li>Trois recrutements ouverts sur Indeed (Secteur Production Vidéo IDF)[cite: 13]</li>
+      <li>Showroom inauguré récemment par un partenaire clé[cite: 13]</li>
+    </ul>
+    <div className="pt-2 border-t border-slate-800 text-amber-400 font-mono text-[11px]">
+      💡 Conseil de rédaction : Utilise l'accroche obligatoire : <strong className="text-white">'J'ai vu que...'</strong>[cite: 13]
     </div>
-  );
-}
+  </div>
+</div>
