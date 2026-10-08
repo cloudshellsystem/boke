@@ -12,8 +12,9 @@ import Abonnes from "./components/Abonnes";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import AuthForm from "./components/AuthForm";
-import CGUPage from "./components/CGUPage"; // 👈 Ajout de la page CGU
-import WhatsAppWidget from "./components/WhatsAppWidget"; // 👈 Ajout du widget WhatsApp flottant
+import CGUPage from "./components/CGUPage"; // 👈 Page CGU
+import WhatsAppWidget from "./components/WhatsAppWidget"; // 👈 Widget WhatsApp flottant
+import Footer from "./components/Footer"; // 👈 1. Importation du Footer
 
 // 🚀 Initialisation de Google Analytics 4 avec votre ID de mesure
 ReactGA.initialize("G-FVFKNP75BZ");
@@ -149,12 +150,19 @@ function AppShell() {
           <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/cgu" element={<CGUPage />} /> {/* 👈 Route vers la page CGU */}
+          <Route path="/cgu" element={<CGUPage />} />
         </Routes>
       </main>
 
-      {/* 💬 Widget WhatsApp Flottant présent sur toutes les pages */}
+      {/* 💬 Widget WhatsApp Flottant */}
       <WhatsAppWidget />
+
+      {/* 🏛️ 2. Affichage du Footer en bas de page avec redirection vers la page CGU */}
+      <Footer onNavigate={(page) => {
+        if (page === "cgu") {
+          window.location.href = "/cgu";
+        }
+      }} />
 
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={closeAuth}>
