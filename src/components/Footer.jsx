@@ -16,33 +16,48 @@ export default function Footer({ onNavigate }) {
           </p>
         </div>
 
-        {/* Colonne 2 : Liens Stratégiques & Connexions */}
+        {/* Colonne 2 : Liens Stratégiques & Connexions (Avec les bons liens & pictos) */}
         <div className="space-y-3">
           <h4 className="text-xs font-bold text-neutral-200 uppercase tracking-wider">Connecteurs & Réseau</h4>
-          <div className="flex flex-wrap gap-3 text-xs">
+          
+          {/* Bandeau de pictos / liens rapides */}
+          <div className="flex flex-wrap items-center gap-3 text-xs bg-neutral-900/60 p-3 rounded-2xl border border-neutral-800">
             <a 
-              href="https://wa.me/32400000000" 
+              href="https://wa.me/33753490292?text=Bonjour%20BOKÉ%20ONE,%20je%20souhaite%20des%20informations." 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-emerald-400 hover:underline flex items-center gap-1"
+              className="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 font-medium"
+              title="WhatsApp Direct"
             >
-              <span>💬</span> WhatsApp Direct
+              <span>💬</span> WhatsApp
             </a>
             <span className="text-neutral-700">•</span>
             <a 
               href="https://linkedin.com" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-amber-400 hover:underline flex items-center gap-1"
+              className="text-amber-400 hover:text-amber-300 transition flex items-center gap-1 font-medium"
+              title="LinkedIn Pro"
             >
-              <span>💼</span> LinkedIn Pro
+              <span>💼</span> LinkedIn
+            </a>
+            <span className="text-neutral-700">•</span>
+            <a 
+              href="https://instagram.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-pink-400 hover:text-pink-300 transition flex items-center gap-1 font-medium"
+              title="Instagram Galerie"
+            >
+              <span>📸</span> Instagram
             </a>
             <span className="text-neutral-700">•</span>
             <a 
               href="https://facebook.com" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-blue-400 hover:underline flex items-center gap-1"
+              className="text-blue-400 hover:text-blue-300 transition flex items-center gap-1 font-medium"
+              title="Facebook"
             >
               <span>👥</span> Facebook
             </a>
@@ -55,8 +70,8 @@ export default function Footer({ onNavigate }) {
           <ul className="space-y-1.5 text-xs">
             <li>
               <button 
-                onClick={() => onNavigate && onNavigate("cgv")} 
-                className="hover:text-amber-400 transition"
+                onClick={() => onNavigate && onNavigate("cgu")} 
+                className="hover:text-amber-400 transition text-neutral-400"
               >
                 Conditions Générales (CGU / CGV)
               </button>
@@ -64,7 +79,7 @@ export default function Footer({ onNavigate }) {
             <li>
               <button 
                 onClick={() => onNavigate && onNavigate("mentions")} 
-                className="hover:text-amber-400 transition"
+                className="hover:text-amber-400 transition text-neutral-400"
               >
                 Mentions Légales & Statut
               </button>
