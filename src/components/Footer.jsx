@@ -13,7 +13,7 @@ export default function Footer({ onNavigate }) {
           </p>
         </div>
 
-        {/* 🔹 LES MINI-PICTOS RONDS DISCRETS EN BAS (Alignés à droite, juste à côté du WhatsApp) */}
+        {/* 🔹 MINI-PICTOS RONDS DISCRETS (Fixes dans le Footer en bas à droite) */}
         <div className="flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 px-3 py-1.5 rounded-full shadow-lg backdrop-blur-md">
           
           {/* Instagram */}
