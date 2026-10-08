@@ -12,6 +12,8 @@ import Abonnes from "./components/Abonnes";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import AuthForm from "./components/AuthForm";
+import CGUPage from "./components/CGUPage"; // 👈 Ajout de la page CGU
+import WhatsAppWidget from "./components/WhatsAppWidget"; // 👈 Ajout du widget WhatsApp flottant
 
 // 🚀 Initialisation de Google Analytics 4 avec votre ID de mesure
 ReactGA.initialize("G-FVFKNP75BZ");
@@ -147,8 +149,13 @@ function AppShell() {
           <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/cgu" element={<CGUPage />} /> {/* 👈 Route vers la page CGU */}
         </Routes>
       </main>
+
+      {/* 💬 Widget WhatsApp Flottant présent sur toutes les pages */}
+      <WhatsAppWidget />
+
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={closeAuth}>
           <div onClick={(e) => e.stopPropagation()} className="max-h-full w-full max-w-md overflow-y-auto">
