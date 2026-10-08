@@ -20,7 +20,7 @@ export default function WhatsAppWidget() {
   return (
     <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2">
       
-      {/* 🔹 Mini-pictos ronds discrets alignés à gauche du bouton WhatsApp */}
+      {/* 🔹 Mini-pictos ronds discrets (Instagram, LinkedIn, Pinterest, Facebook) alignés juste à gauche */}
       <div className="flex items-center gap-1.5 bg-neutral-900/90 border border-neutral-800 px-2.5 py-1.5 rounded-full shadow-2xl backdrop-blur-md">
         
         {/* Instagram */}
@@ -69,12 +69,12 @@ export default function WhatsAppWidget() {
 
       </div>
 
-      {/* 💬 Bouton WhatsApp Flottant */}
+      {/* 💬 Bouton WhatsApp Flottant + Pop-up de capture d'e-mail */}
       <div className="relative">
         {isOpen && (
           <div className="absolute bottom-16 right-0 w-80 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-4 text-neutral-100 backdrop-blur-md">
             <div className="flex items-center justify-between mb-3 border-b border-neutral-800 pb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Conciergerie BOKÉ ONE</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-400">CONCIERGERIE BOKÉ ONE</span>
               <button onClick={() => setIsOpen(false)} className="text-neutral-400 hover:text-white font-bold">✕</button>
             </div>
             {!submitted ? (
@@ -93,8 +93,19 @@ export default function WhatsAppWidget() {
                 </button>
               </form>
             ) : (
-              <p className="text-xs font-bold text-emerald-400 text-center py-3">✓ Demande transmise avec succès !</p>
+              <div className="text-center py-3 space-y-1">
+                <p className="text-xs font-bold text-emerald-400">✓ Demande transmise avec succès !</p>
+                <p className="text-[11px] text-neutral-400">Permanence joignable au +33 7 53 49 02 92</p>
+              </div>
             )}
+            <div className="mt-3 pt-2 border-t border-neutral-800 text-center">
+              <button
+                onClick={handleWhatsAppClick}
+                className="text-[11px] text-emerald-400 hover:underline font-medium inline-flex items-center gap-1"
+              >
+                <span>💬</span> Ouvrir WhatsApp direct (33753490292)
+              </button>
+            </div>
           </div>
         )}
 
