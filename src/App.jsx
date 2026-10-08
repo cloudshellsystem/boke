@@ -14,7 +14,7 @@ import Checkout from "./components/Checkout";
 import AuthForm from "./components/AuthForm";
 import CGUPage from "./components/CGUPage"; // 👈 Page CGU
 import WhatsAppWidget from "./components/WhatsAppWidget"; // 👈 Widget WhatsApp flottant
-import Footer from "./components/Footer"; // 👈 1. Importation du Footer
+import Footer from "./components/Footer"; // 👈 INDISPENSABLE : Importation du Footer
 
 // 🚀 Initialisation de Google Analytics 4 avec votre ID de mesure
 ReactGA.initialize("G-FVFKNP75BZ");
@@ -141,6 +141,7 @@ function AppShell() {
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans">
       <GlobalNavbar onOpenAuth={openAuth} />
+      
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
@@ -157,7 +158,7 @@ function AppShell() {
       {/* 💬 Widget WhatsApp Flottant */}
       <WhatsAppWidget />
 
-      {/* 🏛️ 2. Affichage du Footer en bas de page avec redirection vers la page CGU */}
+      {/* 🏛️ Footer Global avec les pictos ronds & liens légaux */}
       <Footer onNavigate={(page) => {
         if (page === "cgu") {
           window.location.href = "/cgu";
