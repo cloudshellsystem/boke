@@ -5,11 +5,16 @@ export default function WhatsAppWidget() {
   const [emailInput, setEmailInput] = useState("");
   const [sentSuccess, setSentSuccess] = useState(false);
 
-  // Numéro WhatsApp de contact (format international)
-  const whatsappNumber = "32400000000"; 
+   // Numéro WhatsApp de contact (format international français)
+  const whatsappNumber = "33753490292"; 
   const defaultMessage = "Bonjour BOKÉ ONE, je souhaite en savoir plus sur le salon et les œuvres d'élite.";
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
 
+
+
+
+  
+  
   const handleEmailSubmit = (e) => {
     e.preventDefault();
     if (emailInput.trim()) {
