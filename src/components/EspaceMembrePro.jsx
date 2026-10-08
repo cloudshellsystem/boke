@@ -1,7 +1,7 @@
 ﻿import React, { useState, useRef } from "react";
 import { formatPrice } from "../lib/formatPrice";
 
-export default function EspaceMembrePro({ userSession }) {
+export default function EspaceMembrePro({ userSession, onRequireLogin }) {
   const [activeTab, setActiveTab] = useState("notionLive");
   const [simulationAmount, setSimulationAmount] = useState(250);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -23,6 +23,35 @@ export default function EspaceMembrePro({ userSession }) {
   });
 
   const notionPageUrl = "https://brindle-baboon-751.notion.site/3f29868fa534809eaefadbd7532ef348?v=3f29868fa53480d6bd9e000c633bdf4f&pvs=73";
+
+  // 🔒 ÉCRAN DE VERROUILLAGE SI L'UTILISATEUR N'EST PAS CONNECTÉ
+  if (!userSession) {
+    return (
+      <div className="mx-auto w-full max-w-4xl bg-neutral-950 p-8 text-neutral-200 min-h-[70vh] flex flex-col items-center justify-center text-center font-sans">
+        <div className="bg-neutral-900 border-2 border-amber-500/40 p-8 rounded-3xl shadow-2xl max-w-lg space-y-6">
+          <div className="w-16 h-16 bg-amber-500/15 border border-amber-500/30 rounded-2xl flex items-center justify-center mx-auto text-3xl">
+            🔒
+          </div>
+          <div className="space-y-2">
+            <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              Espace Réservé & Sécurisé
+            </span>
+            <h1 className="text-2xl font-black text-amber-400">Espace Vente & Statistiques Pro</h1>
+            <p className="text-xs sm:text-sm text-neutral-400">
+              Cet espace est strictement réservé aux créateurs abonnés et professionnels de BOKÉ ONE. Connectez-vous pour accéder à vos tunnels de vente, vos scripts en direct et vos statistiques de gains.
+            </p>
+          </div>
+
+          <button
+            onClick={onRequireLogin}
+            className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-extrabold rounded-xl text-xs uppercase tracking-wider transition shadow-lg"
+          >
+            Se connecter / S'abonner ⚡
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const calculateCommission = (amount) => {
     const val = parseFloat(amount) || 0;
