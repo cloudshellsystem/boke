@@ -1,153 +1,260 @@
-// src/components/ForumPage.jsx
-import React, { useState } from "react";
+﻿import React, { useEffect, useState, useCallback } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../context/AuthContext";
 
-export default function ForumPage() {
-  const [sujetActif, setSujetActif] = useState(null);
-  const [nouveauMessage, setNouveauMessage] = useState("");
+export default function ForumPage({ onRequireLogin }) {
+  const { isLoggedIn, user } = useAuth();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [category, setCategory] = useState("Général");
+  
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [replies, setReplies] = useState([]);
+  const [replyText, setReplyText] = useState("");
+  const [onlineCount, setOnlineCount] = useState(14);
 
-  // Liste initiale des sujets de discussion
-  const [sujets, setSujets] = useState([
-    {
-      id: 1,
-      titre: "Stratégie de prix pour les packs créateurs en 2026",
-      auteur: "Marc Vane",
-      categorie: "Business & Tarifs",
-      reponsesCount: 14,
-      date: "Il y a 2 jours",
-      messages: [
-        { auteur: "Marc Vane", texte: "Hello à tous, comment positionnez-vous vos grilles tarifaires face à la concurrence actuelle ?", date: "Il y a 2 jours" },
-        { auteur: "Sarah L.", texte: "Personnellement, j'intègre un forfait minimum journalier de 450€ HT, ça filtre direct les clients non qualifiés.", date: "Il y a 1 jour" }
-      ]
-    },
-    {
-      id: 2,
-      titre: "Optimisation de nos tournages avec le nouveau boîtier Sony",
-      auteur: "Alexandre Gaultier",
-      categorie: "Matériel & Technique",
-      reponsesCount: 8,
-      date: "Il y a 3 jours",
-      messages: [
-        { auteur: "Alexandre Gaultier", texte: "Le rendu en low-light est absolument incroyable. Des retours de votre côté sur les profils S-Log3 ?", date: "Il y a 3 jours" }
-      ]
-    },
-    {
-      id: 3,
-      titre: "Recherche vidéaste partenaire sur Lyon pour mission corporate",
-      auteur: "Thomas B.",
-      categorie: "Collaborations",
-      reponsesCount: 5,
-      date: "Il y a 5 jours",
-      messages: [
-        { auteur: "Thomas B.", texte: "Je cherche un binôme caméraman + son pour un gros séminaire d'entreprise le mois prochain.", date: "Il y a 5 jours" }
-      ]
-    }
-  ]);
+  const fetchPosts = useCallback(async () => {
+    const { data } = await supabase.from("forum_posts").select("*").order("created_at", { ascending: false });
+    if (data) setPosts(data);
+    setLoading(false);
+  }, []);
 
-  const handleEnvoyerMessage = (e) => {
+  useEffect(() => { 
+    fetchPosts(); 
+    const interval = setInterval(() => {
+      setOnlineCount((prev) => Math.max(8, prev + (Math.random() > 0.5 ? 1 : -1)));
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [fetchPosts]);
+
+  const fetchReplies = async (postId) => {
+    setReplies([]); // Vide d'abord pour éviter l'effet de persistance entre les sujets
+    const { data } = await supabase
+      .from("forum_replies")
+      .select("*")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+    if (data) setReplies(data);
+  };
+
+  const handleOpenPost = (post) => {
+    setSelectedPost(post);
+    setReplyText(""); // Réinitialise le champ de réponse
+    fetchReplies(post.id);
+  };
+
+  const handleCreatePost = async (e) => {
     e.preventDefault();
-    if (!nouveauMessage.trim()) return;
+    if (!isLoggedIn) { onRequireLogin?.(); return; }
 
-    const sujetMaj = {
-      ...sujetActif,
-      reponsesCount: sujetActif.reponsesCount + 1,
-      messages: [
-        ...sujetActif.messages,
-        { auteur: "Vous (Membre Pro)", texte: nouveauMessage, date: "À l'instant" }
-      ]
-    };
+    const { error } = await supabase.from("forum_posts").insert([{ 
+      title, 
+      content, 
+      category, 
+      user_name: user?.email ? user.email.split("@")[0] : "Membre" 
+    }]);
 
-    setSujetActif(sujetMaj);
-    setSujets(sujets.map(s => s.id === sujetMaj.id ? sujetMaj : s));
-    setNouveauMessage("");
+    if (!error) {
+      setTitle(""); 
+      setContent(""); 
+      setShowForm(false); 
+      fetchPosts();
+    } else {
+      alert("Erreur : " + error.message);
+    }
+  };
+
+  const handleSendReply = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) { onRequireLogin?.(); return; }
+    if (!replyText.trim() || !selectedPost) return;
+
+    const { error } = await supabase.from("forum_replies").insert([{
+      post_id: selectedPost.id,
+      content: replyText,
+      user_name: user?.email ? user.email.split("@")[0] : "Membre"
+    }]);
+
+    if (!error) {
+      setReplyText("");
+      fetchReplies(selectedPost.id);
+      fetchPosts();
+    } else {
+      alert("Erreur lors de l'envoi de la réponse : " + error.message);
+    }
   };
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="flex justify-between items-center">
+    <div className="max-w-5xl mx-auto px-4 py-8 text-neutral-200 font-sans">
+      
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-neutral-800 pb-6 gap-4">
         <div>
-          <h2 className="text-xl font-black text-white">💬 Forum & Échanges de la Communauté</h2>
-          <p className="text-xs text-slate-400 mt-1">Partagez vos retours d'expérience, astuces techniques et opportunités.</p>
+          <h2 className="text-xl sm:text-2xl font-black text-amber-400 flex items-center gap-2">
+            💬 Forum Communautaire (France)
+          </h2>
+          <p className="text-xs text-neutral-400 mt-1 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-emerald-400 font-bold">{onlineCount} membres</span> en ligne actuellement.
+          </p>
         </div>
-        {sujetActif && (
-          <button 
-            onClick={() => setSujetActif(null)}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl cursor-pointer transition-colors"
-          >
-            ← Retour à la liste des sujets
-          </button>
-        )}
+        <button 
+          onClick={() => { if (!isLoggedIn) { onRequireLogin?.(); } else { setShowForm(!showForm); } }} 
+          className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black rounded-xl transition shadow-lg shadow-amber-500/10"
+        >
+          + Nouveau sujet
+        </button>
       </div>
 
-      {!sujetActif ? (
-        /* LISTE DES SUJETS */
-        <div className="space-y-3">
-          {sujets.map((sujet) => (
-            <div 
-              key={sujet.id} 
-              onClick={() => setSujetActif(sujet)}
-              className="bg-[#0e1424] hover:bg-[#131b31] border border-slate-800 hover:border-amber-500/50 p-5 rounded-2xl transition-all cursor-pointer flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-lg"
+      {showForm && (
+        <form onSubmit={handleCreatePost} className="bg-neutral-900/90 border border-neutral-700 p-5 rounded-2xl space-y-4 mb-8 shadow-xl">
+          <h3 className="text-sm font-bold text-amber-400">Créer une nouvelle discussion</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input 
+              type="text" 
+              placeholder="Titre de la discussion" 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+              className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500 sm:col-span-2" 
+              required 
+            />
+            <select 
+              value={category} 
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
             >
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded border border-amber-500/20">
-                    {sujet.categorie}
-                  </span>
-                  <span className="text-[10px] text-slate-500">• Publié par {sujet.auteur} ({sujet.date})</span>
-                </div>
-                <h3 className="text-sm font-bold text-white hover:text-amber-400 transition-colors">{sujet.titre}</h3>
-              </div>
-              
-              <div className="flex items-center gap-2 bg-[#070b12] px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-mono text-amber-400">
-                <span>💬</span>
-                <span>{sujet.reponsesCount} réponses</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        /* VUE DÉTAILLÉE DU FIL DE DISCUSSION */
-        <div className="bg-[#0e1424] border border-slate-800 p-6 rounded-2xl space-y-6 shadow-2xl animate-fade-in">
-          <div className="border-b border-slate-800 pb-4">
-            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">{sujetActif.categorie}</span>
-            <h3 className="text-lg font-black text-white mt-1">{sujetActif.titre}</h3>
-            <p className="text-xs text-slate-400 mt-1">Initié par {sujetActif.auteur}</p>
+              <option value="Général">📁 Général</option>
+              <option value="Matériel & Technique">📷 Matériel & Technique</option>
+              <option value="Entraide France">🤝 Entraide France</option>
+              <option value="Annonces">📢 Annonces</option>
+            </select>
           </div>
+          <textarea 
+            placeholder="Exprimez-vous ici..." 
+            value={content} 
+            onChange={(e) => setContent(e.target.value)} 
+            rows={4} 
+            className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500" 
+            required 
+          />
+          <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 py-3 rounded-xl font-black text-xs transition">
+            🚀 Publier le sujet
+          </button>
+        </form>
+      )}
 
-          {/* Liste des messages du fil */}
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-            {sujetActif.messages.map((msg, index) => (
-              <div key={index} className="bg-[#070b12] border border-slate-800/80 p-4 rounded-xl space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-amber-400">{msg.auteur}</span>
-                  <span className="text-[10px] text-slate-500 font-mono">{msg.date}</span>
+      <div className="bg-neutral-900/70 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+        <div className="hidden sm:grid grid-cols-12 bg-neutral-950/80 px-5 py-3 text-[11px] font-bold text-neutral-400 border-b border-neutral-800 uppercase tracking-wider">
+          <div className="col-span-6">Sujets / Catégories</div>
+          <div className="col-span-2 text-center">Type</div>
+          <div className="col-span-2 text-center">Auteur</div>
+          <div className="col-span-2 text-right">Date</div>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-xs text-neutral-400">Chargement des discussions...</div>
+        ) : posts.length === 0 ? (
+          <div className="p-10 text-center text-xs text-neutral-400">Aucun sujet pour le moment.</div>
+        ) : (
+          <div className="divide-y divide-neutral-800/60">
+            {posts.map((post) => (
+              <div 
+                key={post.id} 
+                onClick={() => handleOpenPost(post)} 
+                className="grid grid-cols-1 sm:grid-cols-12 px-5 py-4 items-center hover:bg-neutral-800/40 cursor-pointer transition gap-3 sm:gap-0"
+              >
+                <div className="sm:col-span-6 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] bg-neutral-800 text-amber-400 px-2 py-0.5 rounded-md font-bold">
+                      {post.category || "Général"}
+                    </span>
+                    <h3 className="font-bold text-sm text-neutral-100 hover:text-amber-400 transition line-clamp-1">
+                      {post.title}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-neutral-400 line-clamp-1 pl-1">
+                    {post.content}
+                  </p>
                 </div>
-                <p className="text-xs text-slate-200 leading-relaxed font-light">{msg.texte}</p>
+
+                <div className="hidden sm:block sm:col-span-2 text-center text-xs text-neutral-300 font-medium">
+                  Discussion
+                </div>
+                <div className="hidden sm:block sm:col-span-2 text-center text-xs text-amber-400/90 font-medium">
+                  {post.user_name || "Anonyme"}
+                </div>
+                <div className="sm:col-span-2 text-left sm:text-right text-[11px] text-neutral-500">
+                  {new Date(post.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })}
+                </div>
               </div>
             ))}
           </div>
+        )}
+      </div>
 
-          {/* Formulaire de réponse */}
-          <form onSubmit={handleEnvoyerMessage} className="space-y-3 pt-4 border-t border-slate-800">
-            <label className="block text-xs font-bold text-slate-300">Participer à la discussion :</label>
-            <textarea 
-              rows="3" 
-              value={nouveauMessage}
-              onChange={(e) => setNouveauMessage(e.target.value)}
-              placeholder="Écrivez votre réponse ici..."
-              className="w-full bg-[#070b12] border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 font-sans"
-              required
-            ></textarea>
-            <div className="flex justify-end">
+      {selectedPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm" onClick={() => setSelectedPost(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full flex flex-col max-h-[85vh] shadow-2xl overflow-hidden">
+            
+            <div className="bg-neutral-950 p-5 border-b border-neutral-800 flex justify-between items-center">
+              <div>
+                <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded font-bold border border-amber-500/20">
+                  {selectedPost.category || "Général"}
+                </span>
+                <h2 className="text-base font-black text-white mt-1">{selectedPost.title}</h2>
+              </div>
+              <button onClick={() => setSelectedPost(null)} className="text-neutral-400 hover:text-white font-bold text-lg px-2">✕</button>
+            </div>
+
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+              <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-2xl space-y-2">
+                <div className="flex justify-between items-center text-xs text-neutral-400 border-b border-neutral-800/60 pb-2">
+                  <span className="text-amber-400 font-bold">👤 {selectedPost.user_name || "Membre"}</span>
+                  <span>{new Date(selectedPost.created_at).toLocaleString("fr-FR")}</span>
+                </div>
+                <p className="text-sm text-neutral-200 whitespace-pre-line pt-1">{selectedPost.content}</p>
+              </div>
+
+              {replies.map((reply) => (
+                <div key={reply.id} className="bg-neutral-900/90 border border-neutral-800/80 p-4 rounded-2xl space-y-2 ml-4 sm:ml-8">
+                  <div className="flex justify-between items-center text-xs text-neutral-400 border-b border-neutral-800 pb-2">
+                    <span className="text-emerald-400 font-bold">💬 {reply.user_name}</span>
+                    <span>{new Date(reply.created_at).toLocaleString("fr-FR")}</span>
+                  </div>
+                  <p className="text-xs text-neutral-300 whitespace-pre-line pt-1">{reply.content}</p>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleSendReply} className="bg-neutral-950 border-t border-neutral-800 p-4 space-y-3">
+              <textarea 
+                placeholder={isLoggedIn ? "Écrivez votre réponse..." : "Connectez-vous pour répondre..."} 
+                value={replyText} 
+                onChange={(e) => setReplyText(e.target.value)} 
+                rows={2} 
+                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-neutral-200 outline-none focus:border-amber-500" 
+                required 
+              />
               <button 
                 type="submit" 
-                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl cursor-pointer shadow-lg transition-colors"
+                onClick={(e) => {
+                  if (!isLoggedIn) {
+                    e.preventDefault();
+                    onRequireLogin?.();
+                  }
+                }}
+                className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 py-2.5 rounded-xl text-xs font-black transition shadow-md"
               >
-                Envoyer ma réponse
+                {isLoggedIn ? "🚀 Envoyer ma réponse" : "Se connecter pour répondre"}
               </button>
-            </div>
-          </form>
+            </form>
+
+          </div>
         </div>
       )}
+
     </div>
   );
 }

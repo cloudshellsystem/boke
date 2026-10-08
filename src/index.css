@@ -1,4 +1,25 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-quartz-950: #07090f;
+  --color-quartz-925: #0b0e17;
+  --color-quartz-900: #0f1420;
+  --color-quartz-850: #141a2b;
+  --color-quartz-800: #1b2235;
+  --color-quartz-700: #2a3349;
+  --color-quartz-600: #3d4760;
+  --color-quartz-500: #5b667e;
+  --color-quartz-400: #8792a8;
+  --color-quartz-300: #b4bdd0;
+  --color-quartz-100: #eef1f7;
+
+  --color-amber-ember-300: #fcd34d;
+  --color-amber-ember-400: #fbbf24;
+  --color-amber-ember-500: #f0a800;
+  --color-amber-ember-600: #c9860a;
+}
 
 @layer base {
   body {
@@ -11,21 +32,7 @@
   }
 }
 
-/* Styles utilitaires et de confort pour l'interface sombre */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #030712;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1f2937;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #374151;
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #030712; }
+::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #374151; }

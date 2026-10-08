@@ -1,58 +1,193 @@
-import React from 'react';
+﻿import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
-export default function HomePage({ onNavigate }) {
+// Filigrane SVG répété, visible sur les photos
+const WATERMARK_SVG = encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="120"><text x="110" y="60" text-anchor="middle" dominant-baseline="middle" transform="rotate(-30 110 60)" fill="white" fill-opacity="0.45" stroke="black" stroke-opacity="0.3" stroke-width="0.8" font-family="Arial, sans-serif" font-size="18" font-weight="900" letter-spacing="4">BOKÉ ONE</text></svg>`
+);
+const watermarkStyle = { 
+  backgroundImage: `url("data:image/svg+xml,${WATERMARK_SVG}")`, 
+  backgroundRepeat: "repeat" 
+};
+
+const STOCK_IMAGES = [
+  { id: 1, title: "Lumières de Conakry", type: "Image", photographe: "Antoine Leroy", description: "Vue panoramique au coucher du soleil sur les côtes guinéennes.", url: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80", initialLikes: 12, licence: "Payante", price: "45.00 €" },
+  { id: 2, title: "Regards de Guinée", type: "Portrait", photographe: "Alejandro Ruiz", description: "Portrait expressif en lumière naturelle capturé à Conakry.", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80", initialLikes: 27, licence: "Libre de droit", price: "Gratuit" },
+  { id: 3, title: "Symphonie Sauvage", type: "Nature", photographe: "Camille Morel", description: "Paysage matinal brumeux dans la réserve naturelle.", url: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=800&q=80", initialLikes: 8, licence: "Payante", price: "30.00 €" },
+  { id: 4, title: "Boké Stories", type: "Vidéo", photographe: "Mateo Fernandez", description: "Séquence dynamique au cœur de l'activité locale.", url: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=800&q=80", initialLikes: 19, licence: "Payante", price: "50.00 €" },
+  { id: 5, title: "Kamsar Industriel", type: "Architecture", photographe: "Élodie Bernard", description: "Lignes géométriques et structures industrielles modernes.", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80", initialLikes: 34, licence: "Libre de droit", price: "Gratuit" },
+  { id: 6, title: "Guinée Créative", type: "Studio", photographe: "Carmen Gomez", description: "Composition artistique en studio avec éclairage recherché.", url: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80", initialLikes: 41, licence: "Payante", price: "40.00 €" }
+];
+
+export default function HomePage({ onRequireLogin }) {
+  const { isLoggedIn } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [likes, setLikes] = useState(() => Object.fromEntries(STOCK_IMAGES.map((img) => [img.id, { count: img.initialLikes, liked: false }])));
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+
+  const toggleLike = (e, id) => {
+    e.stopPropagation();
+    setLikes((prev) => {
+      const current = prev[id];
+      return { ...prev, [id]: { liked: !current.liked, count: current.liked ? current.count - 1 : current.count + 1 } };
+    });
+  };
+
+  // Filtrage des images en fonction de la barre de recherche (titre, type ou nom du photographe)
+  const filteredImages = STOCK_IMAGES.filter((img) => 
+    img.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    img.photographe.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    img.type.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16">
-      <div className="text-center max-w-3xl mx-auto mb-16">
-        <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold tracking-widest uppercase border border-amber-500/20 mb-6">
-          Réseau d'Élite & Agence de Créateurs
-        </span>
-        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6">
-          L'Excellence Visuelle par <span className="text-amber-500">Boké One</span>
-        </h1>
-        <p className="text-slate-300 text-base md:text-lg leading-relaxed mb-10">
-          Plateforme exclusive connectant les créateurs d'images professionnels et les clients à la recherche de prestations haut de gamme en Île-de-France.
-        </p>
-        <div className="flex justify-center gap-4 flex-wrap">
-          <button
-            onClick={() => onNavigate('gallery')}
-            className="px-8 py-4 bg-amber-500 text-slate-950 font-extrabold text-xs uppercase tracking-widest rounded-xl shadow-lg hover:bg-amber-400 transition cursor-pointer"
-          >
-            Explorer les Portfolios
-          </button>
-          <button
-            onClick={() => onNavigate('creatifs')}
-            className="px-8 py-4 bg-slate-900 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl border border-slate-800 hover:bg-slate-800 transition cursor-pointer"
-          >
-            Découvrir l'Annuaire
+    <div className="bg-neutral-950 min-h-screen text-neutral-200">
+      
+      {/* Barre de recherche isolée */}
+      <div className="max-w-6xl mx-auto px-4 pt-8 pb-6 flex justify-center">
+        <div className="w-full max-w-3xl flex items-center bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl overflow-hidden focus-within:border-amber-500/50 transition">
+          <input 
+            type="text" 
+            placeholder="Rechercher des photos, vidéos, créateurs..." 
+            value={searchQuery} 
+            onChange={(e) => setSearchQuery(e.target.value)} 
+            className="w-full bg-transparent px-4 py-3 text-sm text-neutral-100 placeholder-neutral-500 outline-none" 
+          />
+          <button type="button" className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-3 transition flex items-center justify-center">
+            🔍
           </button>
         </div>
       </div>
 
-      {/* Grille des fonctionnalités clés */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-        <div className="p-8 bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-md">
-          <div className="text-amber-500 text-2xl font-black mb-4">01</div>
-          <h3 className="text-xl font-bold text-white mb-2">Portfolios Ciblés</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Parcourez les réalisations artistiques par catégorie et pré-sélectionnez vos coups de cœur pour vos séances.
-          </p>
+      {/* Grille de photos principale avec filigrane */}
+      <div className="max-w-6xl mx-auto px-4 pb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-base sm:text-lg font-bold text-neutral-100 tracking-tight flex items-center gap-2">
+            ✨ Découvertes Tendances <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full">Stock</span>
+          </h2>
         </div>
-        <div className="p-8 bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-md">
-          <div className="text-amber-500 text-2xl font-black mb-4">02</div>
-          <h3 className="text-xl font-bold text-white mb-2">Réseau & Annuaire</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Identifiez et entrez en contact direct avec les créateurs abonnés et les talents validés par l'agence.
-          </p>
-        </div>
-        <div className="p-8 bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-md">
-          <div className="text-amber-500 text-2xl font-black mb-4">03</div>
-          <h3 className="text-xl font-bold text-white mb-2">Espace Pro & CRM</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Un tableau de bord sécurisé gérant les transactions, les commandes et le calcul des commissions de l'agence.
-          </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
+          {filteredImages.map((img) => {
+            const { count, liked } = likes[img.id];
+            return (
+              <div 
+                key={img.id} 
+                onClick={() => setSelectedPhoto(img)}
+                className="group relative rounded-2xl overflow-hidden border border-neutral-900 bg-neutral-900/50 p-2 shadow-md hover:border-amber-500/30 transition cursor-pointer flex flex-col justify-between"
+              >
+                <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-gradient-to-br from-neutral-800 to-neutral-900 relative">
+                  <img src={img.url} alt={img.title} className="h-full w-full object-cover select-none transition duration-500 group-hover:scale-105" />
+                  
+                  {/* FILIGRANE VISIBLE SUR LA MINIATURE */}
+                  <div aria-hidden="true" style={watermarkStyle} className="absolute inset-0 z-10 pointer-events-none select-none opacity-85" />
+                  
+                  <span className="absolute top-2 left-2 z-20 bg-neutral-950/80 border border-neutral-800 backdrop-blur-md text-[10px] font-bold text-amber-400 px-2 py-0.5 rounded-md">{img.type}</span>
+                </div>
+
+                <div className="p-3 flex items-center justify-between gap-2 text-left mt-1">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-neutral-200 truncate">{img.title}</h4>
+                    <p className="text-[11px] text-neutral-400">Par {img.photographe}</p>
+                  </div>
+                  
+                  <button 
+                    type="button" 
+                    onClick={(e) => toggleLike(e, img.id)} 
+                    className={`shrink-0 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${liked ? "bg-amber-500/10 border-amber-500/40 text-amber-400" : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-amber-500/30"}`}
+                  >
+                    <span>{liked ? "❤️" : "🤍"}</span>
+                    <span>{count}</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
+
+      {/* Modale interactive au clic sur une photo */}
+      {selectedPhoto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md" onClick={() => setSelectedPhoto(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-3xl w-full overflow-hidden flex flex-col md:flex-row shadow-2xl">
+            
+            {/* Aperçu grand format avec filigrane prononcé */}
+            <div className="relative md:w-3/5 bg-neutral-950 flex items-center justify-center p-4 min-h-[300px]">
+              <img src={selectedPhoto.url} alt={selectedPhoto.title} className="max-h-[65vh] object-contain rounded-xl select-none" />
+              <div aria-hidden="true" style={watermarkStyle} className="absolute inset-0 z-10 pointer-events-none select-none opacity-90" />
+            </div>
+
+            {/* Panneau de détails & abonnement */}
+            <div className="md:w-2/5 p-6 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded font-bold border border-amber-500/20">
+                    {selectedPhoto.type}
+                  </span>
+                  <button onClick={() => setSelectedPhoto(null)} className="text-neutral-400 hover:text-white font-bold text-lg">✕</button>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-black text-white">{selectedPhoto.title}</h3>
+                  
+                  {/* NOM DU PHOTOGRAPHE CLIQUABLE */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(selectedPhoto.photographe); 
+                      setSelectedPhoto(null); 
+                    }}
+                    className="mt-1 text-xs text-neutral-400 hover:text-amber-400 transition flex items-center gap-1 group text-left cursor-pointer"
+                  >
+                    <span>Photographe :</span>
+                    <span className="font-bold text-amber-400 group-hover:underline">
+                      {selectedPhoto.photographe}
+                    </span>
+                    <span className="text-[10px] text-amber-500 opacity-0 group-hover:opacity-100 transition">voir ses œuvres ➔</span>
+                  </button>
+                </div>
+
+                <p className="text-xs text-neutral-300 leading-relaxed">{selectedPhoto.description}</p>
+              </div>
+
+              {/* Gestion du Prix selon l'abonnement/connexion */}
+              <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-2xl space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-neutral-400 font-medium">Licence :</span>
+                  <span className="text-xs font-bold text-emerald-400">{selectedPhoto.licence}</span>
+                </div>
+
+                <div className="flex justify-between items-center border-t border-neutral-800 pt-3">
+                  <span className="text-xs text-neutral-400 font-medium">Prix :</span>
+                  {isLoggedIn ? (
+                    <span className="text-sm font-black text-amber-400">{selectedPhoto.price}</span>
+                  ) : (
+                    <span className="text-[11px] text-amber-400/90 font-bold bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20 text-center">
+                      🔒 Abonnez-vous pour voir le prix
+                    </span>
+                  )}
+                </div>
+
+                <button 
+                  onClick={() => {
+                    if (!isLoggedIn) { 
+                      onRequireLogin?.(); 
+                    } else { 
+                      alert("Redirection vers le paiement / panier !"); 
+                    }
+                  }}
+                  className="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 py-2.5 rounded-xl font-black text-xs transition shadow"
+                >
+                  {isLoggedIn ? "🛒 Acheter / Télécharger" : "Se connecter pour acheter"}
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -1,195 +1,173 @@
-// src/App.jsx
-import React, { useState, useEffect } from "react";
-import { supabase } from "./lib/supabaseClient"; // Votre client Supabase
+﻿import React, { useState, useCallback, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import ReactGA from "react-ga4";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CartProvider, useCart } from "./context/CartContext";
+
 import HomePage from "./components/HomePage";
-import Gallery from "./components/Gallery";
-import CreatifsPage from "./components/CreatifsPage";
+import CreatorDirectory from "./components/CreatorDirectory";
 import ForumPage from "./components/ForumPage";
 import EspaceMembrePro from "./components/EspaceMembrePro";
+import Abonnes from "./components/Abonnes";
+import Cart from "./components/Cart";
+import Checkout from "./components/Checkout";
 import AuthForm from "./components/AuthForm";
 
-export default function App() {
-  const [currentPage, setCurrentPage] = useState("accueil");
-  const [userProfile, setUserProfile] = useState(null);
-  const [loadingSession, setLoadingSession] = useState(true);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+// 🚀 Initialisation de Google Analytics 4 avec votre ID de mesure
+ReactGA.initialize("G-FVFKNP75BZ");
 
-  // Vérification de la session active Supabase au chargement et écoute des changements
-  useEffect(() => {
-    // 1. Récupérer la session actuelle
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserProfile(session?.user ?? null);
-      setLoadingSession(false);
-    });
+const NAV_LINKS = [
+  { to: "/", label: "Accueil / Stock" },
+  { to: "/creators", label: "Créateurs" },
+  { to: "/forum", label: "Forum" },
+  { to: "/espace-pro", label: "Espace Pro" },
+  { to: "/abonnes", label: "Abonnés" },
+];
 
-    // 2. Écouter les changements de connexion (Login / Logout en temps réel)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserProfile(session?.user ?? null);
-    });
+const isActivePath = (pathname, to) =>
+  to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+function GlobalNavbar({ onOpenAuth }) {
+  const { cart } = useCart();
+  const { isLoggedIn } = useAuth();
+  const { pathname } = useLocation();
+  const [currentLang, setCurrentLang] = useState("FR");
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUserProfile(null);
-    setCurrentPage("accueil");
-  };
+  const tabClass = (to) =>
+    `whitespace-nowrap rounded-xl border px-3.5 py-2 text-sm font-medium transition ${
+      isActivePath(pathname, to)
+        ? "bg-amber-500/10 border-amber-500/30 text-amber-400 font-bold"
+        : "border-transparent text-neutral-200 hover:text-amber-400 hover:bg-neutral-900"
+    }`;
 
-  if (loadingSession) {
-    return (
-      <div className="min-h-screen bg-[#070b12] text-amber-400 flex items-center justify-center font-mono text-xs">
-        ⚡ Connexion à l'écosystème BOKÉ ONE...
-      </div>
-    );
-  }
+  const cartIsActive = isActivePath(pathname, "/cart");
+  const cartBtnClass = `relative border px-3.5 py-2 rounded-xl text-sm flex items-center gap-1.5 transition ${
+    cartIsActive
+      ? "bg-amber-500/10 border-amber-500/40 text-amber-400 font-bold shadow-sm"
+      : "bg-neutral-900 border-neutral-800 text-neutral-200 hover:border-amber-500/30"
+  }`;
 
   return (
-    <div className="min-h-screen bg-[#070b12] text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
-      
-      {/* HEADER / NAVIGATION PRINCIPALE */}
-      <header className="sticky top-0 z-40 bg-[#070b12]/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3 flex items-center justify-between">
+    <nav className="bg-neutral-950/95 border-b border-neutral-900 px-4 py-3.5 text-neutral-200 sticky top-0 z-40 backdrop-blur-md">
+      <div className="mx-auto max-w-7xl flex items-center justify-between gap-4">
         
-        {/* Logo / Marque */}
-        <div 
-          onClick={() => setCurrentPage("accueil")}
-          className="flex items-center gap-3 cursor-pointer group"
-        >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-black text-slate-950 shadow-lg group-hover:scale-105 transition-transform">
-            BK
-          </div>
-          <div>
-            <h1 className="text-sm font-black tracking-wider text-white">BOKÉ ONE</h1>
-            <p className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">Creators Connected</p>
-          </div>
+        {/* 1. À gauche : Logo + Slogan */}
+        <div className="flex items-center gap-3 shrink-0">
+          <Link to="/" className="flex flex-col items-start group">
+            <img src="/logo1-output.png" alt="Boké One" className="h-8 sm:h-9 w-auto object-contain" />
+            <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-neutral-400 mt-0.5">
+              RESEAU D'ELITE & BANQUE D'IMAGES NATIONALE
+            </span>
+          </Link>
         </div>
 
-        {/* Menu de Navigation Central */}
-        <nav className="hidden md:flex items-center gap-2 bg-[#0e1424] p-1.5 rounded-2xl border border-slate-800">
-          <button
-            onClick={() => setCurrentPage("accueil")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              currentPage === "accueil" ? "bg-amber-500 text-slate-950 shadow-md" : "text-slate-400 hover:text-white hover:bg-slate-800/40"
-            }`}
-          >
-            🏠 Accueil
-          </button>
-          
-          <button
-            onClick={() => setCurrentPage("portfolios")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              currentPage === "portfolios" ? "bg-amber-500 text-slate-950 shadow-md" : "text-slate-400 hover:text-white hover:bg-slate-800/40"
-            }`}
-          >
-            🖼️️ Portfolios
-          </button>
-
-          <button
-            onClick={() => setCurrentPage("annuaire")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              currentPage === "annuaire" ? "bg-amber-500 text-slate-950 shadow-md" : "text-slate-400 hover:text-white hover:bg-slate-800/40"
-            }`}
-          >
-            📖 Annuaire
-          </button>
-
-          <button
-            onClick={() => setCurrentPage("forum")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              currentPage === "forum" ? "bg-amber-500 text-slate-950 shadow-md" : "text-slate-400 hover:text-white hover:bg-slate-800/40"
-            }`}
-          >
-            💬 Forum
-          </button>
-
-          {/* ESPACE PRO : Visible UNIQUEMENT si l'utilisateur est authentifié via Supabase */}
-          {userProfile && (
-            <button
-              onClick={() => setCurrentPage("espace-pro")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                currentPage === "espace-pro" ? "bg-amber-500 text-slate-950 shadow-md" : "text-amber-400 hover:bg-amber-500/10 border border-amber-500/20"
-              }`}
-            >
-              <span>💎 Espace Pro Dashboard</span>
-            </button>
-          )}
-        </nav>
-
-        {/* Boutons Droite */}
-        <div className="flex items-center gap-3">
-          {userProfile ? (
-            <div className="flex items-center gap-3 bg-[#0e1424] border border-slate-800 px-3 py-1.5 rounded-xl">
-              <span className="text-xs font-bold text-slate-200 truncate max-w-[150px]">👤 {userProfile.email}</span>
-              <button 
-                onClick={handleLogout}
-                className="text-[11px] font-bold text-rose-400 hover:text-rose-300 cursor-pointer bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-500/20 transition-colors"
-              >
-                Déconnexion
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setAuthModalOpen(true)}
-              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl shadow-lg transition-colors cursor-pointer"
-            >
-              🔑 Connexion Espace Pro
-            </button>
-          )}
+        {/* 2. Au centre : Onglets de navigation */}
+        <div className="hidden lg:flex items-center gap-2">
+          {NAV_LINKS.map((l) => (
+            <Link key={l.to} to={l.to} className={tabClass(l.to)} aria-current={isActivePath(pathname, l.to) ? "page" : undefined}>
+              {l.label}
+            </Link>
+          ))}
         </div>
-      </header>
 
-      {/* CONTENU PRINCIPAL */}
-      <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
-        {currentPage === "accueil" && <HomePage onNavigate={setCurrentPage} />}
-        {currentPage === "portfolios" && <Gallery userProfile={userProfile} />}
-        {currentPage === "annuaire" && <CreatifsPage userProfile={userProfile} />}
-        {currentPage === "forum" && <ForumPage userProfile={userProfile} />}
-        
-        {currentPage === "espace-pro" && (
-          userProfile ? (
-            <EspaceMembrePro userProfile={userProfile} />
+        {/* 3. À droite : Langue, Panier, Connexion */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button 
+            onClick={() => setCurrentLang((l) => (l === "FR" ? "EN" : "FR"))} 
+            className="text-xs font-bold border border-neutral-800 bg-neutral-900 px-3 py-2 rounded-xl hover:border-amber-400/40 transition text-amber-400 flex items-center gap-1.5"
+          >
+            {currentLang === "FR" ? "🇫🇷 FR" : "🇬🇧 EN"}
+          </button>
+
+          <Link to="/cart" className={cartBtnClass} aria-current={cartIsActive ? "page" : undefined}>
+            <span>🛒</span>
+            <span className="hidden sm:inline font-medium">Panier</span>
+            {cart.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-neutral-950 text-[10px] font-black rounded-full h-5 w-5 flex items-center justify-center">
+                {cart.length}
+              </span>
+            )}
+          </Link>
+
+          {isLoggedIn ? (
+            <Link
+              to="/abonnes"
+              className="border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-500/20 flex items-center gap-2 transition hover:bg-emerald-500/20"
+            >
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Connecté
+            </Link>
           ) : (
-            <div className="text-center py-20 space-y-4">
-              <p className="text-3xl">🔒</p>
-              <h2 className="text-lg font-bold text-white">Accès restreint à l'Espace Pro</h2>
-              <p className="text-xs text-slate-400">Veuillez vous connecter via Supabase pour accéder à votre tableau de bord.</p>
-              <button 
-                onClick={() => setAuthModalOpen(true)}
-                className="px-5 py-2.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer"
-              >
-                Se connecter
-              </button>
-            </div>
-          )
-        )}
-      </main>
-
-      {/* MODAL DE CONNEXION */}
-      {authModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0e1424] border border-slate-800 w-full max-w-md rounded-2xl p-6 relative shadow-2xl">
             <button 
-              onClick={() => setAuthModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold cursor-pointer"
+              onClick={onOpenAuth} 
+              className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-sm font-bold text-neutral-950 shadow-md hover:brightness-110 transition"
             >
-              ✕
+              Connexion
             </button>
-            <AuthForm 
-              onLoginSuccess={() => {
-                setAuthModalOpen(false);
-                setCurrentPage("espace-pro");
-              }} 
-            />
+          )}
+        </div>
+      </div>
+
+      {/* Navigation mobile */}
+      <div className="lg:hidden mx-auto max-w-7xl mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {NAV_LINKS.map((l) => (
+          <Link key={l.to} to={l.to} className={tabClass(l.to)} aria-current={isActivePath(pathname, l.to) ? "page" : undefined}>
+            {l.label}
+          </Link>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function AppShell() {
+  const { isLoggedIn } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const location = useLocation();
+
+  // 📊 Enregistre automatiquement chaque changement de page dans Google Analytics
+  useEffect(() => {
+    ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
+  }, [location]);
+
+  const openAuth = useCallback(() => setShowAuthModal(true), []);
+  const closeAuth = useCallback(() => setShowAuthModal(false), []);
+
+  useEffect(() => { if (isLoggedIn) setShowAuthModal(false); }, [isLoggedIn]);
+
+  return (
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans">
+      <GlobalNavbar onOpenAuth={openAuth} />
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
+          <Route path="/creators" element={<CreatorDirectory />} />
+          <Route path="/forum" element={<ForumPage onRequireLogin={openAuth} />} />
+          <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
+          <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+        </Routes>
+      </main>
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={closeAuth}>
+          <div onClick={(e) => e.stopPropagation()} className="max-h-full w-full max-w-md overflow-y-auto">
+            <AuthForm onAuthSuccess={closeAuth} onClose={closeAuth} />
           </div>
         </div>
       )}
-
-      {/* FOOTER */}
-      <footer className="border-t border-slate-800/80 py-6 px-4 text-center text-xs text-slate-500">
-        <p>© 2026 BOKÉ ONE — Propulsé par Supabase. Tous droits réservés.</p>
-      </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <AppShell />
+        </Router>
+      </CartProvider>
+    </AuthProvider>
   );
 }
