@@ -7,6 +7,7 @@ export default function ForumPage({ onRequireLogin }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("Général");
@@ -14,7 +15,7 @@ export default function ForumPage({ onRequireLogin }) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [replies, setReplies] = useState([]);
   const [replyText, setReplyText] = useState("");
-  const [onlineCount, setOnlineCount] = useState(14);
+  const [onlineCount, setOnlineCount] = useState(15);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -71,6 +72,11 @@ export default function ForumPage({ onRequireLogin }) {
       return; 
     }
 
+    if (title.length > 100) {
+      alert("Le titre est trop long (maximum 100 caractères).");
+      return;
+    }
+
     const { error } = await supabase.from("forum_posts").insert([{ 
       title, 
       content, 
@@ -110,6 +116,41 @@ export default function ForumPage({ onRequireLogin }) {
     }
   };
 
+  // Fonction pour détecter et rendre cliquables les liens / intégrer des images ou vidéos YouTube basiques
+  const renderFormattedContent = (text) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        // Détection YouTube
+        if (part.includes("youtube.com") || part.includes("youtu.be")) {
+          return (
+            <div key={index} className="my-2 p-2 bg-neutral-900 border border-neutral-800 rounded-xl text-xs text-amber-400">
+              📺 Vidéo partagée : <a href={part} target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-300 break-all">{part}</a>
+            </div>
+          );
+        }
+        // Détection Image directe
+        if (part.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+          return (
+            <div key={index} className="my-2">
+              <img src={part} alt="Contenu externe" className="max-h-60 rounded-xl object-contain border border-neutral-800" />
+            </div>
+          );
+        }
+        // Lien classique
+        return (
+          <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-amber-400 underline hover:text-amber-300 break-all">
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 text-neutral-200 font-sans">
       
@@ -121,7 +162,7 @@ export default function ForumPage({ onRequireLogin }) {
           </h2>
           <p className="text-xs text-neutral-400 mt-1 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-emerald-400 font-bold">{onlineCount} membres</span> en ligne actuellement. Espace d'échanges et de présentation.
+            <span className="text-emerald-400 font-bold">{onlineCount} membres</span> en ligne actuellement. Partagez vos liens et vos projets.
           </p>
         </div>
 
@@ -142,16 +183,25 @@ export default function ForumPage({ onRequireLogin }) {
       {/* Formulaire de création de sujet */}
       {showForm && isLoggedIn && (
         <form onSubmit={handleCreatePost} className="bg-neutral-900/90 border border-neutral-700 p-5 rounded-2xl space-y-4 mb-8 shadow-xl">
-          <h3 className="text-sm font-bold text-amber-400">Créer une nouvelle discussion</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-bold text-amber-400">Créer une nouvelle discussion</h3>
+            <span className="text-[10px] text-neutral-400">Pas d'upload direct d'images • Liens web & YouTube acceptés</span>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input 
-              type="text" 
-              placeholder="Titre de la discussion (ex: Présentation / Matériel)" 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-              className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500 sm:col-span-2" 
-              required 
-            />
+            <div className="sm:col-span-2 relative">
+              <input 
+                type="text" 
+                placeholder="Titre de la discussion" 
+                value={title} 
+                maxLength={100}
+                onChange={(e) => setTitle(e.target.value)} 
+                className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500" 
+                required 
+              />
+              <span className="absolute right-3 bottom-2.5 text-[10px] text-neutral-500">{title.length}/100</span>
+            </div>
+
             <select 
               value={category} 
               onChange={(e) => setCategory(e.target.value)}
@@ -164,14 +214,20 @@ export default function ForumPage({ onRequireLogin }) {
               <option value="Annonces">📢 Annonces</option>
             </select>
           </div>
-          <textarea 
-            placeholder="Exprimez-vous ici (pas de publicité abusive, entraide et partage avant tout)..." 
-            value={content} 
-            onChange={(e) => setContent(e.target.value)} 
-            rows={4} 
-            className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500" 
-            required 
-          />
+
+          <div className="relative">
+            <textarea 
+              placeholder="Exprimez-vous ici... Vous pouvez coller des liens web ou des vidéos YouTube." 
+              value={content} 
+              maxLength={1000}
+              onChange={(e) => setContent(e.target.value)} 
+              rows={4} 
+              className="w-full bg-neutral-950 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500" 
+              required 
+            />
+            <span className="absolute right-3 bottom-3 text-[10px] text-neutral-500">{content.length}/1000</span>
+          </div>
+
           <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 py-3 rounded-xl font-black text-xs transition">
             🚀 Publier le sujet
           </button>
@@ -184,7 +240,7 @@ export default function ForumPage({ onRequireLogin }) {
           <div className="col-span-6">Sujets / Catégories</div>
           <div className="col-span-2 text-center">Type</div>
           <div className="col-span-2 text-center">Auteur</div>
-          <div className="col-span-2 text-right">Date</div>
+          <div className="col-span-2 text-right">Date & Heure</div>
         </div>
 
         {loading ? (
@@ -223,8 +279,8 @@ export default function ForumPage({ onRequireLogin }) {
                 <div className="hidden sm:block sm:col-span-2 text-center text-xs text-amber-400/90 font-medium truncate px-2">
                   {post.user_name || "Anonyme"}
                 </div>
-                <div className="sm:col-span-2 text-left sm:text-right text-[11px] text-neutral-500">
-                  {new Date(post.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })}
+                <div className="sm:col-span-2 text-left sm:text-right text-[11px] text-neutral-400 font-medium">
+                  {new Date(post.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })} à {new Date(post.created_at).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             ))}
@@ -251,9 +307,11 @@ export default function ForumPage({ onRequireLogin }) {
               <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-2xl space-y-2">
                 <div className="flex justify-between items-center text-xs text-neutral-400 border-b border-neutral-800/60 pb-2">
                   <span className="text-amber-400 font-bold">👤 {selectedPost.user_name || "Membre"}</span>
-                  <span>{new Date(selectedPost.created_at).toLocaleString("fr-FR")}</span>
+                  <span>{new Date(selectedPost.created_at).toLocaleDateString("fr-FR")} à {new Date(selectedPost.created_at).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
-                <p className="text-sm text-neutral-200 whitespace-pre-line pt-1">{selectedPost.content}</p>
+                <div className="text-sm text-neutral-200 whitespace-pre-line pt-1 leading-relaxed">
+                  {renderFormattedContent(selectedPost.content)}
+                </div>
               </div>
 
               {replies.length > 0 && (
@@ -263,9 +321,11 @@ export default function ForumPage({ onRequireLogin }) {
                     <div key={reply.id} className="bg-neutral-900/90 border border-neutral-800/80 p-4 rounded-2xl space-y-2 ml-4 sm:ml-8">
                       <div className="flex justify-between items-center text-xs text-neutral-400 border-b border-neutral-800 pb-2">
                         <span className="text-emerald-400 font-bold">💬 {reply.user_name || "Membre"}</span>
-                        <span>{new Date(reply.created_at).toLocaleString("fr-FR")}</span>
+                        <span>{new Date(reply.created_at).toLocaleDateString("fr-FR")} à {new Date(reply.created_at).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                      <p className="text-xs text-neutral-300 whitespace-pre-line pt-1">{reply.content}</p>
+                      <div className="text-xs text-neutral-300 whitespace-pre-line pt-1 leading-relaxed">
+                        {renderFormattedContent(reply.content)}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -274,14 +334,19 @@ export default function ForumPage({ onRequireLogin }) {
 
             {/* Formulaire de réponse */}
             <form onSubmit={handleSendReply} className="bg-neutral-950 border-t border-neutral-800 p-4 space-y-3">
-              <textarea 
-                placeholder={isLoggedIn ? "Écrivez votre réponse..." : "Connectez-vous ou abonnez-vous pour participer à la discussion..."} 
-                value={replyText} 
-                onChange={(e) => setReplyText(e.target.value)} 
-                rows={2} 
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-neutral-200 outline-none focus:border-amber-500" 
-                required 
-              />
+              <div className="relative">
+                <textarea 
+                  placeholder={isLoggedIn ? "Écrivez votre réponse (liens YouTube ou images acceptés)..." : "Connectez-vous ou abonnez-vous pour participer à la discussion..."} 
+                  value={replyText} 
+                  maxLength={500}
+                  onChange={(e) => setReplyText(e.target.value)} 
+                  rows={2} 
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-neutral-200 outline-none focus:border-amber-500" 
+                  required 
+                />
+                <span className="absolute right-3 bottom-3 text-[10px] text-neutral-500">{replyText.length}/500</span>
+              </div>
+
               <button 
                 type="submit" 
                 onClick={(e) => {
