@@ -4,7 +4,6 @@ import { formatPrice } from "../lib/formatPrice";
 export default function EspaceMembrePro({ userSession, onRequireLogin }) {
   const [activeTab, setActiveTab] = useState("notionLive");
   const [simulationAmount, setSimulationAmount] = useState(250);
-  const [uploadMessage, setUploadMessage] = useState("");
   const fileInputRef = useRef(null);
   
   const [activeLeadId, setActiveLeadId] = useState(1);
@@ -25,8 +24,11 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
 
   const notionPageUrl = "https://brindle-baboon-751.notion.site/3f29868fa534809eaefadbd7532ef348?v=3f29868fa53480d6bd9e000c633bdf4f&pvs=73";
 
+  // Mode contournement pour les tests locaux si userSession n'est pas encore lié
+  const isBypassedForTest = true; 
+
   // 🔒 ÉCRAN DE VERROUILLAGE SI NON CONNECTÉ
-  if (!userSession) {
+  if (!userSession && !isBypassedForTest) {
     return (
       <div className="mx-auto w-full max-w-4xl bg-neutral-950 p-8 text-neutral-200 min-h-[70vh] flex flex-col items-center justify-center text-center font-sans">
         <div className="bg-neutral-900 border-2 border-amber-500/40 p-8 rounded-3xl shadow-2xl max-w-lg space-y-6">
@@ -53,16 +55,6 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
       </div>
     );
   }
-
-  const calculateCommission = (amount) => {
-    const val = parseFloat(amount) || 0;
-    const rate = val <= 100 ? 0.15 : 0.20;
-    const fee = val * rate;
-    const net = val - fee;
-    return { commissionRate: rate * 100, commissionFee: fee, netCreator: net };
-  };
-
-  const { commissionRate, commissionFee, netCreator } = calculateCommission(simulationAmount);
 
   const [mockLeads, setMockLeads] = useState([
     {
@@ -111,7 +103,7 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
     setMockLeads(mockLeads.map(l => l.id === leadId ? { ...l, depositPaid: !l.depositPaid } : l));
   };
 
-  // 📄 FONCTION DE GÉNÉRATION ET TÉLÉCHARGEMENT DU PDF / DOCUMENT OFFICIEL
+  // Génération et téléchargement du document PDF/texte officiel
   const handleDownloadPDF = () => {
     const invoiceContent = `
 =========================================
