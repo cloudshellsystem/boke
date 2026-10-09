@@ -22,7 +22,9 @@
 }
 
 @layer base {
-  body {
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
     background-color: #030712;
     color: #f3f4f6;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;

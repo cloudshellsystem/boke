@@ -15,7 +15,7 @@ export default function CGUPage() {
         <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl space-y-3">
           <h2 className="text-base font-bold text-amber-400">1. Présentation de la Structure & Édition</h2>
           <p>
-            La plateforme <strong>BOKÉ ONE</strong> (réseau d'élite et banque d'images nationale) est actuellement opérée sous un format d'association à vocation communautaire et culturelle, en transition programmée vers une structure de répartition de droits d'auteur et de prestations.
+            La plateforme <strong>BOKÉ ONE</strong> (réseau d'élite et banque d'images nationale) est éditée et opérée sous le numéro <strong>SIRET : 882 507 643 00022</strong> (SIREN : 882 507 643), dédiée aux prestations artistiques, aux cessions de droits d'auteur et à la mise en relation professionnelle.
           </p>
           <p className="text-neutral-400">
             <strong>Siège administratif & de coordination :</strong> Avenue Louise, 1050 Bruxelles, Belgique.

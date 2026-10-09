@@ -9,7 +9,7 @@ export default function Footer({ onNavigate }) {
         <div className="space-y-1 text-center md:text-left">
           <h3 className="text-xs font-black text-amber-400 tracking-wider uppercase">BOKÉ ONE</h3>
           <p className="text-[11px] text-neutral-400">
-            Association en transition • Avenue Louise, 1050 Bruxelles, Belgique.
+            SIRET : 882 507 643 00022 • Avenue Louise, 1050 Bruxelles, Belgique.
           </p>
         </div>
 

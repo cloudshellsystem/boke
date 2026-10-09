@@ -34,7 +34,7 @@ export default function HomePage({ onRequireLogin }) {
   };
 
   // Filtrage des images en fonction de la barre de recherche (titre, type ou nom du photographe)
-  const filteredImages = STOCK_IMAGES.filter((img) => 
+  const filteredImages = STOCK_IMAGES.filter((img) =>  
     img.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     img.photographe.toLowerCase().includes(searchQuery.toLowerCase()) ||
     img.type.toLowerCase().includes(searchQuery.toLowerCase())
@@ -44,7 +44,7 @@ export default function HomePage({ onRequireLogin }) {
     <div className="bg-neutral-950 min-h-screen text-neutral-200">
       
       {/* Barre de recherche isolée */}
-      <div className="max-w-6xl mx-auto px-4 pt-8 pb-6 flex justify-center">
+      <div className="max-w-6xl mx-auto px-4 pt-8 pb-4 flex justify-center">
         <div className="w-full max-w-3xl flex items-center bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl overflow-hidden focus-within:border-amber-500/50 transition">
           <input 
             type="text" 
@@ -56,6 +56,69 @@ export default function HomePage({ onRequireLogin }) {
           <button type="button" className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-3 transition flex items-center justify-center">
             🔍
           </button>
+        </div>
+      </div>
+
+      {/* NOUVELLE SECTION : ACTUALITÉS & ÉVÉNEMENTS (Visibles en accès libre pour attirer les prospects) */}
+      <div className="max-w-6xl mx-auto px-4 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Carte Événement / Salon */}
+          <div className="bg-neutral-900/40 border border-neutral-900 rounded-2xl p-5 flex flex-col justify-between hover:border-amber-500/30 transition">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20 uppercase">
+                  🔥 Événement & Salon IDF
+                </span>
+                <span className="text-[11px] text-neutral-400">Ce week-end</span>
+              </div>
+              <h4 className="text-sm font-bold text-neutral-100 mb-1">Boké One en direct sur le terrain</h4>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Rencontrez nos dronistes, photographes immobiliers et créateurs partenaires. Démonstrations et networking au rendez-vous.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-neutral-900 flex justify-between items-center">
+              <span className="text-[11px] text-amber-400 font-semibold">Accès libre & partenaires</span>
+              <button 
+                onClick={() => alert("Retrouvez-nous sur notre stand ce dimanche pour échanger sur vos projets !")}
+                className="text-xs text-neutral-300 hover:text-amber-400 font-bold transition flex items-center gap-1"
+              >
+                En savoir plus ➔
+              </button>
+            </div>
+          </div>
+
+          {/* Carte Annonce / Mission Exclusive */}
+          <div className="bg-neutral-900/40 border border-neutral-900 rounded-2xl p-5 flex flex-col justify-between hover:border-amber-500/30 transition">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20 uppercase">
+                  📢 Mission Validée (IDF)
+                </span>
+                <span className="text-[11px] text-neutral-400">Posté récemment</span>
+              </div>
+              <h4 className="text-sm font-bold text-neutral-100 mb-1">Reportage architectural & Droniste - Paris 16e</h4>
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Recherche photographe immobilier et opérateur drone accrédité pour la valorisation d'un bien d'exception.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-neutral-900 flex justify-between items-center">
+              <span className="text-[11px] text-emerald-400 font-semibold">Budget sécurisé (SIRET)</span>
+              <button 
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    onRequireLogin?.();
+                  } else {
+                    alert("Redirection vers les détails de la mission exclusive !");
+                  }
+                }}
+                className="text-xs text-neutral-300 hover:text-amber-400 font-bold transition flex items-center gap-1"
+              >
+                {isLoggedIn ? "Voir l'offre ➔" : "🔒 Espace Abonnés ➔"}
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
 

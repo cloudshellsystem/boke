@@ -1,13 +1,28 @@
 import React, { useState } from "react";
-import { supabase } from "../supabaseClient"; // ⚠️ ASSOMPTION structure - vérifie ce chemin si ton arbo diffère
+import { supabase } from "../supabaseClient";
 
 export default function UploadForm({ onUploaded }) {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [price, setPrice] = useState("");
+  const [specialty, setSpecialty] = useState("Photographe corporate / Portrait");
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
+
+  // Liste des spécialités professionnelles
+  const specialtyOptions = [
+    "Photographe corporate / Portrait",
+    "Photographe immobilier",
+    "Droniste / Pilote de drone",
+    "Assistant photographe",
+    "Régisseur photo",
+    "Graphiste",
+    "Opérateur prise de vue",
+    "Technicien laboratoire photo",
+    "Reporter / Événementiel",
+    "Réalisation de contenu"
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,13 +65,20 @@ export default function UploadForm({ onUploaded }) {
         title: title,
         author: author || "Créateur Boke One",
         price: price ? `${price} €` : "Sur demande",
+        specialty: specialty,
         image_url: imageUrl,
         likes: 0
       };
 
       await supabase
         .from("photos")
-        .insert([{ image_url: imageUrl }])
+        .insert([{ 
+          title: title,
+          author: author || "Créateur Boke One",
+          price: price ? `${price} €` : "Sur demande",
+          specialty: specialty,
+          image_url: imageUrl 
+        }])
         .select();
 
       onUploaded(newPhoto);
@@ -66,6 +88,7 @@ export default function UploadForm({ onUploaded }) {
       setTitle("");
       setAuthor("");
       setPrice("");
+      setSpecialty("Photographe corporate / Portrait");
       setFile(null);
       alert("✨ Œuvre publiée et sécurisée avec succès sur Boke One !");
     } catch (error) {
@@ -82,7 +105,7 @@ export default function UploadForm({ onUploaded }) {
         ⚡ Publication rapide d'une nouvelle œuvre (Sécurisée)
       </h3>
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "10px", alignItems: "center" }}>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px", alignItems: "center" }}>
         <input
           type="text"
           placeholder="Votre Nom / Pseudo"
@@ -97,6 +120,15 @@ export default function UploadForm({ onUploaded }) {
           onChange={(e) => setTitle(e.target.value)}
           style={{ padding: "8px 12px", borderRadius: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "13px" }}
         />
+        <select
+          value={specialty}
+          onChange={(e) => setSpecialty(e.target.value)}
+          style={{ padding: "8px 12px", borderRadius: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "13px" }}
+        >
+          {specialtyOptions.map((spec) => (
+            <option key={spec} value={spec}>{spec}</option>
+          ))}
+        </select>
         <input
           type="text"
           placeholder="Prix (ex: 150)"
@@ -113,7 +145,7 @@ export default function UploadForm({ onUploaded }) {
         <button
           type="submit"
           disabled={loading}
-          style={{ background: "#06b6d4", color: "#020617", border: "none", padding: "9px 15px", borderRadius: "8px", fontWeight: "bold", fontSize: "13px", cursor: "pointer" }}
+          style={{ background: "#06b6d4", color: "#020617", border: "none", padding: "9px 15px", borderRadius: "8px", fontWeight: "bold", fontSize: "13px", cursor: "pointer", gridColumn: "1 / -1" }}
         >
           {loading ? "Publication..." : "🚀 Publier"}
         </button>

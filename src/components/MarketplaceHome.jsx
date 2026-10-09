@@ -77,13 +77,13 @@ export default function MarketplaceHome() {
   return (
     <div style={{ color: "white", padding: "20px", maxWidth: "1000px", margin: "0 auto", fontFamily: "system-ui, sans-serif" }}>
       
-      {/* 1. HERO SECTION : L'ACCENT SUR LA RÉSOLUTION DE PROBLÈME IMMÉDIAT */}
+      {/* 1. HERO SECTION : L'ACCENT SUR LA RÉSOLUTION DE PROBLÈMES */}
       <div style={{ textAlign: "center", padding: "40px 20px", background: "linear-gradient(135deg, #0b1329 0%, #0f172a 100%)", borderRadius: "12px", border: "1px solid #1e293b", marginBottom: "30px", boxShadow: "0 8px 25px rgba(0,0,0,0.4)" }}>
         <h1 style={{ fontSize: "28px", marginBottom: "12px", color: "#f8fafc", fontWeight: "700" }}>
           Trouvez le bon créatif en Île-de-France, instantanément.
         </h1>
         <p style={{ color: "#94a3b8", fontSize: "15px", maxWidth: "600px", margin: "0 auto 20px auto", lineHeight: "1.5" }}>
-          Entreprises, associations, particuliers : exprimez votre besoin créatif ou consultez les missions locales en cours. Le cœur de Boke One, c'est la mise en relation réussie.
+          Entreprises, professionnels, particuliers : exprimez votre besoin créatif ou consultez les missions locales en cours. Le cœur de Boke One, c'est la mise en relation réussie.
         </p>
         
         {/* SÉLECTEUR D'ACTION PRINCIPAL (ONGLETS MVP) */}
@@ -121,6 +121,21 @@ export default function MarketplaceHome() {
         </div>
       </div>
 
+      {/* SECTION STORYTELLING / NOTRE VISION */}
+      <div style={{ background: "#0f172a", border: "1px solid #1e293b", padding: "30px", borderRadius: "12px", marginBottom: "30px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
+        <h3 style={{ fontSize: "20px", color: "#f59e0b", marginBottom: "15px", fontWeight: "bold" }}>
+          ⚡ Pourquoi BOKÉ ONE est né ?
+        </h3>
+        <div style={{ color: "#cbd5e1", fontSize: "14px", lineHeight: "1.6" }}>
+          <p style={{ marginBottom: "12px" }}>
+            Né d'une volonté de casser les barrières du milieu artistique et institutionnel en Île-de-France, <strong>BOKÉ ONE</strong> part d'un constat simple : la mise en relation entre créateurs d'élite (photographes, vidéastes, modèles) et professionnels ou particuliers à la recherche de prestations haut de gamme manquait de fluidité et de transparence.
+          </p>
+          <p style={{ margin: 0 }}>
+            Fini les intermédiaires opaques. Nous structurons un réseau d'excellence entièrement orienté vers la performance, la clarté juridique (SIRET) et l'efficacité sur le terrain. Une alternative moderne pensée pour ceux qui veulent du concret.
+          </p>
+        </div>
+      </div>
+
       {/* MESSAGE DE SUCCÈS */}
       {successMsg && (
         <div style={{ background: "#065f46", color: "#d1fae5", padding: "15px", borderRadius: "8px", marginBottom: "25px", textAlign: "center", fontWeight: "bold", border: "1px solid #059669" }}>
@@ -128,7 +143,7 @@ export default function MarketplaceHome() {
         </div>
       )}
 
-      {/* 2. VUE 1 : FORMULAIRE DE DÉPÔT DE BESOIN (Le tunnel de conversion) */}
+      {/* 2. VUE 1 : FORMULAIRE DE DÉPÔT DE BESOIN */}
       {activeTab === "demander" && (
         <div style={{ background: "#0f172a", border: "1px solid #1e293b", padding: "30px", borderRadius: "12px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
           <div style={{ marginBottom: "20px" }}>
@@ -229,7 +244,7 @@ export default function MarketplaceHome() {
         </div>
       )}
 
-      {/* 3. VUE 2 : CONSULTATION DES DEMANDES (Le flux type marketplace/AlloVoisins) */}
+      {/* 3. VUE 2 : CONSULTATION DES DEMANDES */}
       {activeTab === "trouver" && (
         <div>
           {/* Barre de filtrage par catégorie */}
