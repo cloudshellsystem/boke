@@ -43,7 +43,7 @@ export default function HomePage({ onRequireLogin }) {
   );
 
   return (
-    <div className="bg-neutral-950 min-h-screen text-neutral-200">
+    <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans">
       
       {/* Barre de recherche isolée */}
       <div className="max-w-6xl mx-auto px-4 pt-8 pb-4 flex justify-center">
@@ -55,7 +55,7 @@ export default function HomePage({ onRequireLogin }) {
             onChange={(e) => setSearchQuery(e.target.value)} 
             className="w-full bg-transparent px-4 py-3 text-sm text-neutral-100 placeholder-neutral-500 outline-none" 
           />
-          <button type="button" className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-3 transition flex items-center justify-center">
+          <button type="button" className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-3 transition flex items-center justify-center font-bold">
             🔍
           </button>
         </div>
@@ -86,7 +86,7 @@ export default function HomePage({ onRequireLogin }) {
                   title: "Boké One au Salon de la Photo – Grande Halle de la Villette",
                   location: "Grande Halle de la Villette, Paris",
                   date: "Ce week-end",
-                  image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
+                  image: "https://media.istockphoto.com/id/1256309402/fr/photo/la-grande-halle-de-la-villette-%C3%A0-paris-france.jpg?s=612x612&w=0&k=20&c=EDEWj9PLx88V4pmPbjCEI0MYTZvxuNs1_G8Dhk-0QAc=",
                   description: "L'équipe Boké One fait le tour du salon ! Retrouvez nos représentants, nos pilotes de drone accrédités, photographes immobiliers et régisseurs sur le terrain. C'est l'occasion idéale de venir échanger directement avec nous, découvrir le réseau d'élite, discuter de vos projets audiovisuels ou concrétiser votre inscription."
                 })}
                 className="text-xs text-neutral-300 hover:text-amber-400 font-bold transition flex items-center gap-1 cursor-pointer"
@@ -134,7 +134,7 @@ export default function HomePage({ onRequireLogin }) {
       <div className="max-w-6xl mx-auto px-4 pb-16">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-base sm:text-lg font-bold text-neutral-100 tracking-tight flex items-center gap-2">
-            ✨ Découvertes Tendances <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full">Stock</span>
+            ✨ Découvertes Tendances <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full font-semibold">Stock</span>
           </h2>
         </div>
 
@@ -174,14 +174,14 @@ export default function HomePage({ onRequireLogin }) {
         </div>
       </div>
 
-      {/* POP-UP ÉVÉNEMENT : LA HALLE DE LA VILLETTE & BOKÉ ONE */}
+      {/* POP-UP ÉVÉNEMENT : LA GRANDE HALLE DE LA VILLETTE & BOKÉ ONE */}
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md" onClick={() => setSelectedEvent(null)}>
           <div onClick={(e) => e.stopPropagation()} className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col">
             
             {/* Visuel Grande Halle de la Villette */}
-            <div className="relative h-60 w-full overflow-hidden bg-neutral-950">
-              <img src={selectedEvent.image} alt="Halle de la Villette" className="w-full h-full object-cover" />
+            <div className="relative h-64 w-full overflow-hidden bg-neutral-950">
+              <img src={selectedEvent.image} alt="Grande Halle de la Villette" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
               <button onClick={() => setSelectedEvent(null)} className="absolute top-4 right-4 bg-neutral-950/80 hover:bg-neutral-800 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-base transition border border-neutral-800">✕</button>
               
@@ -189,7 +189,7 @@ export default function HomePage({ onRequireLogin }) {
                 <span className="text-[10px] font-bold text-amber-400 bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-full uppercase">
                   📍 {selectedEvent.location}
                 </span>
-                <h3 className="text-xl font-black text-white mt-2 leading-snug">{selectedEvent.title}</h3>
+                <h3 className="text-xl sm:text-2xl font-black text-white mt-2 leading-snug">{selectedEvent.title}</h3>
               </div>
             </div>
 
@@ -199,14 +199,14 @@ export default function HomePage({ onRequireLogin }) {
                 {selectedEvent.description}
               </p>
               
-              <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between">
+              <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between gap-4">
                 <div>
                   <h5 className="text-xs font-bold text-neutral-200">🔥 Une question ou envie de nous rencontrer ?</h5>
                   <p className="text-[11px] text-neutral-400 mt-0.5">Notre équipe réseau est disponible sur place tout au long du salon.</p>
                 </div>
                 <button 
                   onClick={() => window.open("https://wa.me/?text=Bonjour%20Boké%20One,%20je%20suis%20au%20salon%20et%20souhaite%20échanger !", "_blank")}
-                  className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2 rounded-xl font-black text-xs transition shadow flex items-center gap-1.5"
+                  className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2.5 rounded-xl font-black text-xs transition shadow flex items-center gap-1.5"
                 >
                   💬 Discuter
                 </button>
@@ -238,7 +238,7 @@ export default function HomePage({ onRequireLogin }) {
             <div className="md:w-2/5 p-6 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
-                  <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded font-bold border border-amber-500/20">
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded font-bold border border-amber-500/20 uppercase">
                     {selectedPhoto.type}
                   </span>
                   <button onClick={() => setSelectedPhoto(null)} className="text-neutral-400 hover:text-white font-bold text-lg">✕</button>
