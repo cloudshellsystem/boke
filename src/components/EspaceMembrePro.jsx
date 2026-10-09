@@ -15,7 +15,7 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
   const [invoicePrice, setInvoicePrice] = useState(250);
   const [invoiceGenerated, setInvoiceGenerated] = useState(false);
 
-  // Statistiques globales du créateur (Vues, Likes, Gains totaux)
+  // Statistiques globales du créateur
   const [creatorStats, setCreatorStats] = useState({
     totalViews: 14250,
     totalLikes: 3840,
@@ -24,7 +24,7 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
 
   const notionPageUrl = "https://brindle-baboon-751.notion.site/3f29868fa534809eaefadbd7532ef348?v=3f29868fa53480d6bd9e000c633bdf4f&pvs=73";
 
-  // 🔒 ÉCRAN DE VERROUILLAGE SI L'UTILISATEUR N'EST PAS CONNECTÉ
+  // 🔒 ÉCRAN DE VERROUILLAGE SI NON CONNECTÉ
   if (!userSession) {
     return (
       <div className="mx-auto w-full max-w-4xl bg-neutral-950 p-8 text-neutral-200 min-h-[70vh] flex flex-col items-center justify-center text-center font-sans">
@@ -36,9 +36,9 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
             <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
               Espace Réservé & Sécurisé
             </span>
-            <h1 className="text-2xl font-black text-amber-400">Espace Vente & Statistiques Pro</h1>
+            <h1 className="text-2xl font-black text-amber-400">Espace Vente, Compta & Conformité Pro</h1>
             <p className="text-xs sm:text-sm text-neutral-400">
-              Cet espace est strictement réservé aux créateurs abonnés et professionnels de BOKÉ ONE. Connectez-vous pour accéder à vos tunnels de vente, vos scripts en direct et vos statistiques de gains.
+              Cet espace est strictement réservé aux créateurs abonnés et professionnels de BOKÉ ONE. Connectez-vous pour accéder à vos tunnels de vente, votre outil de compta, vos déclarations et vos enregistrements d'examens Drone 2026 (BAPD, CATT, CATS).
             </p>
           </div>
 
@@ -90,15 +90,15 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
       contactPerson: "Aissatou Sow (Chargée de Production)",
       phone: "+224 620 99 88 77",
       contactEmail: "a.sow@mediagroup.gn",
-      itemType: "Prestation Cinéaste / Réalisateur",
+      itemType: "Prestation Cinéaste / Télépilote Drone",
       itemTitle: "Campagne Publique Clip Brand",
       itemImage: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=150",
       status: "Contact débloqué (VIP)",
       depositPaid: true,
       notes: "Tournage prévu le mois prochain.",
       scriptSteps: {
-        1: "« Bonjour Aissatou, notre réalisateur est idéal pour votre clip à Conakry. Pour 1 200 €, nous incluons le matériel 4K complet. On valide les dates ? »",
-        2: "« Le devis vous paraît élevé ? N'oubliez pas que notre équipe locale gère les autorisations de tournage de A à Z, ce qui vous évite des semaines de démarches administratives. »",
+        1: "« Bonjour Aissatou, notre télépilote certifié BAPD/CATS 2026 est idéal pour votre tournage. Pour 1 200 €, nous incluons le matériel 4K et l'autorisation préfectorale. On valide les dates ? »",
+        2: "« Le devis vous paraît élevé ? N'oubliez pas que nos pilotes sont 100% en règle avec les normes européennes 2026, ce qui vous garantit zéro risque d'amende administrative. »",
         3: "« On valide l'acompte de 30% dès maintenant pour bloquer l'agenda du réalisateur le mois prochain ? »"
       }
     },
@@ -129,19 +129,19 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
   return (
     <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-screen font-sans">
       
-      {/* En-tête avec statistiques globales (Vues, Likes, Gains) */}
+      {/* En-tête */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-neutral-800 pb-5">
         <div>
           <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-            Monétisation & Performance Créateur
+            Monétisation, Compta & Normes 2026
           </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-amber-400 mt-1.5">Espace Vente & Statistiques Pro</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-amber-400 mt-1.5">Espace Vente, Compta & Conformité Pro</h1>
           <p className="text-xs sm:text-sm text-neutral-400 mt-0.5">
-            Suivez l'impact de vos œuvres (vues, likes), vos gains cumulés et closez vos prospects en salon.
+            Gérez vos closing en salon, votre comptabilité annuelle, vos factures et vos examens Drone 2026 (BAPD, CATT, CATS).
           </p>
         </div>
 
-        {/* Mini dashboard stats haut de page */}
+        {/* Mini stats */}
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-neutral-900 border border-neutral-800 px-3 py-2 rounded-2xl text-center">
             <span className="text-[9px] text-neutral-400 uppercase font-bold block">👀 Vues</span>
@@ -185,7 +185,16 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
               activeTab === "invoices" ? "bg-amber-500 text-neutral-950 shadow-md font-bold" : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:text-amber-400"
             }`}
           >
-            📄 Devis & Factures
+            📄 Devis, Factures & Compta
+          </button>
+
+          <button
+            onClick={() => setActiveTab("compliance")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap ${
+              activeTab === "compliance" ? "bg-amber-500 text-neutral-950 shadow-md font-bold" : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:text-amber-400"
+            }`}
+          >
+            🛡️ Conformité & Examens Drone 2026
           </button>
 
           <button
@@ -220,10 +229,9 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
       {/* Contenu dynamique */}
       <div className="space-y-6">
         
+        {/* ONGLET TUNNEL DE VENTE */}
         {activeTab === "notionLive" && (
           <div className="space-y-6 animate-fadeIn">
-            
-            {/* TUNNEL DE VENTE INTERACTIF */}
             <div className="bg-gradient-to-br from-neutral-900 via-neutral-900 to-amber-950/20 border-2 border-amber-500/40 p-6 rounded-3xl shadow-2xl space-y-5">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
                 <div>
@@ -325,7 +333,7 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
               </div>
             </div>
 
-            {/* Liste des prospects */}
+            {/* Suivi des prospects */}
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
               <div className="p-4 border-b border-neutral-800 bg-neutral-950/50 flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">📋 Suivi des Prospects & Acomptes</span>
@@ -367,11 +375,10 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
                 </table>
               </div>
             </div>
-
           </div>
         )}
 
-        {/* NOUVEAU ONGLET : VUES, LIKES & REVENUS */}
+        {/* ONGLET STATS */}
         {activeTab === "stats" && (
           <div className="space-y-6 animate-fadeIn max-w-4xl mx-auto">
             <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-5">
@@ -380,7 +387,6 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
                 <p className="text-xs text-neutral-400 mt-0.5">Analysez l'engagement de votre audience et vos performances financières globales.</p>
               </div>
 
-              {/* Cartes de statistiques globales */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-neutral-950 p-5 rounded-2xl border border-neutral-800 text-center space-y-1">
                   <span className="text-2xl">👀</span>
@@ -404,7 +410,6 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
                 </div>
               </div>
 
-              {/* Tableau des performances par œuvre */}
               <div className="bg-neutral-950 border border-neutral-800 rounded-xl overflow-hidden mt-4">
                 <div className="p-3.5 border-b border-neutral-800 text-xs font-bold text-amber-400 uppercase">
                   Détail par Œuvre / Média
@@ -439,12 +444,12 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
           </div>
         )}
 
-        {/* DEVIS & FACTURES */}
+        {/* ONGLET DEVIS, FACTURES & COMPTA */}
         {activeTab === "invoices" && (
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-2xl mx-auto space-y-5 animate-fadeIn">
             <div className="border-b border-neutral-800 pb-3">
-              <h3 className="text-base font-bold text-amber-400">📄 Générateur de Devis / Facture Express</h3>
-              <p className="text-xs text-neutral-400 mt-0.5">Validez l'accord commercial immédiatement sur place.</p>
+              <h3 className="text-base font-bold text-amber-400">📄 Devis, Factures & Module Comptabilité Annuelle</h3>
+              <p className="text-xs text-neutral-400 mt-0.5">Générez vos factures et suivez votre journal des recettes pour vos déclarations.</p>
             </div>
 
             <div className="space-y-4">
@@ -483,20 +488,94 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
                 onClick={() => setInvoiceGenerated(true)}
                 className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-xl text-xs transition shadow-md"
               >
-                Générer et envoyer le lien de devis/facture ⚡
+                Générer et enregistrer la pièce comptable ⚡
               </button>
 
               {invoiceGenerated && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs space-y-1">
-                  <span className="font-bold text-emerald-400 block">✅ Document généré avec succès !</span>
-                  <p className="text-neutral-300">Le devis pour <strong>{invoiceItem}</strong> ({formatPrice(invoicePrice)}) a été converti en lien sécurisé.</p>
+                  <span className="font-bold text-emerald-400 block">✅ Document généré & comptabilisé !</span>
+                  <p className="text-neutral-300">Le devis pour <strong>{invoiceItem}</strong> ({formatPrice(invoicePrice)}) a été converti en facture et enregistré dans le livre des recettes 2026.</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* CALCULATEUR */}
+        {/* NOUVEAU ONGLET : CONFORMITÉ & EXAMENS DRONE 2026 */}
+        {activeTab === "compliance" && (
+          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-3xl mx-auto space-y-6 animate-fadeIn">
+            <div className="border-b border-neutral-800 pb-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-base font-bold text-amber-400">🛡️ Registre de Conformité & Examens Drone 2026</h3>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                  Profil Vérifié BOKÉ ONE
+                </span>
+              </div>
+              <p className="text-xs text-neutral-400">
+                Déposez vos certifications européennes BAPD, CATT, CATS et documents juridiques pour rassurer les clients et agences.
+              </p>
+            </div>
+
+            {/* Cartes certifications drone 2026 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-neutral-200">📜 BAPD 2026</span>
+                  <span className="text-[10px] text-emerald-400 font-bold">Validé</span>
+                </div>
+                <p className="text-[10px] text-neutral-400">Brevet d'Aptitude Pilote de Drone (Open A1/A3-A2)</p>
+                <button className="w-full bg-neutral-900 hover:bg-neutral-800 text-amber-400 text-[10px] py-1.5 rounded-lg border border-neutral-800 font-bold transition">
+                  Voir l'attestation
+                </button>
+              </div>
+
+              <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-neutral-200">🎓 CATT 2026</span>
+                  <span className="text-[10px] text-emerald-400 font-bold">Validé</span>
+                </div>
+                <p className="text-[10px] text-neutral-400">Certificat Théorique Télépilote (Scénarios Nationaux/STS)</p>
+                <button className="w-full bg-neutral-900 hover:bg-neutral-800 text-amber-400 text-[10px] py-1.5 rounded-lg border border-neutral-800 font-bold transition">
+                  Voir le certificat
+                </button>
+              </div>
+
+              <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-neutral-200">🏆 CATS 2026</span>
+                  <span className="text-[10px] text-amber-400 font-bold">À déposer</span>
+                </div>
+                <p className="text-[10px] text-neutral-400">Certificat d'Aptitude Théorique Scénarios Européens</p>
+                <button className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[10px] py-1.5 rounded-lg border border-amber-500/30 font-bold transition">
+                  Téléverser le justificatif
+                </button>
+              </div>
+            </div>
+
+            {/* Documents légaux généraux */}
+            <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-3">
+              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">📄 Documents Légaux & Modèles de Contrats</h4>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between items-center p-2.5 bg-neutral-900 rounded-lg">
+                  <div>
+                    <span className="text-neutral-200 block font-bold">Autorisation de Droit à l'Image (Model Release 2026)</span>
+                    <span className="text-neutral-500 text-[10px]">Modèle conforme RGPD pour tournages/shootings</span>
+                  </div>
+                  <button className="text-amber-400 hover:underline font-bold text-[11px]">Télécharger PDF ⬇</button>
+                </div>
+                <div className="flex justify-between items-center p-2.5 bg-neutral-900 rounded-lg">
+                  <div>
+                    <span className="text-neutral-200 block font-bold">Accord de Prise de Vue Propriété Privée & Immobilier</span>
+                    <span className="text-neutral-500 text-[10px]">Autorisation bailleur / propriétaire pour drone et photo</span>
+                  </div>
+                  <button className="text-amber-400 hover:underline font-bold text-[11px]">Télécharger PDF ⬇</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ONGLET SIMULATEUR */}
         {activeTab === "calculator" && (
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-xl mx-auto space-y-5">
             <h3 className="text-base font-bold text-amber-400">Calculateur de Revenus Créateur</h3>
@@ -515,7 +594,7 @@ export default function EspaceMembrePro({ userSession, onRequireLogin }) {
           </div>
         )}
 
-        {/* PORTFOLIO & STOCK */}
+        {/* ONGLET PORTFOLIO & STOCK */}
         {activeTab === "portfolio" && (
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-xl mx-auto text-center space-y-5">
             <h3 className="text-base font-bold text-amber-400">Protéger mon Catalogue & Médias</h3>
