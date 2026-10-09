@@ -23,13 +23,11 @@ export default function ForumPage({ onRequireLogin }) {
         .select("*")
         .order("created_at", { ascending: false });
       
-      if (error) {
-        console.error("Erreur chargement posts:", error.message);
-      } else if (data) {
+      if (!error && data) {
         setPosts(data);
       }
     } catch (err) {
-      console.error("Erreur réseau:", err);
+      console.error("Erreur chargement forum:", err);
     } finally {
       setLoading(false);
     }
@@ -45,14 +43,18 @@ export default function ForumPage({ onRequireLogin }) {
 
   const fetchReplies = async (postId) => {
     setReplies([]);
-    const { data, error } = await supabase
-      .from("forum_replies")
-      .select("*")
-      .eq("post_id", postId)
-      .order("created_at", { ascending: true });
-    
-    if (!error && data) {
-      setReplies(data);
+    try {
+      const { data, error } = await supabase
+        .from("forum_replies")
+        .select("*")
+        .eq("post_id", postId)
+        .order("created_at", { ascending: true });
+      
+      if (!error && data) {
+        setReplies(data);
+      }
+    } catch (err) {
+      console.error("Erreur chargement réponses:", err);
     }
   };
 
@@ -103,7 +105,6 @@ export default function ForumPage({ onRequireLogin }) {
     if (!error) {
       setReplyText("");
       fetchReplies(selectedPost.id);
-      fetchPosts();
     } else {
       alert("Erreur lors de l'envoi de la réponse : " + error.message);
     }
@@ -120,7 +121,7 @@ export default function ForumPage({ onRequireLogin }) {
           </h2>
           <p className="text-xs text-neutral-400 mt-1 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-emerald-400 font-bold">{onlineCount} membres</span> en ligne actuellement. Espace d'échanges et de présentation entre créateurs.
+            <span className="text-emerald-400 font-bold">{onlineCount} membres</span> en ligne actuellement. Espace d'échanges et de présentation.
           </p>
         </div>
 
@@ -132,7 +133,7 @@ export default function ForumPage({ onRequireLogin }) {
               setShowForm(!showForm); 
             } 
           }} 
-          className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black rounded-xl transition shadow-lg shadow-amber-500/10"
+          className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer"
         >
           {isLoggedIn ? "+ Nouveau sujet" : "Se connecter pour publier ➔"}
         </button>
@@ -192,14 +193,8 @@ export default function ForumPage({ onRequireLogin }) {
             Chargement des discussions...
           </div>
         ) : posts.length === 0 ? (
-          <div className="p-12 text-center text-xs text-neutral-400 space-y-3">
-            <p>Aucun sujet pour le moment sur le forum.</p>
-            <button 
-              onClick={() => { if (!isLoggedIn) onRequireLogin?.(); else setShowForm(true); }}
-              className="text-amber-400 font-bold hover:underline"
-            >
-              Soyez le premier à lancer une discussion ➔
-            </button>
+          <div className="p-12 text-center text-xs text-neutral-400">
+            Aucun sujet pour le moment.
           </div>
         ) : (
           <div className="divide-y divide-neutral-800/60">
@@ -211,7 +206,7 @@ export default function ForumPage({ onRequireLogin }) {
               >
                 <div className="sm:col-span-6 space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] bg-neutral-800 text-amber-400 px-2 py-0.5 rounded-md font-bold">
+                    <span className="text-[10px] bg-neutral-800 text-amber-400 px-2.5 py-0.5 rounded-md font-bold">
                       {post.category || "Général"}
                     </span>
                     <h3 className="font-bold text-sm text-neutral-100 hover:text-amber-400 transition line-clamp-1">
@@ -244,7 +239,7 @@ export default function ForumPage({ onRequireLogin }) {
             
             <div className="bg-neutral-950 p-5 border-b border-neutral-800 flex justify-between items-center">
               <div>
-                <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded font-bold border border-amber-500/20">
+                <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded font-bold border border-amber-500/20">
                   {selectedPost.category || "Général"}
                 </span>
                 <h2 className="text-base font-black text-white mt-1">{selectedPost.title}</h2>
