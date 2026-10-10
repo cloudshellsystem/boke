@@ -27,11 +27,11 @@ export default function ForumPage({ onRequireLogin }) {
     fetchTopics();
   }, []);
 
-  // Récupération des sujets
+  // Récupération des sujets (depuis la table forum_posts)
   const fetchTopics = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("forum_feed")
+      .from("forum_posts")
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -41,11 +41,11 @@ export default function ForumPage({ onRequireLogin }) {
     setLoading(false);
   };
 
-  // Récupération des réponses d'un sujet
+  // Récupération des réponses d'un sujet (depuis la table forum_replies)
   const fetchReplies = async (topicId) => {
     setLoadingReplies(true);
     const { data, error } = await supabase
-      .from("forum_replies_feed")
+      .from("forum_replies")
       .select("*")
       .eq("topic_id", topicId)
       .order("created_at", { ascending: true });
@@ -56,17 +56,16 @@ export default function ForumPage({ onRequireLogin }) {
     setLoadingReplies(false);
   };
 
-  // Clic sur un sujet pour voir les détails et incrémenter les vues
+  // Clic sur un sujet pour voir les détails
   const handleSelectTopic = (topic) => {
     setSelectedTopic(topic);
     fetchReplies(topic.id);
-    supabase.rpc("increment_topic_views", { topic_id: topic.id });
   };
 
   // Interception du clic "Nouveau Sujet"
   const handleNewTopicClick = () => {
     if (!isLoggedIn) {
-      onRequireLogin(); // 🚀 Ouvre la modal d'authentification
+      onRequireLogin();
       return;
     }
     setShowNewTopicForm(true);
@@ -76,7 +75,7 @@ export default function ForumPage({ onRequireLogin }) {
   const handleReplyClick = (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      onRequireLogin(); // 🚀 Ouvre la modal d'authentification
+      onRequireLogin();
       return;
     }
     handleSendReply();
@@ -94,11 +93,12 @@ export default function ForumPage({ onRequireLogin }) {
     setMsg(null);
 
     try {
-      const { error } = await supabase.from("forum_topics").insert({
+      const { error } = await supabase.from("forum_posts").insert({
         user_id: user.id,
         title: newTitle.trim(),
         category: newCategory,
         content: newContent.trim(),
+        user_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Membre",
         status: "approuve",
       });
 
@@ -127,6 +127,7 @@ export default function ForumPage({ onRequireLogin }) {
         topic_id: selectedTopic.id,
         user_id: user.id,
         content: replyContent.trim(),
+        user_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Membre",
         status: "approuve",
       });
 
@@ -155,7 +156,6 @@ export default function ForumPage({ onRequireLogin }) {
           </p>
         </div>
 
-        {/* Bouton Nouveau Sujet -> Déclenche la modal si non connecté */}
         <button
           onClick={handleNewTopicClick}
           className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-5 py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer shrink-0"
@@ -164,7 +164,7 @@ export default function ForumPage({ onRequireLogin }) {
         </button>
       </div>
 
-      {/* Banner d'invitation avec bouton interactif vers la modal d'inscription */}
+      {/* Banner d'invitation si non connecté */}
       {!isLoggedIn && (
         <div className="bg-neutral-900/90 border border-neutral-800 p-4 rounded-2xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -190,7 +190,7 @@ export default function ForumPage({ onRequireLogin }) {
         </div>
       )}
 
-      {/* Formulaire de création de sujet (affiché si connecté) */}
+      {/* Formulaire de création de sujet */}
       {showNewTopicForm && isLoggedIn && (
         <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl mb-8 space-y-4">
           <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
@@ -226,7 +226,7 @@ export default function ForumPage({ onRequireLogin }) {
         </div>
       )}
 
-      {/* Vue d'un Sujet Sélectionné et de ses Réponses */}
+      {/* Vue détaillée d'un Sujet */}
       {selectedTopic ? (
         <div className="space-y-6">
           <button
@@ -244,7 +244,7 @@ export default function ForumPage({ onRequireLogin }) {
                 </span>
                 <h2 className="text-xl font-bold text-white mt-2">{selectedTopic.title}</h2>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Par <span className="text-neutral-200 font-semibold">{selectedTopic.author_name || "Membre"}</span> • {new Date(selectedTopic.created_at).toLocaleDateString()}
+                  Par <span className="text-neutral-200 font-semibold">{selectedTopic.user_name || "Membre"}</span> • {new Date(selectedTopic.created_at).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -266,7 +266,7 @@ export default function ForumPage({ onRequireLogin }) {
               replies.map((reply) => (
                 <div key={reply.id} className="bg-neutral-900/60 border border-neutral-800/80 p-4 rounded-xl space-y-2">
                   <div className="flex justify-between text-xs text-neutral-400">
-                    <span className="font-bold text-amber-400">{reply.author_name || "Membre"}</span>
+                    <span className="font-bold text-amber-400">{reply.user_name || "Membre"}</span>
                     <span>{new Date(reply.created_at).toLocaleDateString()}</span>
                   </div>
                   <p className="text-xs text-neutral-300">{reply.content}</p>
@@ -275,7 +275,7 @@ export default function ForumPage({ onRequireLogin }) {
             )}
           </div>
 
-          {/* Bloc de réponse -> Modal au clic si non connecté */}
+          {/* Bloc de réponse */}
           <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl space-y-3">
             <textarea
               rows={3}
@@ -299,9 +299,8 @@ export default function ForumPage({ onRequireLogin }) {
         /* Table des Sujets du Forum */
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
           <div className="grid grid-cols-12 bg-neutral-950 p-4 text-[10px] font-bold uppercase tracking-wider text-neutral-400 border-b border-neutral-800">
-            <div className="col-span-7 sm:col-span-8">Discussion</div>
-            <div className="col-span-2 text-center">Réponses</div>
-            <div className="col-span-3 sm:col-span-2 text-right">Vues</div>
+            <div className="col-span-8 sm:col-span-9">Discussion</div>
+            <div className="col-span-4 sm:col-span-3 text-right">Date</div>
           </div>
 
           {loading ? (
@@ -315,19 +314,16 @@ export default function ForumPage({ onRequireLogin }) {
                 onClick={() => handleSelectTopic(topic)}
                 className="grid grid-cols-12 p-4 items-center border-b border-neutral-800/60 hover:bg-neutral-800/40 transition cursor-pointer"
               >
-                <div className="col-span-7 sm:col-span-8 space-y-1">
+                <div className="col-span-8 sm:col-span-9 space-y-1">
                   <h3 className="text-xs sm:text-sm font-bold text-white hover:text-amber-400 transition">
                     {topic.title}
                   </h3>
                   <p className="text-[11px] text-neutral-400">
-                    par <span className="text-neutral-300 font-medium">{topic.author_name || "Membre"}</span>
+                    par <span className="text-neutral-300 font-medium">{topic.user_name || "Membre"}</span> • <span className="text-amber-400/80">{topic.category || "Général"}</span>
                   </p>
                 </div>
-                <div className="col-span-2 text-center text-xs font-bold text-amber-400">
-                  {topic.replies_count || 0}
-                </div>
-                <div className="col-span-3 sm:col-span-2 text-right text-xs text-neutral-400 font-medium">
-                  {topic.views_count || 0}
+                <div className="col-span-4 sm:col-span-3 text-right text-xs text-neutral-400 font-medium">
+                  {new Date(topic.created_at).toLocaleDateString()}
                 </div>
               </div>
             ))
