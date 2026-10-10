@@ -1,77 +1,176 @@
-import React, { useState } from "react";
-import { useAuth, translateAuthError } from "../context/AuthContext";
+import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "../context/AuthContext";
 
-export default function AuthForm({ onSuccess }) {
-  const { register, authError } = useAuth();
-  const [mode, setMode] = useState("login");
+export default function AuthForm({ onAuthSuccess, onClose }) {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [localError, setLocalError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { login, signup, resetPassword } = useAuth();
+  const timerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const showError = (text) => {
+    setIsError(true);
+    setMessage(text);
+  };
+  const showSuccess = (text) => {
+    setIsError(false);
+    setMessage(text);
+  };
+
+  const closeAfterSuccess = () => {
+    timerRef.current = setTimeout(() => {
+      if (onAuthSuccess) onAuthSuccess();
+      if (onClose) onClose();
+    }, 700);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError("");
-    setBusy(true);
+    if (submitting) return;
+    setMessage("");
+    setIsError(false);
+    setSubmitting(true);
 
     try {
-      // register ou login géré proprement par le contexte
-      const res = await register(email, password);
-      if (res?.error) {
-        setLocalError(res.error.message || String(res.error));
-      } else {
-        onSuccess?.();
+      if (isForgotPassword) {
+        await resetPassword(email);
+        // Message volontairement identique que le compte existe ou non (pas de fuite d'information)
+        showSuccess("Si un compte existe pour cette adresse, un lien de réinitialisation vient d'être envoyé.");
+        return;
       }
+
+      if (isSignUp) {
+        const { needsEmailConfirmation } = await signup(email, password);
+        if (needsEmailConfirmation) {
+          showSuccess("Compte créé. Un e-mail de confirmation vous a été envoyé : cliquez sur le lien, puis connectez-vous.");
+          setIsSignUp(false);
+          setPassword("");
+        } else {
+          showSuccess("Compte créé avec succès ! Bienvenue sur Boké One.");
+          closeAfterSuccess();
+        }
+        return;
+      }
+
+      await login(email, password);
+      showSuccess("Connexion réussie !");
+      closeAfterSuccess();
     } catch (err) {
-      setLocalError(translateAuthError(err));
+      // Vraie erreur affichée telle quelle : aucune session n'est créée dans ce cas.
+      showError(err?.message || "Une erreur est survenue. Réessayez.");
     } finally {
-      setBusy(false);
+      setSubmitting(false);
     }
   };
 
-  const errorMsg = localError || authError;
-
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm mx-auto bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4 shadow-xl">
-      <h2 className="text-lg font-black text-white text-center">
-        {mode === "login" ? "Connexion" : "Créer un compte"}
-      </h2>
-      <input
-        type="email"
-        required
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-100 placeholder-neutral-500 outline-none focus:border-amber-500/50"
-      />
-      <input
-        type="password"
-        required
-        minLength={6}
-        placeholder="Mot de passe"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-100 placeholder-neutral-500 outline-none focus:border-amber-500/50"
-      />
-      {errorMsg && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-          {errorMsg}
-        </p>
+    <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-3xl text-neutral-200 shadow-2xl relative">
+      {onClose && (
+        <button type="button" onClick={onClose} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-bold text-lg">
+          ✕
+        </button>
       )}
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-neutral-950 py-3 rounded-xl font-black text-sm transition cursor-pointer"
-      >
-        {busy ? "..." : mode === "login" ? "Se connecter" : "S'inscrire"}
-      </button>
-      <button
-        type="button"
-        onClick={() => { setMode(mode === "login" ? "register" : "login"); setLocalError(""); }}
-        className="w-full text-xs text-neutral-400 hover:text-amber-400 transition cursor-pointer"
-      >
-        {mode === "login" ? "Pas de compte ? S'inscrire" : "Déjà inscrit ? Se connecter"}
-      </button>
-    </form>
+
+      <h2 className="text-xl font-black text-amber-400 mb-6">
+        {isForgotPassword ? "Récupérer le mot de passe" : isSignUp ? "Créer un compte" : "Connexion"}
+      </h2>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-bold text-neutral-400 mb-1">Email :</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500"
+            placeholder="votre@email.com"
+          />
+        </div>
+
+        {!isForgotPassword && (
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-xs font-bold text-neutral-400">Mot de passe :</label>
+              {!isSignUp && (
+                <button
+                  type="button"
+                  onClick={() => { setIsForgotPassword(true); setMessage(""); setIsError(false); }}
+                  className="text-[11px] text-amber-400 hover:underline font-medium"
+                >
+                  Mot de passe oublié ?
+                </button>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={isSignUp ? 6 : undefined}
+                autoComplete={isSignUp ? "new-password" : "current-password"}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 pr-10 text-sm text-white outline-none focus:border-amber-500"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-amber-400 text-xs font-bold transition"
+                title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-neutral-950 font-bold py-3 rounded-xl transition text-sm mt-2 shadow-md cursor-pointer"
+        >
+          {submitting
+            ? "Veuillez patienter…"
+            : isForgotPassword
+            ? "Envoyer le lien de réinitialisation"
+            : isSignUp
+            ? "S'inscrire"
+            : "Se connecter"}
+        </button>
+
+        {message && (
+          <p
+            role={isError ? "alert" : "status"}
+            className={`text-xs text-center font-bold mt-3 ${isError ? "text-red-400" : "text-emerald-400"}`}
+          >
+            {message}
+          </p>
+        )}
+      </form>
+
+      <div className="mt-6 text-center text-xs text-neutral-400">
+        {isForgotPassword ? (
+          <button type="button" onClick={() => { setIsForgotPassword(false); setMessage(""); setIsError(false); }} className="text-amber-400 font-bold hover:underline">
+            ← Retour à la connexion
+          </button>
+        ) : (
+          <>
+            {isSignUp ? "Déjà un compte ?" : "Pas encore de compte ?"}{" "}
+            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setMessage(""); setIsError(false); }} className="text-amber-400 font-bold hover:underline ml-1">
+              {isSignUp ? "Se connecter" : "S'inscrire"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
