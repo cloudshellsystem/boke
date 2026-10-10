@@ -1,117 +1,84 @@
-﻿import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
-const AuthContext = createContext({});
+const AuthContext = createContext();
+
+export function translateAuthError(message) {
+  if (!message) return 'Une erreur est survenue.';
+  if (message.includes('Invalid login credentials')) return 'Email ou mot de passe incorrect.';
+  if (message.includes('User already registered')) return 'Cet email est déjà utilisé.';
+  return message;
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
-    // 1. Session initiale
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    let mounted = true;
 
-    // 2. Écoute des changements d'auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
+    async function getInitialSession() {
+      try {
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (mounted && session?.user) {
+            setUser(session.user);
+            setIsLoggedIn(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase auth session non disponible:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    getInitialSession();
+
+    let authListener = null;
+    if (supabase) {
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            setIsLoggedIn(true);
+          } else {
+            setUser(null);
+            setIsLoggedIn(false);
+          }
           setLoading(false);
         }
-      }
-    );
+      });
+      authListener = data?.subscription;
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      if (authListener) authListener.unsubscribe();
+    };
   }, []);
 
-  const fetchProfile = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (err) {
-      console.warn("Erreur chargement profil :", err.message);
-      setProfile(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (email, password) => {
-    setAuthError("");
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    return data;
-  };
-
-  const signup = async (email, password) => {
-    setAuthError("");
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
-    return data;
-  };
-
-  const resetPassword = async (email) => {
-    setAuthError("");
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) throw error;
+  const login = (userData) => {
+    setUser(userData);
+    setIsLoggedIn(true);
   };
 
   const logout = async () => {
-    setAuthError("");
-    await supabase.auth.signOut();
+    if (supabase) {
+      try { await supabase.auth.signOut(); } catch (e) {}
+    }
     setUser(null);
-    setProfile(null);
+    setIsLoggedIn(false);
   };
 
-  // Calcul direct des accès Pro / Élite
-  const plan = profile?.plan || "free";
-  const hasProAccess = plan === "pro" || plan === "elite" || profile?.is_admin === true;
-
-  const value = {
-    user,
-    profile,
-    plan,
-    hasProAccess,
-    isLoggedIn: !!user,
-    loading,
-    authError,
-    login,
-    signup,
-    register: signup, // ✅ Alias indispensable pour que AuthForm (qui appelle register) fonctionne parfaitement
-    resetPassword,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
   return useContext(AuthContext);
-}
-
-// Fonction utilitaire de traduction des erreurs Supabase
-export function translateAuthError(err) {
-  const msg = err?.message || "";
-  if (msg.includes("Invalid login credentials")) return "E-mail ou mot de passe incorrect.";
-  if (msg.includes("User already registered")) return "Un compte existe déjà avec cet e-mail.";
-  if (msg.includes("Password should be at least")) return "Le mot de passe doit contenir au moins 6 caractères.";
-  return msg || "Une erreur est survenue lors de l'authentification.";
 }
