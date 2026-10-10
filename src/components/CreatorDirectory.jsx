@@ -126,12 +126,13 @@ export default function CreatorDirectory({ onRequireLogin }) {
 
   const handleAddToCart = (e, creator) => {
     e.stopPropagation();
+    // 🔒 SÉCURITÉ STRICTE : Si non connecté, interdiction d'ajouter et ouverture de la modale d'authentification
     if (!isLoggedIn) {
       onRequireLogin?.();
-    } else {
-      addToCart(creator);
-      alert(`${creator.name} a été ajouté à votre sélection !`);
+      return;
     }
+    addToCart(creator);
+    alert(`${creator.name} a été ajouté à votre sélection !`);
   };
 
   return (
