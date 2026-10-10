@@ -2,7 +2,7 @@
 import { useCart } from "../context/CartContext";
 import { useLanguage } from "../context/LanguageContext";
 import { formatPrice } from "../lib/formatPrice";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const CART_TEXT = {
   fr: {
@@ -10,7 +10,7 @@ const CART_TEXT = {
     emptyDesc: "Vous n'avez sélectionné ni prestataires ni actifs du stock national pour le moment. Sur Boké One, vous pouvez regrouper des réservations professionnelles et l'achat de licences d'images/vidéos exclusives.",
     howToTitle: "💡 Comment acheter sur Boké One ?",
     howTo1: "Posséder un compte membre validé sur la plateforme.",
-    howTo2: "Utiliser une solution de paiement sécurisée compatible (ex: passerelle Stripe pour cartes bancaires ou paiements mobiles pris en charge).",
+    howTo2: "Utiliser une solution de paiement sécurisée compatible (ex: passerelle Stripe pour cartes bancaires).",
     howTo3: "Valider le panier pour recevoir instantanément vos liens de téléchargement ou confirmer la mission pro.",
     btnExplore: "Explorer le Stock",
     btnCreators: "Découvrir les Créateurs",
@@ -30,7 +30,7 @@ const CART_TEXT = {
     emptyDesc: "You haven't selected any service providers or national stock assets yet. On Boké One, you can combine professional bookings and exclusive image/video license purchases.",
     howToTitle: "💡 How to buy on Boké One?",
     howTo1: "Have a validated member account on the platform.",
-    howTo2: "Use a supported secure payment method (e.g., Stripe gateway for credit cards or mobile payments).",
+    howTo2: "Use a supported secure payment method (e.g., Stripe gateway for credit cards).",
     howTo3: "Checkout to instantly receive download links or confirm your pro assignment.",
     btnExplore: "Explore Stock",
     btnCreators: "Discover Creators",
@@ -50,11 +50,12 @@ const CART_TEXT = {
 export default function Cart() {
   const { cart, removeFromCart, cartTotal } = useCart();
   const { lang } = useLanguage();
+  const navigate = useNavigate();
   const t = CART_TEXT[lang];
 
   if (cart.length === 0) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-neutral-950 text-neutral-200 p-6 text-center">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-neutral-950 text-neutral-200 p-6 text-center font-sans">
         <div className="max-w-md bg-neutral-900/80 border border-neutral-800 p-8 rounded-3xl shadow-xl space-y-4">
           <div className="text-4xl">🛒</div>
           <h2 className="text-2xl font-bold text-amber-400">{t.emptyTitle}</h2>
@@ -73,12 +74,18 @@ export default function Cart() {
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/" className="rounded-xl bg-amber-500 px-5 py-2.5 font-bold text-neutral-950 hover:bg-amber-400 transition text-xs">
+            <button
+              onClick={() => navigate("/")}
+              className="rounded-xl bg-amber-500 px-5 py-2.5 font-bold text-neutral-950 hover:bg-amber-400 transition text-xs cursor-pointer"
+            >
               {t.btnExplore}
-            </Link>
-            <Link to="/creators" className="rounded-xl bg-neutral-800 border border-neutral-700 px-5 py-2.5 font-bold text-neutral-200 hover:bg-neutral-700 transition text-xs">
+            </button>
+            <button
+              onClick={() => navigate("/creators")}
+              className="rounded-xl bg-neutral-800 border border-neutral-700 px-5 py-2.5 font-bold text-neutral-200 hover:bg-neutral-700 transition text-xs cursor-pointer"
+            >
               {t.btnCreators}
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -86,7 +93,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl bg-neutral-950 p-6 text-neutral-200 min-h-screen">
+    <div className="mx-auto w-full max-w-4xl bg-neutral-950 p-6 text-neutral-200 min-h-screen font-sans">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
         <div>
           <h2 className="text-3xl font-bold text-amber-400">{t.titleSelection} ({cart.length})</h2>
