@@ -4,7 +4,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-// Métiers proposés dans la liste déroulante (id stable + libellés FR/EN)
+// Métiers proposés dans la liste déroulante
 const TRADES = [
   { id: "chef-operateur", fr: "Chef Opérateur", en: "Director of Photography" },
   { id: "cadreur", fr: "Cadreur", en: "Camera Operator" },
@@ -25,7 +25,6 @@ const TRADES = [
   { id: "regisseur", fr: "Régisseur / Technicien", en: "Line Producer / Technician" },
 ];
 
-// ⚠️ Données de démonstration (codées en dur) : à remplacer par une lecture Supabase.
 const CREATORS_DATA = [
   {
     id: 101,
@@ -99,8 +98,7 @@ const DIRECTORY_TEXT = {
     modalBioTitle: "Biographie",
     modalEquipTitle: "🛠️ Matériel & Équipement de Tournage",
     modalPortfolioTitle: "📸 Aperçu du Portfolio",
-    noticePlatformOnly: "🔒 Réservé aux abonnés : inscrivez-vous ou connectez-vous pour réserver ce prestataire. Toutes les réservations et paiements passent par la plateforme.",
-    loginAlert: "Inscrivez-vous d'abord pour voir ce prestataire dans votre panier",
+    noticePlatformOnly: "🔒 Réservé aux abonnés : inscrivez-vous ou connectez-vous pour réserver ce prestataire.",
     closeLabel: "Fermer",
     noResult: "Aucun créateur ne correspond à votre recherche.",
   },
@@ -119,8 +117,7 @@ const DIRECTORY_TEXT = {
     modalBioTitle: "Biography",
     modalEquipTitle: "🛠️ Gear & Filming Equipment",
     modalPortfolioTitle: "📸 Portfolio Preview",
-    noticePlatformOnly: "🔒 Reserved for members: sign up or log in to book this provider. All bookings and payments go through the platform.",
-    loginAlert: "Please sign up first to see this provider in your cart",
+    noticePlatformOnly: "🔒 Reserved for members: sign up or log in to book this provider.",
     closeLabel: "Close",
     noResult: "No creator matches your search.",
   },
@@ -128,7 +125,7 @@ const DIRECTORY_TEXT = {
 
 export default function CreatorDirectory({ onRequireLogin }) {
   const { lang } = useLanguage();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, login } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const t = DIRECTORY_TEXT[lang] || DIRECTORY_TEXT.fr;
@@ -138,10 +135,20 @@ export default function CreatorDirectory({ onRequireLogin }) {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedCreator, setSelectedCreator] = useState(null);
 
-  // Échap ferme la fiche ; le défilement de la page est bloqué tant qu'elle est ouverte
+  // État local pour notre belle modale d'inscription / connexion sur-mesure
+  const [showModalAuth, setShowModalAuth] = useState(false);
+  const [authTab, setAuthTab] = useState("register"); // "register" ou "login"
+  const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+
   useEffect(() => {
-    if (!selectedCreator) return undefined;
-    const onKey = (e) => e.key === "Escape" && setSelectedCreator(null);
+    if (!selectedCreator && !showModalAuth) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setSelectedCreator(null);
+        setShowModalAuth(false);
+      }
+    };
     document.addEventListener("keydown", onKey);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -149,7 +156,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [selectedCreator]);
+  }, [selectedCreator, showModalAuth]);
 
   const query = search.trim().toLowerCase();
   const filteredCreators = CREATORS_DATA.filter((creator) => {
@@ -162,23 +169,29 @@ export default function CreatorDirectory({ onRequireLogin }) {
     return matchSearch && matchCategory;
   });
 
-  // Bouton unique "Réserver"
   const handleBookAction = (e, creator) => {
     e.stopPropagation();
 
-    // Visiteur non connecté : bloqué, alerte, puis ouverture de la modale d'inscription
+    // Visiteur non connecté : on ferme la fiche et on ouvre notre belle modale sur-mesure
     if (!isLoggedIn) {
-      alert(t.loginAlert);
       setSelectedCreator(null);
+      setAuthTab("register");
+      setShowModalAuth(true);
       onRequireLogin?.();
       return;
     }
 
-    // Abonné connecté : ajout au panier puis redirection vers le paiement
     const added = addToCart(creator);
-    if (added === false) return; // panier pas encore prêt (session en cours de chargement)
+    if (added === false) return;
     setSelectedCreator(null);
     navigate("/cart");
+  };
+
+  const handleAuthSubmit = (e) => {
+    e.preventDefault();
+    login?.({ email: emailInput });
+    setShowModalAuth(false);
+    alert(lang === "en" ? "Successfully connected!" : "Connexion réussie ! Bienvenue sur Boké One.");
   };
 
   return (
@@ -193,7 +206,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
           <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl mx-auto">{t.subtitle}</p>
         </div>
 
-        {/* Barre de recherche & liste déroulante des métiers (ascenseur automatique) */}
+        {/* Barre de recherche & liste déroulante des métiers */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-neutral-900 border border-neutral-800 p-4 rounded-2xl">
           <input
             type="text"
@@ -290,13 +303,11 @@ export default function CreatorDirectory({ onRequireLogin }) {
           onClick={() => setSelectedCreator(null)}
           role="dialog"
           aria-modal="true"
-          aria-label={`${t.modalTitle} : ${selectedCreator.name}`}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl"
           >
-            {/* En-tête de la modale : titre principal "En savoir plus" */}
             <div className="flex justify-between items-start border-b border-neutral-800 pb-4">
               <div className="flex items-center gap-4">
                 <img
@@ -315,14 +326,12 @@ export default function CreatorDirectory({ onRequireLogin }) {
               <button
                 type="button"
                 onClick={() => setSelectedCreator(null)}
-                aria-label={t.closeLabel}
                 className="text-neutral-400 hover:text-white font-bold text-xl cursor-pointer bg-neutral-950 rounded-full h-8 w-8 flex items-center justify-center border border-neutral-800"
               >
                 ✕
               </button>
             </div>
 
-            {/* Notice d'accès restreint (invités) */}
             {!isLoggedIn && (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 text-[11px] text-amber-300 leading-relaxed">
                 {t.noticePlatformOnly}
@@ -360,7 +369,6 @@ export default function CreatorDirectory({ onRequireLogin }) {
               </div>
             </div>
 
-            {/* Action unique : Réserver */}
             <div className="pt-4 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <span className="text-[10px] text-neutral-500 block">{t.fromPrice}</span>
@@ -375,6 +383,87 @@ export default function CreatorDirectory({ onRequireLogin }) {
                 {t.btnBook}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* VRAIE FENÊTRE MODALE (POP-IN) D'INSCRIPTION / CONNEXION SUR-MESURE */}
+      {showModalAuth && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 relative shadow-2xl">
+            <button 
+              type="button"
+              onClick={() => setShowModalAuth(false)}
+              className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Onglets bascule Inscription / Connexion */}
+            <div className="flex bg-neutral-950 p-1.5 rounded-2xl border border-neutral-800">
+              <button
+                type="button"
+                onClick={() => setAuthTab("register")}
+                className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
+                  authTab === "register" ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                S'inscrire
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthTab("login")}
+                className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
+                  authTab === "login" ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Se connecter
+              </button>
+            </div>
+
+            <div className="space-y-1 text-center">
+              <h3 className="text-lg font-black text-white">
+                {authTab === "register" ? "Rejoignez le réseau Boké One" : "Accès Membre Boké One"}
+              </h3>
+              <p className="text-xs text-neutral-400">
+                {authTab === "register" 
+                  ? "Créez votre compte pour réserver vos prestataires en toute sécurité." 
+                  : "Connectez-vous pour retrouver votre panier et vos réservations."}
+              </p>
+            </div>
+
+            <form onSubmit={handleAuthSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-neutral-300">Adresse email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="nom@exemple.com"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-neutral-300">Mot de passe</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3.5 rounded-xl text-xs transition cursor-pointer shadow-lg"
+              >
+                {authTab === "register" ? "Créer mon compte" : "Se connecter"}
+              </button>
+            </form>
           </div>
         </div>
       )}

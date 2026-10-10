@@ -1,213 +1,477 @@
-﻿import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+﻿import React, { useState, useEffect } from "react";
+import { useCart } from "../context/CartContext";
+import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-// Mêmes catégories que la table `requests` (supabase_01_requests.sql)
-const CATEGORIES = [
-  { id: "portrait-corporate", label: "Portrait Corporate" },
-  { id: "evenementiel", label: "Événementiel" },
-  { id: "contenu", label: "Réalisation de contenu" },
-  { id: "mariage-naissance", label: "Mariage & Naissance" },
-  { id: "autre", label: "Autre besoin" },
+const GALLERY_ITEMS = [
+  {
+    id: 1,
+    title: "Tournage Cinéma Île-de-France",
+    category: "Cinéma",
+    type: "Vidéo",
+    price: 120,
+    image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600",
+    creator: "Marc V. (Réalisateur / Chef Opérateur)",
+    bio: "Spécialisé dans les tournages longs métrages et clips institutionnels en Île-de-France.",
+    likesCount: 24,
+  },
+  {
+    id: 2,
+    title: "Architecture & Design Parisien",
+    category: "Immobilier",
+    type: "Photo",
+    price: 90,
+    image: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=600",
+    creator: "Sophie L. (Photographe d'Architecture)",
+    bio: "Mise en valeur de biens d'exception et d'ouvrages d'art par la lumière naturelle.",
+    likesCount: 42,
+  },
+  {
+    id: 3,
+    title: "Vue Aérienne Drone 4K",
+    category: "Drone",
+    type: "Vidéo / Photo",
+    price: 150,
+    image: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=600",
+    creator: "Alexandre T. (Pilote Drone Certifié DGAC)",
+    bio: "Captions aériennes spectaculaires 4K pour l'immobilier et l'événementiel.",
+    likesCount: 18,
+  },
 ];
 
-export default function HomePage({ onNavigate }) {
-  const [needOpen, setNeedOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+const NEWS_ITEMS = [
+  {
+    id: 1,
+    date: "Salon Pro 2026",
+    title: "Ouverture des accréditations Élite & Pro - Salon de la Photo",
+    summary: "Accédez en avant-première aux masterclasses et plannings exclusifs à la Grande Halle de la Villette.",
+    fullContent: "Le grand Salon Photo & Vidéo bat actuellement son plein à la Grande Halle de la Villette ! Quatre jours exceptionnels dédiés à la pratique, aux masterclasses de pointe, aux tests de matériel en situation réelle (studio, macro, architecture) et aux rencontres exclusives avec l'élite de la création visuelle française.",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1XoNi-N5iNRWgHCmnaTUXumu9Efqp6HbPOPjAq-ki1Q&s=10",
+  },
+  {
+    id: 2,
+    date: "Octobre 2026",
+    title: "Mise à jour des certifications nationales de l'audiovisuel",
+    summary: "Renforcement des protocoles de sécurité pour les tournages en espace public et en milieu aquatique.",
+    fullContent: "Dans le cadre de notre démarche d'élite, cette mise à jour intègre de nouvelles normes obligatoires pour tous les prestataires du réseau Boké One intervenant sur le domaine public en Île-de-France.",
+    image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200",
+  },
+  {
+    id: 3,
+    date: "Nouveauté Réseau",
+    title: "Lancement du module d'accréditation Drone S1-S3",
+    summary: "Standardisation des demandes d'autorisation de vol centralisées sur Boké One.",
+    fullContent: "Simplifiez vos démarches de tournage aérien : les télépilotes certifiés peuvent désormais générer leurs protocoles d'accord préfectoraux directement depuis l'espace membre.",
+    image: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=1200",
+  },
+];
 
-  function handleSearchSubmit(e) {
+export default function HomePage() {
+  const { lang } = useLanguage();
+  const { isLoggedIn, login } = useAuth();
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
+
+  const isEn = lang === "en";
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentNewsIndex((prevIndex) => (prevIndex + 1) % NEWS_ITEMS.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const [likes, setLikes] = useState(
+    GALLERY_ITEMS.reduce((acc, item) => ({ ...acc, [item.id]: item.likesCount }), {})
+  );
+  const [userLiked, setUserLiked] = useState({});
+
+  const [selectedNews, setSelectedNews] = useState(null);
+  const [selectedGalleryItem, setSelectedGalleryItem] = useState(null);
+
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState("register");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleLike = (id, e) => {
+    e.stopPropagation();
+    if (userLiked[id]) {
+      setLikes((prev) => ({ ...prev, [id]: prev[id] - 1 }));
+      setUserLiked((prev) => ({ ...prev, [id]: false }));
+    } else {
+      setLikes((prev) => ({ ...prev, [id]: prev[id] + 1 }));
+      setUserLiked((prev) => ({ ...prev, [id]: true }));
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    // ⚠️ Recherche minimale pour l'instant : redirige vers les portfolios.
-    // Une vraie recherche par référence demandera une colonne "reference"
-    // sur une future table `photos` — pas encore créée, je n'ai pas voulu l'inventer.
-    onNavigate("portfolios");
-  }
+    if (searchQuery.trim()) {
+      navigate(`/creators?search=${encodeURIComponent(searchQuery)}`);
+    } else {
+      navigate("/creators");
+    }
+  };
+
+  const handleBuyItem = (item, e) => {
+    e.stopPropagation();
+    if (!isLoggedIn) {
+      setAuthMode("register");
+      setShowAuthModal(true);
+      return;
+    }
+    addToCart(item);
+    navigate("/cart");
+  };
+
+  const handleAuthSubmit = (e) => {
+    e.preventDefault();
+    login?.({ email });
+    setShowAuthModal(false);
+    alert(isEn ? "Successfully connected!" : "Connexion réussie ! Bienvenue sur Boké One.");
+  };
+
+  const handleForgotPassword = () => {
+    if (!email) {
+      alert(isEn ? "Please enter your email address first." : "Veuillez d'abord saisir votre adresse email dans le champ ci-dessus.");
+      return;
+    }
+    alert(isEn ? `A password reset link has been sent to ${email}.` : `Un email de réinitialisation de mot de passe a été envoyé à ${email}.`);
+  };
+
+  const currentNews = NEWS_ITEMS[currentNewsIndex];
 
   return (
-    <div className="relative max-w-6xl mx-auto px-4 py-16">
-      {/* ENCADRÉ "BESOIN URGENT" — discret, coin haut-droit, accent rouge */}
-      <button
-        type="button"
-        onClick={() => setNeedOpen(true)}
-        className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex items-center gap-2 rounded-xl border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-left hover:bg-rose-500/20 transition cursor-pointer"
-      >
-        <span className="text-rose-400 text-sm">🔴</span>
-        <span className="leading-tight">
-          <span className="block text-[11px] font-black text-rose-300">Besoin urgent ?</span>
-          <span className="block text-[10px] text-rose-400/80">Déposer une demande →</span>
-        </span>
-      </button>
+    <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans selection:bg-amber-500 selection:text-neutral-950 overflow-x-hidden">
+      
+      <div className="max-w-7xl mx-auto px-6 py-10 space-y-10">
 
-      <div className="text-center max-w-3xl mx-auto mb-14">
-        <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold tracking-widest uppercase border border-amber-500/20 mb-6">
-          Réseau d'Élite & Agence de Créateurs
-        </span>
-        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6">
-          L'Excellence Visuelle par <span className="text-amber-500">Boké One</span>
-        </h1>
-        <p className="text-slate-300 text-base md:text-lg leading-relaxed mb-10">
-          Plateforme exclusive connectant les créateurs d'images professionnels et les clients à la recherche de prestations haut de gamme en Île-de-France.
-        </p>
-      </div>
+        {/* 1. ACTUS DÉFILANTES */}
+        <div className="max-w-3xl mx-auto space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-black uppercase tracking-widest text-amber-400 flex items-center gap-2">
+              <span>⚡</span> {isEn ? "Latest News & Updates" : "Actualités & Annonces Réseau"}
+            </h3>
+            {!isLoggedIn && (
+              <button 
+                onClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
+                className="text-xs text-amber-400 hover:underline font-bold cursor-pointer"
+              >
+                {isEn ? "Sign In / Register →" : "Connexion / Inscription →"}
+              </button>
+            )}
+          </div>
 
-      {/* BLOC CENTRAL : rappel planche contact + mini moteur de recherche par référence */}
-      <div className="max-w-2xl mx-auto mb-16 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-md text-center space-y-4">
-        <h2 className="text-lg font-bold text-white">🖼️ Retrouver une réalisation</h2>
-        <p className="text-slate-400 text-sm">
-          Parcourez la planche contact complète, ou cherchez directement une référence si vous l'avez déjà en tête.
-        </p>
-        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Référence, titre ou nom du créateur…"
-            className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
-          />
-          <button
-            type="submit"
-            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-widest rounded-xl shadow-lg transition cursor-pointer whitespace-nowrap"
+          <div 
+            onClick={() => setSelectedNews(currentNews)}
+            className="bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 p-6 rounded-3xl shadow-xl cursor-pointer transition duration-300 relative overflow-hidden group flex flex-col sm:flex-row gap-6 items-center"
           >
-            Rechercher
-          </button>
-        </form>
-        <button
-          type="button"
-          onClick={() => onNavigate('portfolios')}
-          className="inline-block px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-widest rounded-xl border border-slate-700 transition cursor-pointer"
-        >
-          Voir la planche contact complète
-        </button>
-      </div>
+            <div className="w-full sm:w-48 h-32 rounded-2xl overflow-hidden shrink-0 border border-neutral-800">
+              <img 
+                src={currentNews.image} 
+                alt={currentNews.title} 
+                className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+              />
+            </div>
 
-      <div className="flex justify-center gap-4 flex-wrap mb-16">
-        <button
-          type="button"
-          onClick={() => onNavigate('annuaire')}
-          className="px-8 py-4 bg-slate-900 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl border border-slate-800 hover:bg-slate-800 transition cursor-pointer"
-        >
-          Découvrir l'Annuaire
-        </button>
-      </div>
+            <div className="flex-1 space-y-2 text-left">
+              <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold px-2.5 py-1 rounded-full uppercase">
+                {currentNews.date}
+              </span>
+              <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition">
+                {currentNews.title}
+              </h4>
+              <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
+                {currentNews.summary}
+              </p>
+              <span className="text-[11px] text-amber-400 font-bold block pt-1 underline">
+                {isEn ? "Read full update →" : "Lire le résumé complet →"}
+              </span>
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="p-8 bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-md">
-          <div className="text-amber-500 text-2xl font-black mb-4">01</div>
-          <h3 className="text-xl font-bold text-white mb-2">Portfolios Ciblés</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Parcourez les réalisations artistiques par catégorie et pré-sélectionnez vos coups de cœur pour vos séances.
-          </p>
+            <div className="absolute bottom-3 right-4 flex gap-1.5">
+              {NEWS_ITEMS.map((_, idx) => (
+                <span
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); setCurrentNewsIndex(idx); }}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    idx === currentNewsIndex ? "w-6 bg-amber-400" : "w-1.5 bg-neutral-700"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="p-8 bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-md">
-          <div className="text-amber-500 text-2xl font-black mb-4">02</div>
-          <h3 className="text-xl font-bold text-white mb-2">Réseau & Annuaire</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Identifiez et entrez en contact direct avec les créateurs abonnés et les talents validés par l'agence.
-          </p>
-        </div>
-        <div className="p-8 bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-md">
-          <div className="text-amber-500 text-2xl font-black mb-4">03</div>
-          <h3 className="text-xl font-bold text-white mb-2">Espace Pro & CRM</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Un tableau de bord sécurisé gérant les transactions, les commandes et le calcul des commissions de l'agence.
-          </p>
-        </div>
-      </div>
 
-      {/* MODALE BESOIN — compacte, pas de grand hero */}
-      {needOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4"
-          onMouseDown={(e) => e.target === e.currentTarget && setNeedOpen(false)}
-        >
-          <div className="bg-[#0e1424] border border-rose-500/30 w-full max-w-md rounded-2xl p-6 relative shadow-2xl">
+        <div className="max-w-3xl mx-auto border-t border-neutral-800/80 my-6"></div>
+
+        {/* 2. RECHERCHE */}
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 max-w-2xl mx-auto shadow-xl">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              placeholder={isEn ? "Search by creator name, subscription, reference..." : "Rechercher par nom de presta, abonnement, référence..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
+            />
             <button
-              type="button"
-              onClick={() => setNeedOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold cursor-pointer"
+              type="submit"
+              className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-md"
+            >
+              {isEn ? "SEARCH" : "RECHERCHER"}
+            </button>
+          </form>
+        </div>
+
+        <div className="max-w-3xl mx-auto border-t border-neutral-800/80 my-6"></div>
+
+        {/* 3. GALERIE */}
+        <div className="space-y-6 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {GALLERY_ITEMS.map((item) => (
+              <div 
+                key={item.id} 
+                onClick={() => setSelectedGalleryItem(item)}
+                className="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between group cursor-pointer transition"
+              >
+                <div className="relative h-56 overflow-hidden">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-25">
+                    <span className="text-white font-black text-xl tracking-widest uppercase rotate-[-20deg]">
+                      BOKÉ ONE
+                    </span>
+                  </div>
+
+                  <span className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-amber-400 text-[10px] font-bold px-3 py-1 rounded-full border border-neutral-800">
+                    {item.category} ({item.type})
+                  </span>
+                </div>
+
+                <div className="p-5 space-y-4">
+                  <h3 className="text-sm font-bold text-white group-hover:text-amber-400 transition">{item.title}</h3>
+                  
+                  <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                    <span className="text-base font-black text-amber-400">{item.price} €</span>
+                    
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={(e) => handleLike(item.id, e)}
+                        className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-xl text-xs transition cursor-pointer ${
+                          userLiked[item.id]
+                            ? "bg-rose-500/20 border-rose-500 text-rose-400 font-bold"
+                            : "bg-neutral-950 hover:bg-neutral-800 border-neutral-800 text-neutral-300"
+                        }`}
+                      >
+                        <span>❤️</span>
+                        <span className="font-bold">{likes[item.id]}</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => handleBuyItem(item, e)}
+                        className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-4 py-1.5 rounded-xl text-xs transition cursor-pointer shadow"
+                      >
+                        {isEn ? "Buy" : "Acheter"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* MODALE NEWS */}
+      {selectedNews && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl space-y-5 p-6 sm:p-8 relative">
+            <button 
+              onClick={() => setSelectedNews(null)}
+              className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
             >
               ✕
             </button>
-            <NeedForm onDone={() => setNeedOpen(false)} />
+            <div className="space-y-1">
+              <span className="text-xs text-amber-400 font-bold">{selectedNews.date}</span>
+              <h2 className="text-xl sm:text-2xl font-black text-white">{selectedNews.title}</h2>
+            </div>
+            <div className="relative h-64 rounded-2xl overflow-hidden border border-neutral-800 shadow-inner">
+              <img src={selectedNews.image} alt="Grande Halle de la Villette" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent flex items-end p-4">
+                <span className="text-xs text-amber-300 font-medium">📍 Événement officiel - Grande Halle de la Villette, Paris</span>
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">{selectedNews.fullContent}</p>
+            <button 
+              onClick={() => setSelectedNews(null)}
+              className="w-full bg-amber-500 text-neutral-950 font-bold py-3.5 rounded-xl text-xs cursor-pointer hover:bg-amber-400 transition shadow-lg"
+            >
+              {isEn ? "Close news" : "Fermer l'actualité"}
+            </button>
           </div>
         </div>
       )}
+
+      {/* MODALE CRÉATEUR */}
+      {selectedGalleryItem && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl space-y-4 p-6 relative">
+            <button 
+              onClick={() => setSelectedGalleryItem(null)}
+              className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
+            >
+              ✕
+            </button>
+            <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 px-3 py-1 rounded-full font-bold uppercase">
+              {selectedGalleryItem.category} • {selectedGalleryItem.type}
+            </span>
+            <h2 className="text-lg font-black text-white">{selectedGalleryItem.title}</h2>
+            <div className="relative h-48 rounded-2xl overflow-hidden border border-neutral-800">
+              <img src={selectedGalleryItem.image} alt="" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                <span className="text-white font-black text-lg tracking-widest uppercase">BOKÉ ONE</span>
+              </div>
+            </div>
+            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-2xl space-y-2">
+              <h4 className="text-xs font-bold text-amber-400">{isEn ? "Creator:" : "Auteur / Créateur :"} {selectedGalleryItem.creator}</h4>
+              <p className="text-xs text-neutral-300 leading-relaxed">{selectedGalleryItem.bio}</p>
+            </div>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => { setSelectedGalleryItem(null); navigate("/creators"); }}
+                className="flex-1 bg-neutral-950 border border-neutral-800 hover:border-neutral-700 text-neutral-200 font-bold py-3 rounded-xl text-xs transition cursor-pointer"
+              >
+                {isEn ? "View full profile" : "Voir le profil complet"}
+              </button>
+              <button 
+                onClick={() => setSelectedGalleryItem(null)}
+                className="bg-amber-500 text-neutral-950 font-bold px-6 py-3 rounded-xl text-xs cursor-pointer hover:bg-amber-400 transition"
+              >
+                {isEn ? "Close" : "Fermer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODALE D'INSCRIPTION / CONNEXION */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 relative shadow-2xl">
+            <button 
+              type="button"
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="flex bg-neutral-950 p-1.5 rounded-2xl border border-neutral-800">
+              <button
+                type="button"
+                onClick={() => setAuthMode("register")}
+                className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
+                  authMode === "register" ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                {isEn ? "Register" : "S'inscrire"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthMode("login")}
+                className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
+                  authMode === "login" ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                {isEn ? "Sign In" : "Se connecter"}
+              </button>
+            </div>
+
+            <div className="space-y-1 text-center">
+              <h3 className="text-lg font-black text-white">
+                {authMode === "register" 
+                  ? (isEn ? "Join the Boké One Network" : "Rejoignez le réseau Boké One")
+                  : (isEn ? "Boké One Member Access" : "Accès Membre Boké One")}
+              </h3>
+              <p className="text-xs text-neutral-400">
+                {authMode === "register" 
+                  ? (isEn ? "Create your account to confirm purchases and book creators." : "Créez votre compte pour valider vos achats et réserver vos prestations.") 
+                  : (isEn ? "Sign in to retrieve your cart and bookmarks." : "Connectez-vous pour retrouver votre panier et vos favoris.")}
+              </p>
+            </div>
+
+            <form onSubmit={handleAuthSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-neutral-300">
+                  {isEn ? "Email address" : "Adresse email"}
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="nom@exemple.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-[11px] font-bold text-neutral-300">
+                    {isEn ? "Password" : "Mot de passe"}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-[10px] text-amber-400 hover:underline cursor-pointer font-semibold"
+                  >
+                    {isEn ? "Forgot password?" : "Mot de passe oublié ?"}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-4 pr-10 py-3 text-xs text-white outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white text-xs cursor-pointer select-none"
+                  >
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3.5 rounded-xl text-xs transition cursor-pointer shadow-lg"
+              >
+                {authMode === "register" 
+                  ? (isEn ? "Create Account" : "Créer mon compte") 
+                  : (isEn ? "Sign In" : "Se connecter")}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
-  );
-}
-
-function NeedForm({ onDone }) {
-  const [category, setCategory] = useState("");
-  const [city, setCity] = useState("");
-  const [description, setDescription] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle | success | error
-  const [error, setError] = useState("");
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-    if (!category) return setError("Choisissez un type de besoin.");
-    if (city.trim().length < 2) return setError("Indiquez une ville.");
-    if (description.trim().length < 10) return setError("Décrivez votre besoin (10 caractères min.).");
-    if (contactName.trim().length < 2) return setError("Indiquez votre prénom.");
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail)) return setError("E-mail invalide.");
-    if (!consent) return setError("Merci d'accepter l'utilisation de vos informations.");
-
-    setSubmitting(true);
-    const { error: dbError } = await supabase.from("requests").insert([{
-      category,
-      city: city.trim(),
-      timing: "non-defini",
-      description: description.trim(),
-      contact_name: contactName.trim(),
-      contact_email: contactEmail.trim(),
-      consent: true,
-    }]);
-    setSubmitting(false);
-
-    if (dbError) {
-      console.error("Erreur dépôt de besoin :", dbError);
-      setError("Une erreur est survenue. Réessayez.");
-      return;
-    }
-    setStatus("success");
-  }
-
-  if (status === "success") {
-    return (
-      <div className="text-center py-4 space-y-3">
-        <div className="text-3xl">✅</div>
-        <h3 className="text-sm font-bold text-white">Votre besoin est enregistré</h3>
-        <p className="text-xs text-slate-400">Nous revenons vers vous dès qu'un créatif correspondant est identifié.</p>
-        <button type="button" onClick={onDone} className="px-5 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl cursor-pointer">Fermer</button>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <h3 className="text-sm font-black text-white">🔴 Besoin urgent — déposez votre demande</h3>
-      <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-[#070b12] border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
-        <option value="">Type de besoin…</option>
-        {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-      </select>
-      <input type="text" placeholder="Ville" value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-[#070b12] border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500" />
-      <textarea rows={3} placeholder="Décrivez votre besoin…" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-[#070b12] border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500" />
-      <div className="flex gap-2">
-        <input type="text" placeholder="Prénom" value={contactName} onChange={(e) => setContactName(e.target.value)} className="flex-1 bg-[#070b12] border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500" />
-        <input type="email" placeholder="E-mail" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="flex-1 bg-[#070b12] border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500" />
-      </div>
-      <label className="flex items-start gap-2 text-[11px] text-slate-400">
-        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5" />
-        J'accepte que mes informations soient utilisées pour étudier mon besoin.
-      </label>
-      {error && <p className="text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">{error}</p>}
-      <button type="submit" disabled={submitting} className="w-full py-2.5 bg-rose-500 hover:bg-rose-400 disabled:opacity-60 text-slate-950 text-xs font-black rounded-xl cursor-pointer">
-        {submitting ? "Envoi…" : "Envoyer ma demande"}
-      </button>
-    </form>
   );
 }

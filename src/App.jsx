@@ -8,6 +8,7 @@ import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 import HomePage from "./components/HomePage";
 import CreatorDirectory from "./components/CreatorDirectory";
 import ForumPage from "./components/ForumPage";
+import AdminForumModeration from "./components/AdminForumModeration"; // 🚀 Import du composant de modération
 import EspaceMembrePro from "./components/EspaceMembrePro";
 import Abonnes from "./components/Abonnes";
 import Cart from "./components/Cart";
@@ -56,7 +57,7 @@ const isActivePath = (pathname, to) =>
 
 function GlobalNavbar({ onOpenAuth }) {
   const { cart } = useCart();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth(); // Récupération de l'utilisateur pour vérifier son rôle si besoin
   const { pathname } = useLocation();
   const { lang, toggleLanguage } = useLanguage();
 
@@ -76,6 +77,8 @@ function GlobalNavbar({ onOpenAuth }) {
       ? "bg-amber-500/10 border-amber-500/40 text-amber-400 font-bold shadow-sm"
       : "bg-neutral-900 border-neutral-800 text-neutral-200 hover:border-amber-500/30"
   }`;
+
+  const modIsActive = isActivePath(pathname, "/admin/moderation");
 
   return (
     <nav className="bg-neutral-950/95 border-b border-neutral-900 px-4 py-3.5 text-neutral-200 sticky top-0 z-40 backdrop-blur-md">
@@ -100,9 +103,9 @@ function GlobalNavbar({ onOpenAuth }) {
           ))}
         </div>
 
-        {/* 3. À droite : Langue, Panier, Connexion */}
+        {/* 3. À droite : Langue, Panier, Modération Admin, Connexion */}
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Bouton de langue : indique la langue vers laquelle basculer au clic */}
+          {/* Bouton de langue */}
           <button 
             onClick={toggleLanguage} 
             className="text-xs font-bold border border-neutral-800 bg-neutral-900 px-3 py-2 rounded-xl hover:border-amber-400/40 transition text-amber-400 flex items-center gap-1.5 cursor-pointer"
@@ -110,6 +113,7 @@ function GlobalNavbar({ onOpenAuth }) {
             {lang === "fr" ? "🇬🇧 EN" : "🇫🇷 FR"}
           </button>
 
+          {/* Panier */}
           <Link to="/cart" className={cartBtnClass} aria-current={cartIsActive ? "page" : undefined}>
             <span>🛒</span>
             <span className="hidden sm:inline font-medium">{ui.cart}</span>
@@ -120,6 +124,22 @@ function GlobalNavbar({ onOpenAuth }) {
             )}
           </Link>
 
+          {/* 🛡️ Bouton d'accès direct à la Modération (visible si connecté) */}
+          {isLoggedIn && (
+            <Link
+              to="/admin/moderation"
+              className={`border px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                modIsActive
+                  ? "bg-red-500/20 border-red-500/60 text-red-400 shadow-sm"
+                  : "border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+              }`}
+            >
+              <span>🛡️</span>
+              <span className="hidden md:inline">Modération</span>
+            </Link>
+          )}
+
+          {/* Statut de connexion */}
           {isLoggedIn ? (
             <Link
               to="/abonnes"
@@ -146,6 +166,11 @@ function GlobalNavbar({ onOpenAuth }) {
             {l.label}
           </Link>
         ))}
+        {isLoggedIn && (
+          <Link to="/admin/moderation" className={tabClass("/admin/moderation")}>
+            🛡️ Modération
+          </Link>
+        )}
       </div>
     </nav>
   );
@@ -174,6 +199,10 @@ function AppShell() {
           <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
           <Route path="/creators" element={<CreatorDirectory />} />
           <Route path="/forum" element={<ForumPage onRequireLogin={openAuth} />} />
+          
+          {/* 🚀 Route de la Modération du Forum */}
+          <Route path="/admin/moderation" element={<AdminForumModeration />} />
+
           <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
           <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
           <Route path="/cart" element={<Cart />} />
