@@ -2,7 +2,7 @@
 import { useCart } from "../context/CartContext";
 import { useLanguage } from "../context/LanguageContext";
 import { formatPrice } from "../lib/formatPrice";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const CART_TEXT = {
   fr: {
@@ -47,6 +47,14 @@ const CART_TEXT = {
   }
 };
 
+// Fonction helper pour extraire une chaîne de texte qu'elle soit en string ou objet bilingue
+const getTextValue = (val, lang) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object") return val[lang] || val.fr || val.en || "";
+  return String(val);
+};
+
 export default function Cart() {
   const { cart, removeFromCart, cartTotal } = useCart();
   const { lang } = useLanguage();
@@ -75,12 +83,14 @@ export default function Cart() {
 
           <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
             <button
+              type="button"
               onClick={() => navigate("/")}
               className="rounded-xl bg-amber-500 px-5 py-2.5 font-bold text-neutral-950 hover:bg-amber-400 transition text-xs cursor-pointer"
             >
               {t.btnExplore}
             </button>
             <button
+              type="button"
               onClick={() => navigate("/creators")}
               className="rounded-xl bg-neutral-800 border border-neutral-700 px-5 py-2.5 font-bold text-neutral-200 hover:bg-neutral-700 transition text-xs cursor-pointer"
             >
@@ -107,7 +117,8 @@ export default function Cart() {
       <div className="flex flex-col gap-4">
         {cart.map((item) => {
           const imageSrc = item.avatar || item.avatar_url || item.url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150";
-          const itemName = item.name || item.display_name || item.title || t.defaultCreator;
+          const itemName = getTextValue(item.name || item.display_name || item.title, lang) || t.defaultCreator;
+          const itemType = getTextValue(item.type || item.specialty, lang) || t.defaultItem;
           const itemPrice = item.starting_price ? formatPrice(item.starting_price) : (item.price || t.defaultQuote);
 
           return (
@@ -120,7 +131,7 @@ export default function Cart() {
                 />
                 <div className="min-w-0">
                   <span className="text-[10px] bg-neutral-950 text-amber-400 px-2 py-0.5 rounded border border-neutral-800 font-bold uppercase">
-                    {item.type || item.specialty || t.defaultItem}
+                    {itemType}
                   </span>
                   <h3 className="font-bold text-neutral-100 text-base truncate mt-1">{itemName}</h3>
                   <p className="text-xs text-neutral-400 truncate">{item.photographe ? `${t.by} ${item.photographe}` : (item.city || "")}</p>
@@ -128,7 +139,7 @@ export default function Cart() {
               </div>
               <div className="flex items-center gap-4 shrink-0">
                 <span className="font-bold text-amber-400 text-sm sm:text-base">{itemPrice}</span>
-                <button onClick={() => removeFromCart(item.id)} className="text-xs font-semibold text-red-400 hover:text-red-300 transition bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-lg cursor-pointer">
+                <button type="button" onClick={() => removeFromCart(item.id)} className="text-xs font-semibold text-red-400 hover:text-red-300 transition bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-lg cursor-pointer">
                   {t.btnRemove}
                 </button>
               </div>
@@ -144,9 +155,13 @@ export default function Cart() {
         </div>
 
         <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
-          <Link to="/checkout" className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 px-8 py-3.5 font-bold text-neutral-950 shadow-lg shadow-amber-500/10 hover:brightness-110 transition text-sm text-center">
+          <button
+            type="button"
+            onClick={() => navigate("/checkout")}
+            className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 px-8 py-3.5 font-bold text-neutral-950 shadow-lg shadow-amber-500/10 hover:brightness-110 transition text-sm text-center cursor-pointer"
+          >
             {t.btnCheckout}
-          </Link>
+          </button>
         </div>
       </div>
     </div>

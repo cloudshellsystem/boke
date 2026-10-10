@@ -36,7 +36,7 @@ const CREATORS_DATA = [
       fr: "Photographe d'architecture chevronnée, spécialisée dans la mise en valeur de biens immobiliers haut de gamme et d'ouvrages d'art. Mon travail repose sur la maîtrise de la lumière naturelle et la précision des perspectives.",
       en: "Seasoned architectural photographer, specialized in showcasing high-end real estate and engineering structures. My work relies on mastering natural light and precise perspective balance."
     },
-    equipment: ["Sony A7R V (61MP)", "Objectifs Cadrage DÉCENTRÉ (Tilt-Shift)", "Éclairage Studio Portable Profoto"],
+    equipment: ["Sony A7R V (61MP)", "Objectifs Tilt-Shift", "Éclairage Studio Profoto"],
     portfolio: [
       "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=600",
       "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=600"
@@ -55,7 +55,7 @@ const CREATORS_DATA = [
       fr: "Régisseur général et chef opérateur fort de 12 ans d'expérience sur le terrain (décors complexes, tournages maritimes, événements institutionnels). Expert en logistique d'équipe et sécurisation des tournages.",
       en: "General line producer and cinematographer with 12 years of field experience (complex sets, maritime shoots, corporate events). Expert in team logistics and shoot safety management."
     },
-    equipment: ["RED V-Raptor 8K", "Gréement Stabilisé Ronin 2", "Véhicule Régie Tout-Terrain"],
+    equipment: ["RED V-Raptor 8K", "Gréement Ronin 2", "Véhicule Régie Tout-Terrain"],
     portfolio: [
       "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600"
     ]
@@ -74,8 +74,9 @@ const DIRECTORY_TEXT = {
     filterRegisseur: "Régisseurs / Techniciens",
     certifiedBadge: "CERTIFIÉ 2026",
     fromPrice: "À partir de",
+    btnStory: "📖 Storytelling & Fiche ➔",
     btnContact: "💬 Contacter / Devis Direct",
-    btnAddToCart: "🛒 Réserver / Ajouter au panier",
+    btnAddToCart: "🛒 Réserver / Ajouter",
     modalBioTitle: "📖 Storytelling & Parcours",
     modalEquipTitle: "🛠️ Matériel & Équipement de Tournage",
     modalPortfolioTitle: "📸 Aperçu du Portfolio",
@@ -92,6 +93,7 @@ const DIRECTORY_TEXT = {
     filterRegisseur: "Line Producers / Technicians",
     certifiedBadge: "CERTIFIED 2026",
     fromPrice: "Starting from",
+    btnStory: "📖 Storytelling & Profile ➔",
     btnContact: "💬 Contact / Direct Quote",
     btnAddToCart: "🛒 Book / Add to Cart",
     modalBioTitle: "📖 Storytelling & Background",
@@ -164,6 +166,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
             ].map((btn) => (
               <button
                 key={btn.id}
+                type="button"
                 onClick={() => setFilter(btn.id)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   filter === btn.id
@@ -182,8 +185,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
           {filteredCreators.map((creator) => (
             <div
               key={creator.id}
-              onClick={() => setSelectedCreator(creator)}
-              className="bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 rounded-3xl p-6 flex flex-col justify-between shadow-xl transition cursor-pointer group"
+              className="bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 rounded-3xl p-6 flex flex-col justify-between shadow-xl transition group"
             >
               <div>
                 <div className="flex items-center gap-4 mb-4">
@@ -196,12 +198,20 @@ export default function CreatorDirectory({ onRequireLogin }) {
                     <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase">
                       {t.certifiedBadge}
                     </span>
-                    <h3 className="text-base font-bold text-white mt-1 group-hover:text-amber-400 transition">{creator.name}</h3>
+                    <h3 className="text-base font-bold text-white mt-1">{creator.name}</h3>
                     <p className="text-xs text-neutral-400">{creator.city}</p>
                   </div>
                 </div>
 
-                <p className="text-xs text-amber-400/90 font-medium mb-4">{creator.specialty[lang]}</p>
+                <p className="text-xs text-amber-400/90 font-medium mb-3">{creator.specialty[lang]}</p>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedCreator(creator)}
+                  className="w-full text-left text-xs text-amber-400 hover:underline font-bold bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-xl mb-4 transition flex items-center justify-between cursor-pointer"
+                >
+                  <span>{t.btnStory}</span>
+                </button>
 
                 <div className="flex flex-wrap gap-1.5 mb-6">
                   {creator.certifications.map((cert, idx) => (
@@ -219,6 +229,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
                 </div>
 
                 <button
+                  type="button"
                   onClick={(e) => handleAddToCart(e, creator)}
                   className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow cursor-pointer"
                 >
@@ -258,6 +269,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedCreator(null)}
                 className="text-neutral-400 hover:text-white font-bold text-xl cursor-pointer bg-neutral-950 rounded-full h-8 w-8 flex items-center justify-center border border-neutral-800"
               >
@@ -285,4 +297,51 @@ export default function CreatorDirectory({ onRequireLogin }) {
 
             {/* Portfolio */}
             <div className="space-y-2">
-              <h4 className="text-
+              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">{t.modalPortfolioTitle}</h4>
+              <div className="grid grid-cols-2 gap-3">
+                {selectedCreator.portfolio.map((imgUrl, i) => (
+                  <img
+                    key={i}
+                    src={imgUrl}
+                    alt={`Réalisation ${i + 1}`}
+                    className="rounded-xl h-32 w-full object-cover border border-neutral-800"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Actions Bottom */}
+            <div className="pt-4 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] text-neutral-500 block">{t.fromPrice}</span>
+                <span className="text-xl font-black text-amber-400">{selectedCreator.starting_price} €</span>
+              </div>
+
+              <div className="flex gap-3 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => window.open("https://wa.me/?text=" + encodeURIComponent(`Bonjour ${selectedCreator.name}, je viens via Boké One pour un devis !`), "_blank")}
+                  className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
+                >
+                  {t.btnContact}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    handleAddToCart(e, selectedCreator);
+                    setSelectedCreator(null);
+                  }}
+                  className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-400 text-neutral-950 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
+                >
+                  {t.btnAddToCart}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
