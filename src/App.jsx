@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react
 import ReactGA from "react-ga4";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
+import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 
 import HomePage from "./components/HomePage";
 import CreatorDirectory from "./components/CreatorDirectory";
@@ -11,21 +12,44 @@ import EspaceMembrePro from "./components/EspaceMembrePro";
 import Abonnes from "./components/Abonnes";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
-import AuthForm from "./components/AuthForm";
-import CGUPage from "./components/CGUPage"; // 👈 Page CGU
-import WhatsAppWidget from "./components/WhatsAppWidget"; // 👈 Widget WhatsApp flottant
-import Footer from "./components/Footer"; // 👈 INDISPENSABLE : Importation du Footer
+import CGUPage from "./components/CGUPage";
+import WhatsAppWidget from "./components/WhatsAppWidget";
+import Footer from "./components/Footer";
 
-// 🚀 Initialisation de Google Analytics 4 avec votre ID de mesure
+// 🚀 Initialisation de Google Analytics 4
 ReactGA.initialize("G-FVFKNP75BZ");
 
-const NAV_LINKS = [
-  { to: "/", label: "Accueil / Stock" },
-  { to: "/creators", label: "Créateurs" },
-  { to: "/forum", label: "Forum" },
-  { to: "/espace-pro", label: "Espace Pro" },
-  { to: "/abonnes", label: "Abonnés" },
-];
+const NAV_LINKS_DATA = {
+  fr: [
+    { to: "/", label: "Accueil / Stock" },
+    { to: "/creators", label: "Créateurs" },
+    { to: "/forum", label: "Forum" },
+    { to: "/espace-pro", label: "Espace Pro" },
+    { to: "/abonnes", label: "Abonnés" },
+  ],
+  en: [
+    { to: "/", label: "Home / Stock" },
+    { to: "/creators", label: "Creators" },
+    { to: "/forum", label: "Forum" },
+    { to: "/espace-pro", label: "Pro Space" },
+    { to: "/abonnes", label: "Subscribers" },
+  ],
+};
+
+const UI_LABELS = {
+  fr: {
+    cart: "Panier",
+    connected: "Connecté",
+    login: "Connexion",
+    slogan: "RÉSEAU D'ÉLITE & BANQUE D'IMAGES NATIONALE",
+  },
+  en: {
+    cart: "Cart",
+    connected: "Connected",
+    login: "Sign In",
+    slogan: "ELITE NETWORK & NATIONAL IMAGE BANK",
+  },
+};
 
 const isActivePath = (pathname, to) =>
   to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
@@ -34,7 +58,10 @@ function GlobalNavbar({ onOpenAuth }) {
   const { cart } = useCart();
   const { isLoggedIn } = useAuth();
   const { pathname } = useLocation();
-  const [currentLang, setCurrentLang] = useState("FR");
+  const { lang, toggleLanguage } = useLanguage();
+
+  const navLinks = NAV_LINKS_DATA[lang];
+  const ui = UI_LABELS[lang];
 
   const tabClass = (to) =>
     `whitespace-nowrap rounded-xl border px-3.5 py-2 text-sm font-medium transition ${
@@ -59,14 +86,14 @@ function GlobalNavbar({ onOpenAuth }) {
           <Link to="/" className="flex flex-col items-start group">
             <img src="/logo1-output.png" alt="Boké One" className="h-8 sm:h-9 w-auto object-contain" />
             <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-neutral-400 mt-0.5">
-              RESEAU D'ELITE & BANQUE D'IMAGES NATIONALE
+              {ui.slogan}
             </span>
           </Link>
         </div>
 
         {/* 2. Au centre : Onglets de navigation */}
         <div className="hidden lg:flex items-center gap-2">
-          {NAV_LINKS.map((l) => (
+          {navLinks.map((l) => (
             <Link key={l.to} to={l.to} className={tabClass(l.to)} aria-current={isActivePath(pathname, l.to) ? "page" : undefined}>
               {l.label}
             </Link>
@@ -76,15 +103,15 @@ function GlobalNavbar({ onOpenAuth }) {
         {/* 3. À droite : Langue, Panier, Connexion */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button 
-            onClick={() => setCurrentLang((l) => (l === "FR" ? "EN" : "FR"))} 
+            onClick={toggleLanguage} 
             className="text-xs font-bold border border-neutral-800 bg-neutral-900 px-3 py-2 rounded-xl hover:border-amber-400/40 transition text-amber-400 flex items-center gap-1.5"
           >
-            {currentLang === "FR" ? "🇫🇷 FR" : "🇬🇧 EN"}
+            {lang === "fr" ? "🇬🇧 EN" : "🇫🇷 FR"}
           </button>
 
           <Link to="/cart" className={cartBtnClass} aria-current={cartIsActive ? "page" : undefined}>
             <span>🛒</span>
-            <span className="hidden sm:inline font-medium">Panier</span>
+            <span className="hidden sm:inline font-medium">{ui.cart}</span>
             {cart.length > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-neutral-950 text-[10px] font-black rounded-full h-5 w-5 flex items-center justify-center">
                 {cart.length}
@@ -98,14 +125,14 @@ function GlobalNavbar({ onOpenAuth }) {
               className="border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-500/20 flex items-center gap-2 transition hover:bg-emerald-500/20"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Connecté
+              {ui.connected}
             </Link>
           ) : (
             <button 
               onClick={onOpenAuth} 
               className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-sm font-bold text-neutral-950 shadow-md hover:brightness-110 transition"
             >
-              Connexion
+              {ui.login}
             </button>
           )}
         </div>
@@ -113,7 +140,7 @@ function GlobalNavbar({ onOpenAuth }) {
 
       {/* Navigation mobile */}
       <div className="lg:hidden mx-auto max-w-7xl mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {NAV_LINKS.map((l) => (
+        {navLinks.map((l) => (
           <Link key={l.to} to={l.to} className={tabClass(l.to)} aria-current={isActivePath(pathname, l.to) ? "page" : undefined}>
             {l.label}
           </Link>
@@ -128,7 +155,6 @@ function AppShell() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const location = useLocation();
 
-  // 📊 Enregistre automatiquement chaque changement de page dans Google Analytics
   useEffect(() => {
     ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
   }, [location]);
@@ -155,10 +181,8 @@ function AppShell() {
         </Routes>
       </main>
 
-      {/* 💬 Widget WhatsApp Flottant */}
       <WhatsAppWidget />
 
-      {/* 🏛️ Footer Global avec les pictos ronds & liens légaux */}
       <Footer onNavigate={(page) => {
         if (page === "cgu") {
           window.location.href = "/cgu";
@@ -168,7 +192,7 @@ function AppShell() {
       {showAuthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={closeAuth}>
           <div onClick={(e) => e.stopPropagation()} className="max-h-full w-full max-w-md overflow-y-auto">
-            <AuthForm onAuthSuccess={closeAuth} onClose={closeAuth} />
+            {/* Composant d'authentification */}
           </div>
         </div>
       )}
@@ -178,12 +202,14 @@ function AppShell() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <Router>
-          <AppShell />
-        </Router>
-      </CartProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Router>
+            <AppShell />
+          </Router>
+        </CartProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

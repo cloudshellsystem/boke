@@ -1,5 +1,6 @@
 ﻿import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext"; // 👈 Importation du contexte global de langue
 
 const SUBSCRIPTION_PLANS = {
   fr: [
@@ -159,30 +160,16 @@ const UI_TEXT = {
 
 export default function Abonnes({ onRequireLogin }) {
   const { isLoggedIn, user, logout } = useAuth();
-  const [lang, setLang] = useState("fr");
+  const { lang } = useLanguage(); // 👈 Récupération de la langue globale
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null);
 
   const plans = SUBSCRIPTION_PLANS[lang];
   const ui = UI_TEXT[lang];
 
-  const toggleLanguage = () => {
-    setLang((prev) => (prev === "fr" ? "en" : "fr"));
-  };
-
   if (!isLoggedIn) {
     return (
       <div className="bg-neutral-950 min-h-screen py-12 px-6 text-neutral-200 font-sans">
         
-        {/* BOUTON BASCULE LANGUE */}
-        <div className="max-w-5xl mx-auto flex justify-end mb-4">
-          <button
-            onClick={toggleLanguage}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs font-bold text-amber-400 hover:border-amber-500/40 transition"
-          >
-            {lang === "fr" ? "🇬🇧 EN" : "🇫🇷 FR"}
-          </button>
-        </div>
-
         <div className="max-w-5xl mx-auto text-center mb-12">
           <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold tracking-widest uppercase border border-amber-500/20 mb-3">
             {ui.headerBadge}
@@ -315,16 +302,6 @@ export default function Abonnes({ onRequireLogin }) {
     <div className="bg-neutral-950 min-h-screen py-12 px-6 text-neutral-200 font-sans">
       <div className="max-w-4xl mx-auto bg-neutral-900/50 border border-neutral-900 rounded-3xl p-8 shadow-2xl">
         
-        {/* BOUTON BASCULE LANGUE ESPACE ABONNE */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={toggleLanguage}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs font-bold text-amber-400 hover:border-amber-500/40 transition"
-          >
-            {lang === "fr" ? "🇬🇧 EN" : "🇫🇷 FR"}
-          </button>
-        </div>
-
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-neutral-800 pb-6 gap-4">
           <div>
             <h1 className="text-2xl font-black text-amber-400 mb-1">{ui.memberSpaceTitle}</h1>
