@@ -1,6 +1,6 @@
 ﻿import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useLanguage } from "../context/LanguageContext"; // 👈 Context global de langue
+import { useLanguage } from "../context/LanguageContext";
 
 // Filigrane SVG répété, visible sur les photos
 const WATERMARK_SVG = encodeURIComponent(
@@ -25,7 +25,7 @@ const UI_TEXT = {
     searchPlaceholder: "Rechercher des photos, vidéos, créateurs...",
     eventBadge: "🔥 Événement & Salon IDF",
     eventTime: "Ce week-end",
-    eventTitle: "Boké One en direct sur the terrain",
+    eventTitle: "Boké One en direct sur le terrain",
     eventDesc: "Rencontrez nos dronistes, photographes immobiliers et créateurs partenaires. Démonstrations et networking au rendez-vous.",
     eventAccess: "Accès libre & partenaires",
     learnMore: "En savoir plus ➔",
@@ -48,7 +48,7 @@ const UI_TEXT = {
     loginToBuy: "Se connecter pour acheter",
     eventModalTitle: "Boké One au Salon de la Photo – Grande Halle de la Villette",
     eventModalLocation: "Grande Halle de la Villette, Paris",
-    eventModalDesc: "L'équipe Boké One fait le tour du salon ! Retrouvez nos représentants, nos pilotes de drone accrédités, photographes immobiliers et régisseurs sur le terrain. C'est l'occasion idéale de venir échanger directement avec nous, découvrir le réseau d'élite, discuter de vos projets audiovisuels ou concrétiser votre inscription.",
+    eventModalDesc: "L'équipe Boké One fait le tour du salon ! Retrouvez nos représentants, nos pilotes de drone accrédités, photographes immobiliers et régisseurs sur le terrain. C'est l'occasion idéale de venir échanger directement avec nous, découvrir le réseau d'élite, discuter de vos projets audiovisuel ou concrétiser votre inscription.",
     questionTitle: "🔥 Une question ou envie de nous rencontrer ?",
     questionDesc: "Notre équipe réseau est disponible sur place tout au long du salon.",
     chatBtn: "💬 Discuter",
@@ -91,7 +91,7 @@ const UI_TEXT = {
 
 export default function HomePage({ onRequireLogin }) {
   const { isLoggedIn } = useAuth();
-  const { lang } = useLanguage(); // 👈 Récupération dynamique de la langue 'fr' ou 'en'
+  const { lang } = useLanguage();
   const ui = UI_TEXT[lang];
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -116,7 +116,7 @@ export default function HomePage({ onRequireLogin }) {
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans">
       
-      {/* Barre de recherche isolée */}
+      {/* Barre de recherche */}
       <div className="max-w-6xl mx-auto px-4 pt-8 pb-4 flex justify-center">
         <div className="w-full max-w-3xl flex items-center bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl overflow-hidden focus-within:border-amber-500/50 transition">
           <input 
@@ -245,12 +245,11 @@ export default function HomePage({ onRequireLogin }) {
         </div>
       </div>
 
-      {/* POP-UP ÉVÉNEMENT : LA GRANDE HALLE DE LA VILLETTE & BOKÉ ONE */}
+      {/* POP-UP ÉVÉNEMENT */}
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md" onClick={() => setSelectedEvent(null)}>
           <div onClick={(e) => e.stopPropagation()} className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col">
             
-            {/* Visuel Grande Halle de la Villette */}
             <div className="relative h-64 w-full overflow-hidden bg-neutral-950">
               <img src={selectedEvent.image} alt="Grande Halle de la Villette" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
@@ -264,7 +263,6 @@ export default function HomePage({ onRequireLogin }) {
               </div>
             </div>
 
-            {/* Contenu textuel d'immersion */}
             <div className="p-6 space-y-4">
               <p className="text-sm text-neutral-300 leading-relaxed">
                 {selectedEvent.description}
@@ -297,7 +295,7 @@ export default function HomePage({ onRequireLogin }) {
         </div>
       )}
 
-      {/* Modale photo originale */}
+      {/* Modale photo */}
       {selectedPhoto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md" onClick={() => setSelectedPhoto(null)}>
           <div onClick={(e) => e.stopPropagation()} className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-3xl w-full overflow-hidden flex flex-col md:flex-row shadow-2xl">
