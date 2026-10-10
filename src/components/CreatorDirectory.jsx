@@ -74,12 +74,13 @@ const DIRECTORY_TEXT = {
     filterRegisseur: "Régisseurs / Techniciens",
     certifiedBadge: "CERTIFIÉ 2026",
     fromPrice: "À partir de",
-    btnStory: "📖 Storytelling & Fiche ➔",
-    btnContact: "💬 Contacter / Devis Direct",
+    btnStory: "📖 En savoir plus ➔",
+    btnSecureQuote: "🔒 Demande de Devis Sécurisé",
     btnAddToCart: "🛒 Réserver / Ajouter",
-    modalBioTitle: "📖 Storytelling & Parcours",
+    modalBioTitle: "📖 En savoir plus",
     modalEquipTitle: "🛠️ Matériel & Équipement de Tournage",
     modalPortfolioTitle: "📸 Aperçu du Portfolio",
+    noticePlatformOnly: "🔒 Sécurité Boké One : Tous les échanges et commandes de devis doivent impérativement transiter par la plateforme pour garantir votre protection et la conformité des transactions.",
     closeBtn: "Fermer"
   },
   en: {
@@ -93,12 +94,13 @@ const DIRECTORY_TEXT = {
     filterRegisseur: "Line Producers / Technicians",
     certifiedBadge: "CERTIFIED 2026",
     fromPrice: "Starting from",
-    btnStory: "📖 Storytelling & Profile ➔",
-    btnContact: "💬 Contact / Direct Quote",
+    btnStory: "📖 Learn more ➔",
+    btnSecureQuote: "🔒 Secure Quote Request",
     btnAddToCart: "🛒 Book / Add to Cart",
-    modalBioTitle: "📖 Storytelling & Background",
+    modalBioTitle: "📖 Learn more",
     modalEquipTitle: "🛠️ Gear & Filming Equipment",
     modalPortfolioTitle: "📸 Portfolio Preview",
+    noticePlatformOnly: "🔒 Boké One Security: All communications and quote requests must strictly go through the platform to guarantee your protection and transaction compliance.",
     closeBtn: "Close"
   }
 };
@@ -124,15 +126,20 @@ export default function CreatorDirectory({ onRequireLogin }) {
     return matchSearch && matchCategory;
   });
 
-  const handleAddToCart = (e, creator) => {
+  const handleActionRestricted = (e, creator, actionType = "cart") => {
     e.stopPropagation();
-    // 🔒 SÉCURITÉ STRICTE : Si non connecté, interdiction d'ajouter et ouverture de la modale d'authentification
+    // 🔒 SÉCURITÉ STRICTE : Si non connecté, interdiction d'accéder aux actions et ouverture de la modale d'inscription abonnés
     if (!isLoggedIn) {
+      setSelectedCreator(null);
       onRequireLogin?.();
       return;
     }
-    addToCart(creator);
-    alert(`${creator.name} a été ajouté à votre sélection !`);
+    if (actionType === "cart") {
+      addToCart(creator);
+      alert(`${creator.name} a été ajouté à votre sélection !`);
+    } else if (actionType === "quote") {
+      alert(`Demande de devis sécurisé transmise à ${creator.name} via la messagerie interne Boké One.`);
+    }
   };
 
   return (
@@ -231,7 +238,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
 
                 <button
                   type="button"
-                  onClick={(e) => handleAddToCart(e, creator)}
+                  onClick={(e) => handleActionRestricted(e, creator, "cart")}
                   className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow cursor-pointer"
                 >
                   {t.btnAddToCart}
@@ -243,7 +250,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
 
       </div>
 
-      {/* POP-UP STORYTELLING & FICHE DÉTAILLÉE CRÉATEUR */}
+      {/* POP-UP "EN SAVOIR PLUS" CRÉATEUR */}
       {selectedCreator && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
@@ -278,7 +285,12 @@ export default function CreatorDirectory({ onRequireLogin }) {
               </button>
             </div>
 
-            {/* Storytelling / Bio */}
+            {/* Notice de sécurité plate-forme */}
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 text-[11px] text-amber-300 leading-relaxed">
+              {t.noticePlatformOnly}
+            </div>
+
+            {/* Section En savoir plus */}
             <div className="space-y-2">
               <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">{t.modalBioTitle}</h4>
               <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
@@ -311,7 +323,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
               </div>
             </div>
 
-            {/* Actions Bottom */}
+            {/* Actions Bottom (🔒 Interdiction de contact externe / Réservées abonnés) */}
             <div className="pt-4 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <span className="text-[10px] text-neutral-500 block">{t.fromPrice}</span>
@@ -321,17 +333,14 @@ export default function CreatorDirectory({ onRequireLogin }) {
               <div className="flex gap-3 w-full sm:w-auto">
                 <button
                   type="button"
-                  onClick={() => window.open("https://wa.me/?text=" + encodeURIComponent(`Bonjour ${selectedCreator.name}, je viens via Boké One pour un devis !`), "_blank")}
-                  className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
+                  onClick={(e) => handleActionRestricted(e, selectedCreator, "quote")}
+                  className="flex-1 sm:flex-none bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
                 >
-                  {t.btnContact}
+                  {t.btnSecureQuote}
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    handleAddToCart(e, selectedCreator);
-                    setSelectedCreator(null);
-                  }}
+                  onClick={(e) => handleActionRestricted(e, selectedCreator, "cart")}
                   className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-400 text-neutral-950 px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
                 >
                   {t.btnAddToCart}
