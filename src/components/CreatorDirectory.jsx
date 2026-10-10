@@ -80,7 +80,7 @@ const DIRECTORY_TEXT = {
     modalBioTitle: "📖 En savoir plus",
     modalEquipTitle: "🛠️ Matériel & Équipement de Tournage",
     modalPortfolioTitle: "📸 Aperçu du Portfolio",
-    noticePlatformOnly: "🔒 Sécurité Boké One : Tous les échanges et commandes de devis doivent impérativement transiter par la plateforme pour garantir votre protection et la conformité des transactions.",
+    noticePlatformOnly: "🔒 Accès Réservé aux Abonnés : L'ajout au panier et les demandes de devis sécurisés nécessitent d'être connecté à votre compte membre Boké One.",
     closeBtn: "Fermer"
   },
   en: {
@@ -100,7 +100,7 @@ const DIRECTORY_TEXT = {
     modalBioTitle: "📖 Learn more",
     modalEquipTitle: "🛠️ Gear & Filming Equipment",
     modalPortfolioTitle: "📸 Portfolio Preview",
-    noticePlatformOnly: "🔒 Boké One Security: All communications and quote requests must strictly go through the platform to guarantee your protection and transaction compliance.",
+    noticePlatformOnly: "🔒 Reserved for Members: Adding to cart and secure quote requests require logging into your Boké One member account.",
     closeBtn: "Close"
   }
 };
@@ -128,12 +128,15 @@ export default function CreatorDirectory({ onRequireLogin }) {
 
   const handleActionRestricted = (e, creator, actionType = "cart") => {
     e.stopPropagation();
-    // 🔒 SÉCURITÉ STRICTE : Si non connecté, interdiction d'accéder aux actions et ouverture de la modale d'inscription abonnés
+    
+    // 🔒 RÈGLE ABSOLUE : Si non connecté, interdiction totale d'agir. On ferme la modale créateur et on ouvre l'authentification/inscription.
     if (!isLoggedIn) {
       setSelectedCreator(null);
       onRequireLogin?.();
       return;
     }
+
+    // Si connecté, actions autorisées
     if (actionType === "cart") {
       addToCart(creator);
       alert(`${creator.name} a été ajouté à votre sélection !`);
@@ -285,7 +288,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
               </button>
             </div>
 
-            {/* Notice de sécurité plate-forme */}
+            {/* Notice d'accès restreint abonnés */}
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 text-[11px] text-amber-300 leading-relaxed">
               {t.noticePlatformOnly}
             </div>
@@ -323,7 +326,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
               </div>
             </div>
 
-            {/* Actions Bottom (🔒 Interdiction de contact externe / Réservées abonnés) */}
+            {/* Actions Bottom (🔒 Verrouillées pour les invités non connectés) */}
             <div className="pt-4 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <span className="text-[10px] text-neutral-500 block">{t.fromPrice}</span>
