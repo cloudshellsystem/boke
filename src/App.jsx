@@ -41,7 +41,7 @@ const UI_LABELS = {
     cart: "Panier",
     connected: "Connecté",
     login: "Connexion",
-    slogan: "RÉSEAU D'ÉLITE & BANQUE D'IMAGES NATIONALE",
+    slogan: "RESEAU D'ELITE & BANQUE D'IMAGES NATIONALE",
   },
   en: {
     cart: "Cart",
@@ -102,11 +102,12 @@ function GlobalNavbar({ onOpenAuth }) {
 
         {/* 3. À droite : Langue, Panier, Connexion */}
         <div className="flex items-center gap-2.5 shrink-0">
+          {/* Bouton de langue logique : affiche la langue active, clique pour changer */}
           <button 
             onClick={toggleLanguage} 
             className="text-xs font-bold border border-neutral-800 bg-neutral-900 px-3 py-2 rounded-xl hover:border-amber-400/40 transition text-amber-400 flex items-center gap-1.5"
           >
-            {lang === "fr" ? "🇬🇧 EN" : "🇫🇷 FR"}
+            {lang === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}
           </button>
 
           <Link to="/cart" className={cartBtnClass} aria-current={cartIsActive ? "page" : undefined}>
