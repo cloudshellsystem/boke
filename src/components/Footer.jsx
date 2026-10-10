@@ -40,7 +40,7 @@ export default function Footer({ onNavigate }) {
 
           {/* Pinterest */}
           <a 
-            href="https://pinterest.com" 
+            href="https://www.pinterest.com/bokeone_photographes" 
             target="_blank" 
             rel="noopener noreferrer" 
             className="w-7 h-7 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center text-neutral-300 hover:text-red-400 hover:border-red-500 transition transform hover:scale-110 shadow-sm"
