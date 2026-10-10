@@ -13,20 +13,20 @@ const loadCfg = () => {
 const fmt = (n) => n.toFixed(2).replace(".", ",") + " €";
 
 export default function EspaceMembrePro({ onRequireLogin }) {
-  // ✅ TOUS les hooks avant tout return conditionnel
-  const { isLoggedIn, hasProAccess } = useAuth();
+  // 1. Déclaration de tous les Hooks React au tout début
+  const { isLoggedIn, hasProAccess, loading } = useAuth();
   const fileRef = useRef(null);
-  
+
   const [company, setCompany] = useState(() => ({
     regime: "entreprise", // "entreprise" ou "mda"
-    name: "", 
-    siret: "", 
+    name: "",
+    siret: "",
     numMda: "",
-    address: "", 
-    logo: "", 
+    address: "",
+    logo: "",
     ...loadCfg(),
   }));
-  
+
   const [tvaEnabled, setTvaEnabled] = useState(false);
   const [tvaRate] = useState(20);
   const [client, setClient] = useState("");
@@ -35,33 +35,45 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   );
   const [lines, setLines] = useState([{ id: 1, desc: "", qty: 1, price: 0 }]);
 
-  // Vérification de l'accès Pro / Élite
+  // 2. Gestion de l'état de chargement d'authentification
+  if (loading) {
+    return (
+      <div className="bg-neutral-950 min-h-screen flex items-center justify-center text-amber-500 font-bold text-xs tracking-wide">
+        Vérification des accès en cours...
+      </div>
+    );
+  }
+
+  // 3. Verrouillage de sécurité : bloque l'accès si non connecté ou pas Pro/Élite
   if (!isLoggedIn || !hasProAccess) {
     return (
       <div className="bg-neutral-950 min-h-screen flex items-center justify-center p-4">
-        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 max-w-md text-center space-y-4">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 max-w-md text-center space-y-4 shadow-2xl">
           <div className="text-4xl">🔒</div>
           <h2 className="text-lg font-black text-white">Espace réservé aux membres Pro & Élite</h2>
-          <p className="text-xs text-neutral-400">
-            Passez à l'offre Pro ou Élite pour générer vos factures professionnelles et gérer votre comptabilité.
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            Passez à l'offre Pro ou Élite pour générer vos factures professionnelles, éditer vos devis et configurer votre comptabilité.
           </p>
-          {!isLoggedIn && (
-            <button
-              onClick={() => onRequireLogin?.()}
-              className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer"
-            >
-              Se connecter
-            </button>
-          )}
+          <button
+            onClick={() => onRequireLogin?.()}
+            className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer shadow"
+          >
+            Se connecter / S'abonner
+          </button>
         </div>
       </div>
     );
   }
 
+  // Helper pour mettre à jour et sauvegarder les infos de l'entreprise
   const updateCompany = (patch) => {
     const next = { ...company, ...patch };
     setCompany(next);
-    try { localStorage.setItem(CFG_KEY, JSON.stringify(next)); } catch { /* quota */ }
+    try {
+      localStorage.setItem(CFG_KEY, JSON.stringify(next));
+    } catch {
+      /* quota local storage */
+    }
   };
 
   const onLogo = (e) => {
@@ -88,7 +100,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
 
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans">
-      {/* CSS impression : isole uniquement la facture */}
+      {/* Configuration CSS pour l'impression native du PDF */}
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
@@ -101,14 +113,15 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           @page { margin: 12mm; }
         }
       `}</style>
+
       <div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* ---------- Formulaire ---------- */}
+        {/* ---------- Formulaire de saisie ---------- */}
         <div className="space-y-6">
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-3">
             <h3 className="text-sm font-black text-white">🏢 Mon entreprise & Régime comptable</h3>
             
             <div>
-              <label className="text-xs font-bold text-neutral-400 block mb-1">Régime fiscal / Comptabilité :</label>
+              <label className="text-xs font-bold text-neutral-400 block mb-1">Régime fiscal / Profil :</label>
               <select
                 value={company.regime}
                 onChange={(e) => updateCompany({ regime: e.target.value })}
@@ -177,7 +190,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           </div>
         </div>
 
-        {/* ---------- Aperçu facture ---------- */}
+        {/* ---------- Aperçu temps réel et document imprimable ---------- */}
         <div id="invoice-print" className="bg-white text-neutral-900 rounded-2xl p-8 shadow-xl text-sm">
           <div className="flex justify-between items-start gap-4">
             <div>
