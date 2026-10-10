@@ -1,13 +1,6 @@
-// src/lib/supabaseClient.js
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://yfrbidmoyaynfnhipauni.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmcmJpZG1veWF5bmZuaHBhdW5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMjM1MDgsImV4cCI6MjEwNTU5OTUwOH0.ohTzPChaJBKRKlhJJXeVQLXbnofmojTsTMBRNkw2uw0';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error(
-    "⚠️ [BOké ONE Error] : Les variables d'environnement VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY sont manquantes dans votre fichier .env !"
-  );
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
