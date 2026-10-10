@@ -1,78 +1,117 @@
-﻿import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+﻿import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
+    // 1. Session initiale
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // 2. Écoute des changements d'auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email, password) => {
+  const fetchProfile = async (userId) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
       if (error) throw error;
+      setProfile(data);
     } catch (err) {
-      console.warn("Erreur réseau Supabase détectée, passage en mode connexion locale de test :", err.message);
-      // Fallback local pour vos tests si le serveur distant ne répond pas
-      setUser({ email, id: "local-test-id-123" });
+      console.warn("Erreur chargement profil :", err.message);
+      setProfile(null);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const login = async (email, password) => {
+    setAuthError("");
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
   };
 
   const signup = async (email, password) => {
-    try {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-    } catch (err) {
-      console.warn("Erreur réseau Supabase lors de l'inscription, passage en mode local :", err.message);
-      setUser({ email, id: "local-test-id-123" });
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      // Ignorer
-    }
-    setUser(null);
+    setAuthError("");
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+    return data;
   };
 
   const resetPassword = async (email) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin,
-      });
-      if (error) throw error;
-    } catch (err) {
-      alert("En mode de test local, la réinitialisation par e-mail est simulée pour : " + email);
-    }
+    setAuthError("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) throw error;
   };
 
-  const value = { user, isLoggedIn: !!user, loading, login, signup, logout, resetPassword };
+  const logout = async () => {
+    setAuthError("");
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // Calcul direct des accès Pro / Élite
+  const plan = profile?.plan || "free";
+  const hasProAccess = plan === "pro" || plan === "elite" || profile?.is_admin === true;
+
+  const value = {
+    user,
+    profile,
+    plan,
+    hasProAccess,
+    isLoggedIn: !!user,
+    loading,
+    authError,
+    login,
+    signup,
+    register: signup, // ✅ Alias indispensable pour que AuthForm (qui appelle register) fonctionne parfaitement
+    resetPassword,
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth doit être utilisé dans un <AuthProvider>");
-  return ctx;
+  return useContext(AuthContext);
+}
+
+// Fonction utilitaire de traduction des erreurs Supabase
+export function translateAuthError(err) {
+  const msg = err?.message || "";
+  if (msg.includes("Invalid login credentials")) return "E-mail ou mot de passe incorrect.";
+  if (msg.includes("User already registered")) return "Un compte existe déjà avec cet e-mail.";
+  if (msg.includes("Password should be at least")) return "Le mot de passe doit contenir au moins 6 caractères.";
+  return msg || "Une erreur est survenue lors de l'authentification.";
 }

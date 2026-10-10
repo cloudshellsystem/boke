@@ -162,7 +162,7 @@ export default function HomePage({ onRequireLogin }) {
                   <button 
                     type="button" 
                     onClick={(e) => toggleLike(e, img.id)} 
-                    className={`shrink-0 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${liked ? "bg-amber-500/10 border-amber-500/40 text-amber-400" : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-amber-500/30"}`}
+                    className={`shrink-0 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${liked ? "bg-amber-500/10 border-amber-500/40 text-amber-400" : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-amber-500/30"}`}
                   >
                     <span>{liked ? "❤️" : "🤍"}</span>
                     <span>{count}</span>
@@ -183,7 +183,7 @@ export default function HomePage({ onRequireLogin }) {
             <div className="relative h-64 w-full overflow-hidden bg-neutral-950">
               <img src={selectedEvent.image} alt="Grande Halle de la Villette" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
-              <button onClick={() => setSelectedEvent(null)} className="absolute top-4 right-4 bg-neutral-950/80 hover:bg-neutral-800 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-base transition border border-neutral-800">✕</button>
+              <button onClick={() => setSelectedEvent(null)} className="absolute top-4 right-4 bg-neutral-950/80 hover:bg-neutral-800 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-base transition border border-neutral-800 cursor-pointer">✕</button>
               
               <div className="absolute bottom-4 left-6 right-6">
                 <span className="text-[10px] font-bold text-amber-400 bg-amber-500/20 border border-amber-500/30 px-3 py-1 rounded-full uppercase">
@@ -205,8 +205,8 @@ export default function HomePage({ onRequireLogin }) {
                   <p className="text-[11px] text-neutral-400 mt-0.5">Notre équipe réseau est disponible sur place tout au long du salon.</p>
                 </div>
                 <button 
-                  onClick={() => window.open("https://wa.me/?text=Bonjour%20Boké%20One,%20je%20suis%20au%20salon%20et%20souhaite%20échanger !", "_blank")}
-                  className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2.5 rounded-xl font-black text-xs transition shadow flex items-center gap-1.5"
+                  onClick={() => window.open("https://wa.me/?text=" + encodeURIComponent("Bonjour Boké One, je suis au salon et souhaite échanger !"), "_blank")}
+                  className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2.5 rounded-xl font-black text-xs transition shadow flex items-center gap-1.5 cursor-pointer"
                 >
                   💬 Discuter
                 </button>
@@ -215,7 +215,7 @@ export default function HomePage({ onRequireLogin }) {
               <div className="pt-2 flex justify-end">
                 <button 
                   onClick={() => setSelectedEvent(null)}
-                  className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-5 py-2 rounded-xl text-xs font-bold transition"
+                  className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-5 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
                 >
                   Fermer
                 </button>
@@ -241,7 +241,7 @@ export default function HomePage({ onRequireLogin }) {
                   <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded font-bold border border-amber-500/20 uppercase">
                     {selectedPhoto.type}
                   </span>
-                  <button onClick={() => setSelectedPhoto(null)} className="text-neutral-400 hover:text-white font-bold text-lg">✕</button>
+                  <button onClick={() => setSelectedPhoto(null)} className="text-neutral-400 hover:text-white font-bold text-lg cursor-pointer">✕</button>
                 </div>
 
                 <div>
@@ -290,7 +290,7 @@ export default function HomePage({ onRequireLogin }) {
                       alert("Redirection vers le paiement / panier !"); 
                     }
                   }}
-                  className="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 py-2.5 rounded-xl font-black text-xs transition shadow"
+                  className="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 py-2.5 rounded-xl font-black text-xs transition shadow cursor-pointer"
                 >
                   {isLoggedIn ? "🛒 Acheter / Télécharger" : "Se connecter pour acheter"}
                 </button>
