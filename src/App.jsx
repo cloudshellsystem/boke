@@ -4,7 +4,6 @@ import ReactGA from "react-ga4";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
-import { supabase } from "./lib/supabaseClient";
 
 import HomePage from "./components/HomePage";
 import CreatorDirectory from "./components/CreatorDirectory";
@@ -17,6 +16,7 @@ import Checkout from "./components/Checkout";
 import CGUPage from "./components/CGUPage";
 import WhatsAppWidget from "./components/WhatsAppWidget";
 import Footer from "./components/Footer";
+import AuthModal from "./components/AuthModal"; // 🚀 Import de la modale jaune officielle
 
 // Initialisation de Google Analytics 4
 ReactGA.initialize("G-FVFKNP75BZ");
@@ -55,103 +55,6 @@ const UI_LABELS = {
 
 const isActivePath = (pathname, to) =>
   to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
-
-// Composant Modal d'Authentification Intégré
-function AuthModalContent({ onClose }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg("");
-
-    try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        alert("Inscription réussie ! Vous êtes désormais connecté.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
-      onClose();
-    } catch (err) {
-      setErrorMsg(err.message || "Erreur d'authentification.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold text-amber-400">
-          {isSignUp ? "Créer un compte Boké One" : "Connexion Membre"}
-        </h3>
-        <button
-          onClick={onClose}
-          className="text-neutral-400 hover:text-white font-bold text-lg p-1"
-        >
-          ✕
-        </button>
-      </div>
-
-      {errorMsg && (
-        <div className="mb-4 text-xs font-semibold bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl">
-          {errorMsg}
-        </div>
-      )}
-
-      <form onSubmit={handleAuth} className="space-y-4">
-        <div>
-          <label className="text-xs font-bold text-neutral-300 block mb-1">Email :</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-amber-500"
-            placeholder="votre@email.com"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-bold text-neutral-300 block mb-1">Mot de passe :</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-amber-500"
-            placeholder="••••••••"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-bold rounded-xl text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer"
-        >
-          {loading ? "Chargement..." : isSignUp ? "S'inscrire" : "Se connecter"}
-        </button>
-      </form>
-
-      <div className="mt-4 text-center">
-        <button
-          type="button"
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="text-xs text-neutral-400 hover:text-amber-400 underline cursor-pointer"
-        >
-          {isSignUp ? "Déjà un compte ? Connectez-vous" : "Pas encore de compte ? S'inscrire"}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function GlobalNavbar({ onOpenAuth }) {
   const { cart } = useCart();
@@ -291,7 +194,7 @@ function AppShell() {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
-          <Route path="/creators" element={<CreatorDirectory />} />
+          <Route path="/creators" element={<CreatorDirectory onRequireLogin={openAuth} />} />
           <Route path="/forum" element={<ForumPage onRequireLogin={openAuth} />} />
           <Route path="/admin/moderation" element={<AdminForumModeration />} />
           <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
@@ -310,20 +213,8 @@ function AppShell() {
         }
       }} />
 
-      {/* Modal d'Authentification Sécurisée (Fermeture & Nettoyage du Flou) */}
-      {showAuthModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          onClick={closeAuth}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()} 
-            className="max-h-full w-full max-w-md overflow-y-auto"
-          >
-            <AuthModalContent onClose={closeAuth} />
-          </div>
-        </div>
-      )}
+      {/* 🚀 Intégration propre de la modale d'authentification officielle */}
+      <AuthModal isOpen={showAuthModal} onClose={closeAuth} />
     </div>
   );
 }

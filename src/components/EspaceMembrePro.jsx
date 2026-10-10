@@ -1,18 +1,4 @@
-﻿Votre code est très bien structuré, mais il manquait la fin du fichier (le code a été coupé au niveau de l'input du client dans l'éditeur de factures) et la récupération de `userProfile` depuis la base de données Supabase pour que les variables `hasProTier` et `hasEliteTier` sachent quel plan l'utilisateur possède réellement !
-
-Voici le **code complet, finalisé et sans coupure** de `EspaceMembrePro.jsx`.
-
-Il intègre :
-
-1. Le chargement automatique du profil utilisateur (`userProfile` et son `plan`) depuis Supabase.
-2. Le verrouillage strict des onglets (avec les alertes et les cadenas 🔒) si l'utilisateur n'a pas l'offre requise.
-3. La grille des tarifs et le module de closing/paiement.
-4. Vos outils de facturation et scripts originaux.
-
-Vous pouvez copier-coller ce code directement dans votre fichier `src/components/EspaceMembrePro.jsx` :
-
-```jsx
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import { formatPrice } from "../lib/formatPrice";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -106,9 +92,10 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   const [userProfile, setUserProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Gestion du modal de paiement (Closing)
+  // Modals : Restitution / Closing & Pop-up d'information restreinte
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [restrictionModal, setRestrictionModal] = useState({ open: false, title: "", text: "" });
 
   const [companyInfo, setCompanyInfo] = useState(EMPTY_COMPANY);
   const [logoError, setLogoError] = useState("");
@@ -146,7 +133,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     },
   ]);
 
-  // Charger le profil utilisateur et son plan depuis Supabase
+  // Chargement du profil Supabase
   useEffect(() => {
     if (isLoggedIn && user) {
       supabase
@@ -209,6 +196,38 @@ export default function EspaceMembrePro({ onRequireLogin }) {
       </div>
     );
   }
+
+  // Clic sur un onglet verrouillé -> déclenche la popup propre
+  const handleTabClick = (tabKey, requiredTier) => {
+    if (!isLoggedIn) {
+      onRequireLogin();
+      return;
+    }
+
+    if (requiredTier === 'pro' && !hasProTier) {
+      setRestrictionModal({
+        open: true,
+        title: isEn ? "Pro Tier Required (49€)" : "Abonnement Pro requis (49€)",
+        text: isEn 
+          ? "This tool is strictly reserved for Pro and Elite subscribers. Subscribe now to unlock SIRET, logo and legal invoicing."
+          : "Cet outil est strictement réservé aux abonnés Pro et Élite. Souscrivez à l'offre Pro pour générer vos devis, factures avec SIRET et logo."
+      });
+      return;
+    }
+
+    if (requiredTier === 'elite' && !hasEliteTier) {
+      setRestrictionModal({
+        open: true,
+        title: isEn ? "Elite Agency Required (129€)" : "Offre Agence Élite requise (129€)",
+        text: isEn 
+          ? "This CRM & Sales script area is reserved for Elite Agency members."
+          : "Cet espace CRM, Tunnels et Scripts de vente en direct est exclusivement réservé aux membres de l'offre Agence Élite."
+      });
+      return;
+    }
+
+    setActiveTab(tabKey);
+  };
 
   const handleSelectOffer = (offer) => {
     if (!isLoggedIn) {
@@ -431,7 +450,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
         </div>
       </div>
 
-      {/* Navigation des onglets (Avec verrouillage sécurisé par plan) */}
+      {/* Navigation des onglets avec Verrouillage Sécurisé et Popups */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-2 border-b border-neutral-900">
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -444,45 +463,27 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           </button>
 
           <button
-            onClick={() => {
-              if (!hasEliteTier) {
-                alert(isEn ? "This tool is reserved for the Elite Agency tier (129€)." : "Cet outil est réservé à l'offre Agence Élite (129€).");
-                return;
-              }
-              setActiveTab("notionLive");
-            }}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 ${
-              !hasEliteTier ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            onClick={() => handleTabClick("notionLive", "elite")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 cursor-pointer ${
+              !hasEliteTier ? "opacity-60" : ""
             } ${activeTab === "notionLive" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800"}`}
           >
             <span>{!hasEliteTier && "🔒 "}💬</span> {isEn ? "Direct Sales (Script)" : "Vendre en Direct (Script)"}
           </button>
           
           <button
-            onClick={() => {
-              if (!hasProTier) {
-                alert(isEn ? "This tool is reserved starting from the Pro tier (49€)." : "Cet outil est réservé à partir de l'offre Pro (49€).");
-                return;
-              }
-              setActiveTab("companyConfig");
-            }}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap flex items-center gap-1 ${
-              !hasProTier ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            onClick={() => handleTabClick("companyConfig", "pro")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap flex items-center gap-1 cursor-pointer ${
+              !hasProTier ? "opacity-60" : ""
             } ${activeTab === "companyConfig" ? "bg-amber-500 text-neutral-950 shadow-md font-bold" : "bg-neutral-900 text-neutral-300 border border-neutral-800"}`}
           >
             {!hasProTier && "🔒 "}🏢 {isEn ? "My Company (SIRET & Logo)" : "Mon Entreprise (SIRET & Logo)"}
           </button>
           
           <button
-            onClick={() => {
-              if (!hasProTier) {
-                alert(isEn ? "Issuing legal documents requires the Pro tier (49€)." : "L'émission de documents légaux nécessite l'offre Pro (49€).");
-                return;
-              }
-              setActiveTab("invoices");
-            }}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap flex items-center gap-1 ${
-              !hasProTier ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            onClick={() => handleTabClick("invoices", "pro")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap flex items-center gap-1 cursor-pointer ${
+              !hasProTier ? "opacity-60" : ""
             } ${activeTab === "invoices" ? "bg-amber-500 text-neutral-950 shadow-md font-bold" : "bg-neutral-900 text-neutral-300 border border-neutral-800"}`}
           >
             {!hasProTier && "🔒 "}📄 {isEn ? "Real-Time Editor & Invoices" : "Éditeur Temps Réel & Factures PDF"}
@@ -504,7 +505,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
       {/* Contenu des onglets */}
       <div className="space-y-6">
         
-        {/* ONGLET 1 : OFFRES & TARIFS (Closing interactif) */}
+        {/* ONGLET 1 : OFFRES & TARIFS (Visible pour TOUS) */}
         {activeTab === "tarifs" && (
           <div className="space-y-8">
             <div className="text-center max-w-2xl mx-auto space-y-2">
@@ -592,7 +593,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           </div>
         )}
 
-        {/* ONGLET 3 : CONFIGURATION ENTREPRISE (SIRET & Logo) */}
+        {/* ONGLET 3 : CONFIGURATION ENTREPRISE */}
         {activeTab === "companyConfig" && hasProTier && (
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-2xl mx-auto space-y-5">
             <h3 className="text-base font-bold text-amber-400">{isEn ? "Company Settings & Logo" : "Paramètres de votre Entreprise & Logo"}</h3>
@@ -769,9 +770,51 @@ export default function EspaceMembrePro({ onRequireLogin }) {
         )}
       </div>
 
-      {/* Modal de Finalisation du Paiement (Closing) */}
+      {/* MODAL 1 : Information d'Abonnement Requis (Popup Propre & Nette) */}
+      {restrictionModal.open && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-amber-500/50 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+            <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🔒</span>
+                <h3 className="text-lg font-bold text-amber-400">{restrictionModal.title}</h3>
+              </div>
+              <button 
+                onClick={() => setRestrictionModal({ open: false, title: "", text: "" })}
+                className="text-neutral-400 hover:text-white font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+              {restrictionModal.text}
+            </p>
+
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={() => {
+                  setRestrictionModal({ open: false, title: "", text: "" });
+                  setActiveTab("tarifs");
+                }}
+                className="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-bold rounded-xl text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer"
+              >
+                {isEn ? "View Pricing & Subscribe ⚡" : "Voir les offres & S'abonner ⚡"}
+              </button>
+              <button
+                onClick={() => setRestrictionModal({ open: false, title: "", text: "" })}
+                className="w-full py-2 text-xs text-neutral-400 hover:text-white cursor-pointer"
+              >
+                {isEn ? "Close" : "Fermer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2 : Finalisation du Paiement / Closing */}
       {selectedPlan && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl">
             <div className="flex justify-between items-start">
               <div>
@@ -821,5 +864,3 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     </div>
   );
 }
-
-```

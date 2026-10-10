@@ -1,267 +1,340 @@
-﻿import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient'; // Ajustez selon votre chemin d'import
+﻿import React, { useState, useEffect } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 
-export default function ForumPage({ user }) {
+export default function ForumPage({ onRequireLogin }) {
+  const { user, isLoggedIn } = useAuth();
+  const { lang } = useLanguage();
+  const isEn = lang === "en";
+
   const [topics, setTopics] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [replies, setReplies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingReplies, setLoadingReplies] = useState(false);
 
-  // Formulaire nouveau sujet
-  const [showNewTopicModal, setShowNewTopicModal] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newContent, setNewContent] = useState('');
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [newYoutubeUrl, setNewYoutubeUrl] = useState('');
-
-  // Formulaire nouvelle réponse
-  const [newReplyContent, setNewReplyContent] = useState('');
+  // Formulaires
+  const [showNewTopicForm, setShowNewTopicForm] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newCategory, setNewCategory] = useState("Général");
+  const [newContent, setNewContent] = useState("");
+  const [replyContent, setReplyContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [msg, setMsg] = useState(null);
 
   useEffect(() => {
     fetchTopics();
   }, []);
 
-  // 1. Récupérer le flux des sujets approuvés
+  // Récupération des sujets
   const fetchTopics = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('forum_feed')
-      .select('*')
-      .order('last_activity_at', { ascending: false });
+      .from("forum_feed")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    if (!error) setTopics(data || []);
+    if (!error && data) {
+      setTopics(data);
+    }
     setLoading(false);
   };
 
-  // 2. Ouvrir un sujet, incrémenter les vues et charger ses réponses
-  const handleSelectTopic = async (topic) => {
-    setSelectedTopic(topic);
-    
-    // Appel de la fonction RPC pour incrémenter les vues
-    await supabase.rpc('increment_topic_views', { p_topic_id: topic.id });
+  // Récupération des réponses d'un sujet
+  const fetchReplies = async (topicId) => {
+    setLoadingReplies(true);
+    const { data, error } = await supabase
+      .from("forum_replies_feed")
+      .select("*")
+      .eq("topic_id", topicId)
+      .order("created_at", { ascending: true });
 
-    // Charger les réponses approuvées de ce sujet
-    const { data } = await supabase
-      .from('forum_replies_feed')
-      .select('*')
-      .eq('topic_id', topic.id)
-      .order('created_at', { ascending: true });
-
-    setReplies(data || []);
+    if (!error && data) {
+      setReplies(data);
+    }
+    setLoadingReplies(false);
   };
 
-  // 3. Poster un nouveau sujet (statut 'en_attente' par défaut)
+  // Clic sur un sujet pour voir les détails et incrémenter les vues
+  const handleSelectTopic = (topic) => {
+    setSelectedTopic(topic);
+    fetchReplies(topic.id);
+    supabase.rpc("increment_topic_views", { topic_id: topic.id });
+  };
+
+  // Interception du clic "Nouveau Sujet"
+  const handleNewTopicClick = () => {
+    if (!isLoggedIn) {
+      onRequireLogin(); // 🚀 Ouvre la modal d'authentification
+      return;
+    }
+    setShowNewTopicForm(true);
+  };
+
+  // Interception du clic "Répondre"
+  const handleReplyClick = (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      onRequireLogin(); // 🚀 Ouvre la modal d'authentification
+      return;
+    }
+    handleSendReply();
+  };
+
+  // Envoi d'un nouveau sujet
   const handleCreateTopic = async (e) => {
     e.preventDefault();
-    if (!user) return alert('Veuillez vous connecter pour publier.');
+    if (!isLoggedIn) {
+      onRequireLogin();
+      return;
+    }
 
-    const { error } = await supabase.from('forum_topics').insert([
-      {
-        title: newTitle,
-        content: newContent,
-        image_url: newImageUrl || null,
-        youtube_url: newYoutubeUrl || null,
-        author_id: user.id,
-        status: 'en_attente'
-      }
-    ]);
+    setSubmitting(true);
+    setMsg(null);
 
-    if (error) {
-      alert('Erreur lors de la publication : ' + error.message);
-    } else {
-      alert('Votre sujet a été publié et est en attente de modération.');
-      setShowNewTopicModal(false);
-      setNewTitle('');
-      setNewContent('');
-      setNewImageUrl('');
-      setNewYoutubeUrl('');
+    try {
+      const { error } = await supabase.from("forum_topics").insert({
+        user_id: user.id,
+        title: newTitle.trim(),
+        category: newCategory,
+        content: newContent.trim(),
+        status: "approuve",
+      });
+
+      if (error) throw error;
+
+      setMsg({ type: "ok", text: isEn ? "Topic created successfully!" : "Sujet publié avec succès !" });
+      setNewTitle("");
+      setNewContent("");
+      setShowNewTopicForm(false);
       fetchTopics();
+    } catch (err) {
+      setMsg({ type: "error", text: err.message || "Erreur lors de la publication." });
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // 4. Poster une réponse
-  const handleCreateReply = async (e) => {
-    e.preventDefault();
-    if (!user || !selectedTopic) return;
+  // Envoi d'une réponse
+  const handleSendReply = async () => {
+    if (!replyContent.trim()) return;
+    setSubmitting(true);
+    setMsg(null);
 
-    const { error } = await supabase.from('forum_replies').insert([
-      {
+    try {
+      const { error } = await supabase.from("forum_replies").insert({
         topic_id: selectedTopic.id,
-        author_id: user.id,
-        content: newReplyContent,
-        status: 'en_attente'
-      }
-    ]);
+        user_id: user.id,
+        content: replyContent.trim(),
+        status: "approuve",
+      });
 
-    if (error) {
-      alert('Erreur : ' + error.message);
-    } else {
-      alert('Votre réponse a été envoyée et est en attente de modération.');
-      setNewReplyContent('');
-    }
-  };
+      if (error) throw error;
 
-  // Helper pour afficher les badges de plan
-  const renderBadge = (plan) => {
-    switch (plan) {
-      case 'admin': return <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">Admin</span>;
-      case 'elite': return <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded">Agence Élite</span>;
-      case 'pro': return <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">Pro</span>;
-      case 'decouverte': return <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">Découverte</span>;
-      default: return <span className="bg-gray-500 text-white text-xs px-2 py-1 rounded">Membre</span>;
+      setReplyContent("");
+      fetchReplies(selectedTopic.id);
+    } catch (err) {
+      setMsg({ type: "error", text: err.message || "Erreur lors de l'envoi." });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 font-sans">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Forum Boké One</h1>
-        {user && (
-          <button
-            onClick={() => setShowNewTopicModal(true)}
-            className="bg-orange-600 text-white px-4 py-2 rounded-lg shadow hover:bg-orange-700"
-          >
-            + Nouveau Sujet
-          </button>
-        )}
+    <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-screen font-sans">
+      
+      {/* En-tête du Forum */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-black text-amber-400">Forum</h1>
+          <p className="text-xs sm:text-sm text-neutral-400 mt-1">
+            {isEn
+              ? "Exchanges, technical advice and networking between image and sound professionals."
+              : "Échanges, conseils techniques et réseau entre professionnels de l'image et du son."}
+          </p>
+        </div>
+
+        {/* Bouton Nouveau Sujet -> Déclenche la modal si non connecté */}
+        <button
+          onClick={handleNewTopicClick}
+          className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-5 py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer shrink-0"
+        >
+          + {isEn ? "New Topic" : "Nouveau Sujet"}
+        </button>
       </div>
 
-      {/* Modal Nouveau Sujet */}
-      {showNewTopicModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <form onSubmit={handleCreateTopic} className="bg-white p-6 rounded-lg max-w-lg w-full">
-            <h2 className="text-xl font-bold mb-4">Créer un sujet de discussion</h2>
+      {/* Banner d'invitation avec bouton interactif vers la modal d'inscription */}
+      {!isLoggedIn && (
+        <div className="bg-neutral-900/90 border border-neutral-800 p-4 rounded-2xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🔒</span>
+            <p className="text-xs text-neutral-300">
+              {isEn
+                ? "Browse discussions freely. Log in or register to publish a topic or reply."
+                : "Consultez les discussions librement. Connectez-vous ou inscrivez-vous pour publier ou répondre."}
+            </p>
+          </div>
+          <button
+            onClick={onRequireLogin}
+            className="text-xs font-bold text-amber-400 hover:text-amber-300 underline cursor-pointer shrink-0"
+          >
+            {isEn ? "Sign In / Register ➔" : "S'inscrire / Se connecter ➔"}
+          </button>
+        </div>
+      )}
+
+      {msg && (
+        <div className={`p-4 rounded-xl text-xs font-bold mb-6 ${msg.type === "ok" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border border-red-500/30 text-red-400"}`}>
+          {msg.text}
+        </div>
+      )}
+
+      {/* Formulaire de création de sujet (affiché si connecté) */}
+      {showNewTopicForm && isLoggedIn && (
+        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl mb-8 space-y-4">
+          <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
+            <h3 className="text-base font-bold text-amber-400">{isEn ? "Create a New Topic" : "Créer un nouveau sujet"}</h3>
+            <button onClick={() => setShowNewTopicForm(false)} className="text-neutral-400 hover:text-white font-bold cursor-pointer">✕</button>
+          </div>
+
+          <div className="space-y-3">
             <input
               type="text"
-              placeholder="Titre du sujet"
+              placeholder={isEn ? "Topic Title..." : "Titre de votre sujet..."}
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full border p-2 mb-3 rounded"
-              required
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-amber-500"
             />
+
             <textarea
-              placeholder="Votre message (max 1000 caractères)..."
+              rows={4}
+              placeholder={isEn ? "Write your message..." : "Rédigez votre message..."}
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              maxLength={1000}
-              className="w-full border p-2 mb-3 rounded h-32"
-              required
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-4 text-xs text-white outline-none focus:border-amber-500"
             />
-            <input
-              type="url"
-              placeholder="Lien image optionnel (https://...)"
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              className="w-full border p-2 mb-3 rounded"
-            />
-            <input
-              type="url"
-              placeholder="Lien YouTube optionnel"
-              value={newYoutubeUrl}
-              onChange={(e) => setNewYoutubeUrl(e.target.value)}
-              className="w-full border p-2 mb-3 rounded"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowNewTopicModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded"
-              >
-                Annuler
-              </button>
-              <button type="submit" className="px-4 py-2 bg-orange-600 text-white rounded">
-                Soumettre pour validation
-              </button>
-            </div>
-          </form>
+
+            <button
+              onClick={handleCreateTopic}
+              disabled={submitting}
+              className="py-3 px-6 bg-amber-500 text-neutral-950 font-bold rounded-xl text-xs uppercase cursor-pointer"
+            >
+              {submitting ? "Publication..." : "Publier"}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Vue Liste ou Détail */}
-      {!selectedTopic ? (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {loading ? (
-            <p className="p-6 text-center text-gray-500">Chargement du forum...</p>
-          ) : topics.length === 0 ? (
-            <p className="p-6 text-center text-gray-500">Aucun sujet approuvé pour le moment.</p>
-          ) : (
-            diviserFlux(topics, handleSelectTopic, renderBadge)
-          )}
-        </div>
-      ) : (
-        <div>
+      {/* Vue d'un Sujet Sélectionné et de ses Réponses */}
+      {selectedTopic ? (
+        <div className="space-y-6">
           <button
             onClick={() => setSelectedTopic(null)}
-            className="mb-4 text-orange-600 font-semibold hover:underline"
+            className="text-xs text-amber-400 hover:underline flex items-center gap-1 font-bold cursor-pointer"
           >
-            ← Retour aux discussions
+            ← {isEn ? "Back to discussions" : "Retour aux discussions"}
           </button>
-          
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <div className="flex justify-between items-start mb-2">
-              <h2 className="text-2xl font-bold">{selectedTopic.title}</h2>
-              {renderBadge(selectedTopic.author_plan)}
-            </div>
-            <p className="text-sm text-gray-500 mb-4">Par {selectedTopic.author_name} — {new Date(selectedTopic.created_at).toLocaleDateString()}</p>
-            <p className="text-gray-800 mb-4 whitespace-pre-line">{selectedTopic.content}</p>
-            
-            {selectedTopic.image_url && (
-              <img src={selectedTopic.image_url} alt="Illustration" className="max-h-80 rounded mb-4 object-cover" />
-            )}
-            
-            <div className="text-xs text-gray-400">Vues : {selectedTopic.views_count}</div>
-          </div>
 
-          {/* Réponses */}
-          <h3 className="text-xl font-bold mb-4">Réponses</h3>
-          <div className="space-y-4 mb-6">
-            {replies.map((r) => (
-              <div key={r.id} className="bg-gray-50 p-4 rounded-lg border">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-semibold text-sm">{r.author_name}</span>
-                  {renderBadge(r.author_plan)}
-                </div>
-                <p className="text-gray-700">{r.content}</p>
+          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4">
+            <div className="flex justify-between items-start gap-4 border-b border-neutral-800 pb-4">
+              <div>
+                <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold uppercase">
+                  {selectedTopic.category || "Général"}
+                </span>
+                <h2 className="text-xl font-bold text-white mt-2">{selectedTopic.title}</h2>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Par <span className="text-neutral-200 font-semibold">{selectedTopic.author_name || "Membre"}</span> • {new Date(selectedTopic.created_at).toLocaleDateString()}
+                </p>
               </div>
-            ))}
+            </div>
+
+            <p className="text-xs sm:text-sm text-neutral-300 whitespace-pre-line leading-relaxed">
+              {selectedTopic.content}
+            </p>
           </div>
 
-          {/* Formulaire Réponse */}
-          {user ? (
-            <form onSubmit={handleCreateReply} className="bg-white p-4 rounded-lg shadow">
-              <textarea
-                placeholder="Rédiger une réponse (max 1000 caractères)..."
-                value={newReplyContent}
-                onChange={(e) => setNewReplyContent(e.target.value)}
-                maxLength={1000}
-                className="w-full border p-2 mb-3 rounded h-24"
-                required
-              />
-              <button type="submit" className="bg-orange-600 text-white px-4 py-2 rounded">
-                Répondre (soumis à modération)
+          {/* Liste des réponses */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">{isEn ? "Replies" : "Réponses"}</h3>
+
+            {loadingReplies ? (
+              <p className="text-xs text-neutral-500">Chargement...</p>
+            ) : replies.length === 0 ? (
+              <p className="text-xs text-neutral-500 italic">{isEn ? "No replies yet. Be the first to answer!" : "Aucune réponse pour le moment. Soyez le premier !"}</p>
+            ) : (
+              replies.map((reply) => (
+                <div key={reply.id} className="bg-neutral-900/60 border border-neutral-800/80 p-4 rounded-xl space-y-2">
+                  <div className="flex justify-between text-xs text-neutral-400">
+                    <span className="font-bold text-amber-400">{reply.author_name || "Membre"}</span>
+                    <span>{new Date(reply.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-xs text-neutral-300">{reply.content}</p>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Bloc de réponse -> Modal au clic si non connecté */}
+          <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl space-y-3">
+            <textarea
+              rows={3}
+              placeholder={isLoggedIn ? (isEn ? "Write a reply..." : "Écrire une réponse...") : (isEn ? "Sign in to reply to this topic..." : "Connectez-vous pour répondre à ce sujet...")}
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-500"
+            />
+            <div className="flex justify-end">
+              <button
+                onClick={handleReplyClick}
+                disabled={submitting}
+                className="py-2.5 px-5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-xl text-xs cursor-pointer"
+              >
+                {isLoggedIn ? (submitting ? "Envoi..." : "Répondre") : "Se connecter pour répondre"}
               </button>
-            </form>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Table des Sujets du Forum */
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-12 bg-neutral-950 p-4 text-[10px] font-bold uppercase tracking-wider text-neutral-400 border-b border-neutral-800">
+            <div className="col-span-7 sm:col-span-8">Discussion</div>
+            <div className="col-span-2 text-center">Réponses</div>
+            <div className="col-span-3 sm:col-span-2 text-right">Vues</div>
+          </div>
+
+          {loading ? (
+            <div className="p-8 text-center text-xs text-neutral-500">Chargement des sujets...</div>
+          ) : topics.length === 0 ? (
+            <div className="p-8 text-center text-xs text-neutral-500 italic">Aucun sujet publié.</div>
           ) : (
-            <p className="text-gray-500 italic">Connectez-vous pour participer à la discussion.</p>
+            topics.map((topic) => (
+              <div
+                key={topic.id}
+                onClick={() => handleSelectTopic(topic)}
+                className="grid grid-cols-12 p-4 items-center border-b border-neutral-800/60 hover:bg-neutral-800/40 transition cursor-pointer"
+              >
+                <div className="col-span-7 sm:col-span-8 space-y-1">
+                  <h3 className="text-xs sm:text-sm font-bold text-white hover:text-amber-400 transition">
+                    {topic.title}
+                  </h3>
+                  <p className="text-[11px] text-neutral-400">
+                    par <span className="text-neutral-300 font-medium">{topic.author_name || "Membre"}</span>
+                  </p>
+                </div>
+                <div className="col-span-2 text-center text-xs font-bold text-amber-400">
+                  {topic.replies_count || 0}
+                </div>
+                <div className="col-span-3 sm:col-span-2 text-right text-xs text-neutral-400 font-medium">
+                  {topic.views_count || 0}
+                </div>
+              </div>
+            ))
           )}
         </div>
       )}
+
     </div>
   );
-}
-
-function diviserFlux(topics, onSelect, renderBadge) {
-  return topics.map((t) => (
-    <div
-      key={t.id}
-      onClick={() => onSelect(t)}
-      className="p-4 border-b hover:bg-gray-50 cursor-pointer flex justify-between items-center"
-    >
-      <div>
-        <h3 className="font-bold text-lg text-gray-800">{t.title}</h3>
-        <p className="text-sm text-gray-500">Par {t.author_name} • {t.replies_count} réponses • {t.views_count} vues</p>
-      </div>
-      <div>{renderBadge(t.author_plan)}</div>
-    </div>
-  ));
 }
