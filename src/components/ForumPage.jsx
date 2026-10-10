@@ -1,174 +1,143 @@
-﻿import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+﻿import React, { useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 
-const INITIAL_THREADS = [
+const FORUM_DISCUSSIONS = [
   {
     id: 1,
-    category: 'Général',
-    title: 'Bienvenue sur le Forum Officiel Boké One',
-    content: 'Bonjour à tous les créateurs, photographes et télépilotes de drone ! Cet espace est le vôtre.',
-    type: 'Discussion',
-    author: 'Admin Boké One',
-    date: '10 oct. à 02:44'
+    title: { fr: "Réglementation Drone 2026 : Exigences BAPD & CATS en pratique", en: "2026 Drone Regulations: Practical BAPD & CATS Requirements" },
+    author: "Marc V. (Pilote Certifié)",
+    category: { fr: "Législation & Examens", en: "Legislation & Exams" },
+    replies: 14,
+    views: 340,
+    date: { fr: "Il y a 2 heures", en: "2 hours ago" }
   },
   {
     id: 2,
-    category: 'Présentation',
-    title: 'Présentation : Pilote de drone certifié BAPD / CATT',
-    content: 'Salut la communauté ! Je rejoins Boké One pour proposer mes services de prises de vue aériennes.',
-    type: 'Discussion',
-    author: 'Thomas D.',
-    date: '9 oct. à 21:44'
+    title: { fr: "Retour d'expérience : Quel boîtier pour le suivi de chantier en 4K ?", en: "Feedback: Best camera body for 4K construction tracking?" },
+    author: "Sophie T. (Photographe Immo)",
+    category: { fr: "Matériel & Studio", en: "Equipment & Studio" },
+    replies: 8,
+    views: 195,
+    date: { fr: "Hier", en: "Yesterday" }
+  },
+  {
+    id: 3,
+    title: { fr: "Missions en réseau : Comment optimiser vos devis avec acompte 30%", en: "Network missions: Optimizing quotes with a 30% deposit" },
+    author: "Boké One Conciergerie",
+    category: { fr: "Conseils Pro & Tarifs", en: "Pro Advice & Rates" },
+    replies: 22,
+    views: 510,
+    date: { fr: "Il y a 3 jours", en: "3 days ago" }
   }
 ];
 
+const FORUM_TEXT = {
+  fr: {
+    badge: "COMMUNAUTÉ & RÉSEAU",
+    title: "Forum & Échanges Professionnels",
+    subtitle: "Discussions sur les autorisations de vol 2026, retours d'expérience matériel et opportunités de tournages.",
+    btnNewTopic: "➕ Créer un sujet",
+    searchPlaceholder: "Rechercher une discussion...",
+    replies: "réponses",
+    views: "vues",
+    btnReadMore: "Lire la discussion ➔",
+    modalNoticeTitle: "Accès Réservé aux Membres",
+    modalNoticeDesc: "Connectez-vous pour participer aux échanges et poser vos questions."
+  },
+  en: {
+    badge: "COMMUNITY & NETWORK",
+    title: "Forum & Professional Discussions",
+    subtitle: "Discussions on 2026 flight authorizations, gear reviews, and filming opportunities.",
+    btnNewTopic: "➕ New Topic",
+    searchPlaceholder: "Search discussion...",
+    replies: "replies",
+    views: "views",
+    btnReadMore: "Read discussion ➔",
+    modalNoticeTitle: "Member Restricted Access",
+    modalNoticeDesc: "Sign in to participate in discussions and post questions."
+  }
+};
+
 export default function ForumPage({ onRequireLogin }) {
-  const { isLoggedIn, user } = useAuth();
-  const [threads, setThreads] = useState(INITIAL_THREADS);
-  const [showNewThreadModal, setShowNewThreadModal] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newCategory, setNewCategory] = useState('Général');
-  const [newContent, setNewContent] = useState('');
+  const { lang } = useLanguage();
+  const t = FORUM_TEXT[lang];
 
-  const handleCreateThread = (e) => {
-    e.preventDefault();
-    if (!newTitle || !newContent) return;
+  const [search, setSearch] = useState("");
 
-    const newThread = {
-      id: Date.now(),
-      category: newCategory,
-      title: newTitle,
-      content: newContent,
-      type: 'Discussion',
-      author: user?.email?.split('@')[0] || 'Membre Boké One',
-      date: 'À l’instant'
-    };
-
-    setThreads([newThread, ...threads]);
-    setNewTitle('');
-    setNewContent('');
-    setShowNewThreadModal(false);
-  };
+  const filteredDiscussions = FORUM_DISCUSSIONS.filter((disc) =>
+    disc.title[lang].toLowerCase().includes(search.toLowerCase()) ||
+    disc.author.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="bg-neutral-950 text-neutral-100 min-h-screen p-4 md:p-8 space-y-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* En-tête sans compteurs fictifs */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
+    <div className="bg-neutral-950 min-h-screen text-neutral-200 p-6 sm:p-12 font-sans">
+      <div className="max-w-5xl mx-auto space-y-8">
+        
+        {/* En-tête */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
           <div>
-            <h1 className="text-2xl font-black text-white flex items-center gap-2">
-              💬 Forum Communautaire (France)
-            </h1>
-            <p className="text-xs text-neutral-400 mt-1">
-              Partagez vos projets, échangez vos astuces et collaborez avec d'autres créateurs.
-            </p>
+            <span className="inline-block text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest mb-2">
+              {t.badge}
+            </span>
+            <h1 className="text-3xl font-black text-white">{t.title}</h1>
+            <p className="text-xs text-neutral-400 mt-1">{t.subtitle}</p>
           </div>
 
-          {!isLoggedIn ? (
-            <button
-              onClick={() => onRequireLogin?.()}
-              className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer"
-            >
-              Se connecter pour publier ➔
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowNewThreadModal(true)}
-              className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer"
-            >
-              + Nouveau Sujet
-            </button>
-          )}
+          <button
+            onClick={onRequireLogin}
+            className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-5 py-3 rounded-xl font-bold text-xs transition shadow shrink-0 cursor-pointer"
+          >
+            {t.btnNewTopic}
+          </button>
         </div>
 
-        {/* Modal Nouveau Sujet */}
-        {showNewThreadModal && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 max-w-lg w-full space-y-4">
-              <h2 className="text-lg font-black text-white">Lancer une nouvelle discussion</h2>
-              <form onSubmit={handleCreateThread} className="space-y-3">
-                <div>
-                  <label className="text-[10px] font-bold text-neutral-400">Catégorie</label>
-                  <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-xs text-white"
-                  >
-                    <option value="Général">Général</option>
-                    <option value="Présentation">Présentation</option>
-                    <option value="Matériel & Drone">Matériel & Drone</option>
-                    <option value="Missions & Offres">Missions & Offres</option>
-                  </select>
-                </div>
+        {/* Recherche */}
+        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl">
+          <input
+            type="text"
+            placeholder={t.searchPlaceholder}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 outline-none focus:border-amber-500"
+          />
+        </div>
 
-                <div>
-                  <label className="text-[10px] font-bold text-neutral-400">Titre</label>
-                  <input
-                    type="text"
-                    required
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-xs text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-neutral-400">Message</label>
-                  <textarea
-                    required
-                    rows={4}
-                    value={newContent}
-                    onChange={(e) => setNewContent(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-xs text-white"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowNewThreadModal(false)}
-                    className="px-4 py-2 text-xs text-neutral-400 hover:text-white font-bold"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-4 py-2 rounded-xl text-xs font-black"
-                  >
-                    Publier
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Liste des Sujets */}
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-12 text-[10px] font-bold text-neutral-400 uppercase tracking-wider p-4 border-b border-neutral-800">
-            <div className="col-span-6">Sujets / Catégories</div>
-            <div className="col-span-2 hidden md:block">Type</div>
-            <div className="col-span-2">Auteur</div>
-            <div className="col-span-2 text-right">Date</div>
-          </div>
-
-          <div className="divide-y divide-neutral-800">
-            {threads.map((thread) => (
-              <div key={thread.id} className="grid grid-cols-12 p-4 items-center text-xs hover:bg-neutral-800/40 transition">
-                <div className="col-span-6 space-y-1">
-                  <span className="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/20 mr-2">
-                    {thread.category}
+        {/* Liste des sujets */}
+        <div className="space-y-4">
+          {filteredDiscussions.map((disc) => (
+            <div
+              key={disc.id}
+              className="bg-neutral-900/60 border border-neutral-800 hover:border-amber-500/30 p-5 rounded-2xl transition flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded font-bold uppercase">
+                    {disc.category[lang]}
                   </span>
-                  <span className="font-bold text-white">{thread.title}</span>
-                  <p className="text-[11px] text-neutral-400 line-clamp-1">{thread.content}</p>
+                  <span className="text-[11px] text-neutral-500">• {disc.date[lang]}</span>
                 </div>
-                <div className="col-span-2 hidden md:block text-neutral-400">{thread.type}</div>
-                <div className="col-span-2 font-bold text-amber-500/90">{thread.author}</div>
-                <div className="col-span-2 text-right text-neutral-500 text-[11px]">{thread.date}</div>
+                <h3 className="text-sm sm:text-base font-bold text-white hover:text-amber-400 transition cursor-pointer">
+                  {disc.title[lang]}
+                </h3>
+                <p className="text-xs text-neutral-400">Par <span className="text-neutral-200">{disc.author}</span></p>
               </div>
-            ))}
-          </div>
+
+              <div className="flex items-center gap-6 shrink-0 border-t sm:border-t-0 border-neutral-800 pt-3 sm:pt-0">
+                <div className="text-right">
+                  <span className="text-xs font-bold text-white block">{disc.replies} {t.replies}</span>
+                  <span className="text-[10px] text-neutral-500">{disc.views} {t.views}</span>
+                </div>
+                <button
+                  onClick={onRequireLogin}
+                  className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer"
+                >
+                  {t.btnReadMore}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
+
       </div>
     </div>
   );

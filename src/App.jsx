@@ -102,12 +102,12 @@ function GlobalNavbar({ onOpenAuth }) {
 
         {/* 3. À droite : Langue, Panier, Connexion */}
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Bouton de langue logique : affiche la langue active, clique pour changer */}
+          {/* Bouton de langue : indique la langue vers laquelle basculer au clic */}
           <button 
             onClick={toggleLanguage} 
-            className="text-xs font-bold border border-neutral-800 bg-neutral-900 px-3 py-2 rounded-xl hover:border-amber-400/40 transition text-amber-400 flex items-center gap-1.5"
+            className="text-xs font-bold border border-neutral-800 bg-neutral-900 px-3 py-2 rounded-xl hover:border-amber-400/40 transition text-amber-400 flex items-center gap-1.5 cursor-pointer"
           >
-            {lang === "fr" ? "🇫🇷 FR" : "🇬🇧 EN"}
+            {lang === "fr" ? "🇬🇧 EN" : "🇫🇷 FR"}
           </button>
 
           <Link to="/cart" className={cartBtnClass} aria-current={cartIsActive ? "page" : undefined}>
@@ -131,7 +131,7 @@ function GlobalNavbar({ onOpenAuth }) {
           ) : (
             <button 
               onClick={onOpenAuth} 
-              className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-sm font-bold text-neutral-950 shadow-md hover:brightness-110 transition"
+              className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-sm font-bold text-neutral-950 shadow-md hover:brightness-110 transition cursor-pointer"
             >
               {ui.login}
             </button>
