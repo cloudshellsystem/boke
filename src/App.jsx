@@ -11,13 +11,13 @@ import CreatorDirectory from "./components/CreatorDirectory";
 import ForumPage from "./components/ForumPage";
 import AdminForumModeration from "./components/AdminForumModeration";
 import EspaceMembrePro from "./components/EspaceMembrePro";
-import Abonnes from "./components/Abonnes";
+import TarifsPage from "./components/TarifsPage"; // Page des tarifs dédiée
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import CGUPage from "./components/CGUPage";
 import WhatsAppWidget from "./components/WhatsAppWidget";
 import Footer from "./components/Footer";
-import AuthModal from "./components/AuthModal"; // 🚀 Import de la modale jaune officielle
+import AuthModal from "./components/AuthModal";
 
 // Initialisation de Google Analytics 4
 ReactGA.initialize("G-FVFKNP75BZ");
@@ -28,14 +28,14 @@ const NAV_LINKS_DATA = {
     { to: "/creators", label: "Créateurs" },
     { to: "/forum", label: "Forum" },
     { to: "/espace-pro", label: "Espace Pro" },
-    { to: "/abonnes", label: "Tarifs" }, // ⚡ Renommé de "Abonnés" à "Tarifs"
+    { to: "/tarifs", label: "Tarifs" },
   ],
   en: [
     { to: "/", label: "Home / Stock" },
     { to: "/creators", label: "Creators" },
     { to: "/forum", label: "Forum" },
     { to: "/espace-pro", label: "Pro Space" },
-    { to: "/abonnes", label: "Pricing" }, // ⚡ Renommé de "Subscribers" à "Pricing"
+    { to: "/tarifs", label: "Pricing" },
   ],
 };
 
@@ -140,7 +140,7 @@ function GlobalNavbar({ onOpenAuth }) {
 
           {isLoggedIn ? (
             <Link
-              to="/abonnes"
+              to="/tarifs"
               className="border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-500/20 flex items-center gap-2 transition hover:bg-emerald-500/20"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -199,7 +199,7 @@ function AppShell() {
           <Route path="/forum" element={<ForumPage onRequireLogin={openAuth} />} />
           <Route path="/admin/moderation" element={<AdminForumModeration />} />
           <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
-          <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
+          <Route path="/tarifs" element={<TarifsPage onRequireLogin={openAuth} />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/cgu" element={<CGUPage />} />
@@ -214,7 +214,6 @@ function AppShell() {
         }
       }} />
 
-      {/* 🚀 Intégration propre de la modale d'authentification officielle */}
       <AuthModal isOpen={showAuthModal} onClose={closeAuth} />
     </div>
   );

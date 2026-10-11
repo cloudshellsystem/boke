@@ -1,5 +1,6 @@
 ﻿// src/components/EspaceMembrePro.jsx
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { formatPrice } from "../lib/formatPrice";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -31,6 +32,7 @@ function issueErrorMessage(err, isEn) {
 export default function EspaceMembrePro({ onRequireLogin }) {
   const { isLoggedIn, loading: authLoading, user } = useAuth();
   const { lang } = useLanguage();
+  const navigate = useNavigate();
   const isEn = lang === "en";
 
   const [activeTab, setActiveTab] = useState("companyConfig");
@@ -58,7 +60,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
 
   const [scriptStep, setScriptStep] = useState(1);
 
-  // Leads de démonstration pour le CRM & Scripts
   const [mockLeads] = useState([
     {
       id: 1,
@@ -73,7 +74,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     },
   ]);
 
-  // Chargement du profil Supabase
   useEffect(() => {
     if (isLoggedIn && user) {
       supabase
@@ -116,10 +116,10 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     );
   }
 
-  // 🔒 BARRIÈRE DE VERROUILLAGE ÉPURÉE
+  // 🔒 SURCOUCHE DE SÉCURITÉ MVP ÉPURÉE POUR LE SALON
   if (!isLoggedIn || !hasProTier) {
     return (
-      <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-[80vh] font-sans flex flex-col items-center justify-center">
+      <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-[70vh] font-sans flex flex-col items-center justify-center">
         <div className="max-w-xl bg-neutral-900 border border-neutral-800 p-8 rounded-3xl shadow-2xl text-center space-y-6">
           <span className="text-6xl block animate-bounce">🔒</span>
           <h1 className="text-2xl sm:text-3xl font-black text-amber-400">
@@ -127,16 +127,13 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">
             {isEn 
-              ? "Access to CRM, invoice generators, SIRET settings, and legal contracts requires a Pro or Elite account."
-              : "L'accès au CRM de prospection, au générateur de devis/factures, aux paramètres SIRET et à la gestion comptable nécessite un abonnement Pro ou Élite."}
+              ? "Access to the digital order form, automated invoicing, SIRET verification, and compliant legal contracts requires a Pro or Elite subscription."
+              : "L'accès au bon de commande numérique, à la facturation automatisée, aux vérifications SIRET et aux contrats juridiques conformes nécessite un abonnement Pro ou Élite."}
           </p>
-          
           <div className="pt-2">
             <button
               type="button"
-              onClick={() => {
-                window.location.href = "/";
-              }}
+              onClick={() => navigate("/tarifs")}
               className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition-all duration-200 shadow-md cursor-pointer"
             >
               {isEn ? "View Subscription Plans ➔" : "Découvrir les formules d'abonnement ➔"}
@@ -157,9 +154,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
       setRestrictionModal({
         open: true,
         title: isEn ? "Pro Tier Required" : "Abonnement Pro requis",
-        text: isEn 
-          ? "This tool is reserved for Pro and Elite subscribers."
-          : "Cet outil est strictement réservé aux abonnés Pro et Élite."
+        text: isEn ? "This tool is reserved for Pro and Elite subscribers." : "Cet outil est strictement réservé aux abonnés Pro et Élite."
       });
       return;
     }
@@ -168,9 +163,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
       setRestrictionModal({
         open: true,
         title: isEn ? "Elite Agency Required" : "Offre Agence Élite requise",
-        text: isEn 
-          ? "This CRM & Sales area is reserved for Elite Agency members."
-          : "Cet espace CRM, Tunnels et Scripts de vente est réservé aux membres Agence Élite."
+        text: isEn ? "This CRM & Sales area is reserved for Elite Agency members." : "Cet espace CRM, Tunnels et Scripts de vente est réservé aux membres Agence Élite."
       });
       return;
     }
@@ -341,7 +334,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   return (
     <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-screen font-sans">
       
-      {/* ⚡ EN-TÊTE PRO ÉPURÉ & CLAIR */}
       <div className="mb-8 border-b border-neutral-800 pb-5">
         <h1 className="text-2xl sm:text-3xl font-black text-amber-400">
           {isEn ? "Pro Business Space" : "Espace Pro & Outils Business"}
@@ -351,9 +343,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
         </p>
       </div>
 
-      {/* ⚡ NAVIGATION PAR SERVICES (CRM, SIRET, FACTURES, SCRIPTS) */}
       <div className="flex flex-wrap items-center gap-2 mb-8 pb-3 border-b border-neutral-900">
-        
         <button
           onClick={() => handleTabClick("companyConfig", "pro")}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
@@ -389,13 +379,9 @@ export default function EspaceMembrePro({ onRequireLogin }) {
         >
           <span>{!hasEliteTier && "🔒 "}💬</span> {isEn ? "Sales Scripts" : "Scripts de Vente Directe"}
         </button>
-
       </div>
 
-      {/* CONTENU DES SERVICES */}
       <div className="space-y-6">
-        
-        {/* SERVICE 1 : CONFIGURATION ENTREPRISE */}
         {activeTab === "companyConfig" && hasProTier && (
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-2xl mx-auto space-y-5">
             <h3 className="text-base font-bold text-amber-400">{isEn ? "Company Settings & Logo" : "Paramètres de votre Entreprise & Logo"}</h3>
@@ -465,7 +451,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           </div>
         )}
 
-        {/* SERVICE 2 : ÉDITEUR DE FACTURES ET DEVIS PDF */}
         {activeTab === "invoices" && hasProTier && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4 h-fit">
@@ -571,7 +556,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           </div>
         )}
 
-        {/* SERVICE 3 : CRM & SUIVI PROSPECTS */}
         {activeTab === "crm" && hasEliteTier && (
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4">
             <h3 className="text-base font-bold text-amber-400">📊 {isEn ? "CRM & Lead Pipeline" : "CRM & Suivi des Prospects"}</h3>
@@ -588,7 +572,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           </div>
         )}
 
-        {/* SERVICE 4 : SCRIPTS DE VENTE */}
         {activeTab === "notionLive" && hasEliteTier && (
           <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-amber-950/20 border-2 border-amber-500/40 p-6 rounded-3xl shadow-2xl space-y-5">
             <h2 className="text-xl font-black text-white">{isEn ? "Sales Funnel & Pro Script" : "Tunnel de Vente & Script Pro"}</h2>
@@ -601,10 +584,8 @@ export default function EspaceMembrePro({ onRequireLogin }) {
             </button>
           </div>
         )}
-
       </div>
 
-      {/* MODAL RESTRICTION */}
       {restrictionModal.open && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <div className="bg-neutral-900 border border-amber-500/50 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
@@ -629,7 +610,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
               <button
                 onClick={() => {
                   setRestrictionModal({ open: false, title: "", text: "" });
-                  window.location.href = "/";
+                  navigate("/tarifs");
                 }}
                 className="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-bold rounded-xl text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer"
               >
