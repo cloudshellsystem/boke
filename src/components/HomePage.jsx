@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import TarifsPage from "./TarifsPage"; // ⚡ Importation de la page des tarifs
+import Abonnes from "./Abonnes"; // ⚡ Importation correcte du composant Abonnés
 
 const GALLERY_ITEMS = [
   {
@@ -329,8 +329,8 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* ⚡ ONGLET TARIFS INDÉPENDANT */}
-          {activeTab === "tarifs" && <TarifsPage />}
+          {/* ⚡ ONGLET ABONNÉS / TARIFS INDÉPENDANT */}
+          {activeTab === "tarifs" && <Abonnes />}
         </main>
 
       </div>
