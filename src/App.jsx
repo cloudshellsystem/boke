@@ -1,4 +1,5 @@
-﻿import React, { useState, useCallback, useEffect } from "react";
+﻿// src/App.jsx
+import React, { useState, useCallback, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import ReactGA from "react-ga4";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -27,14 +28,14 @@ const NAV_LINKS_DATA = {
     { to: "/creators", label: "Créateurs" },
     { to: "/forum", label: "Forum" },
     { to: "/espace-pro", label: "Espace Pro" },
-    { to: "/abonnes", label: "Abonnés" },
+    { to: "/abonnes", label: "Tarifs" }, // ⚡ Renommé de "Abonnés" à "Tarifs"
   ],
   en: [
     { to: "/", label: "Home / Stock" },
     { to: "/creators", label: "Creators" },
     { to: "/forum", label: "Forum" },
     { to: "/espace-pro", label: "Pro Space" },
-    { to: "/abonnes", label: "Subscribers" },
+    { to: "/abonnes", label: "Pricing" }, // ⚡ Renommé de "Subscribers" à "Pricing"
   ],
 };
 
