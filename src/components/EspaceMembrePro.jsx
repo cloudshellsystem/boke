@@ -90,9 +90,15 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     }
   }, [isLoggedIn, user]);
 
-  const userPlan = userProfile?.plan || 'none';
-  const hasProTier = ['pro', 'elite', 'admin'].includes(userPlan);
-  const hasEliteTier = ['elite', 'admin'].includes(userPlan);
+  // text-generation
+  // 🔑 RECOUVREMENT DES DROITS : Lecture de la colonne role_abonnement et validation Admin
+  const userPlan = userProfile?.role_abonnement || 'none';
+  const isSuperAdmin = userProfile?.role === 'admin';
+
+  // L'accès est accordé si l'utilisateur possède le bon plan OU s'il est SuperAdmin
+  const hasProTier = ['pro', 'elite'].includes(userPlan) || isSuperAdmin;
+  const hasEliteTier = ['elite'].includes(userPlan) || isSuperAdmin;
+
 
   const montantHT = round2(parseFloat(itemPrice) || 0);
   const montantTVA = hasTva ? round2(montantHT * (tvaRate / 100)) : 0;
