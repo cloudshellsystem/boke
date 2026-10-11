@@ -4,7 +4,6 @@ import { useAuth } from "../lib/AuthContext";
 import { useSelectionCart } from "../hooks/useSelectionCart";
 
 // ⚠️ Démo : ces réalisations sont codées en dur, pas encore issues d'une table Supabase.
-// Quand tu auras une vraie table `photos`, remplace ce tableau par un fetch.
 const REALISATIONS = [
   { id: 1, titre: "Publicité Luxe & Or", categorie: "COMMERCIAL", auteur: "Agence One", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" },
   { id: 2, titre: "Portrait Naturel", categorie: "PORTRAIT", auteur: "Studio Boke", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" },
@@ -17,8 +16,11 @@ export default function Gallery({ onRequireLogin }) {
 
   const [filtreCategorie, setFiltreCategorie] = useState("TOUS");
   const [panierOuvert, setPanierOuvert] = useState(false);
-  const [likedIds, setLikedIds] = useState(() => new Set()); // local uniquement, pas de persistance serveur ici
-  const [syncState, setSyncState] = useState("idle"); // idle | saving | done | error
+  const [likedIds, setLikedIds] = useState(() => new Set()); 
+  const [syncState, setSyncState] = useState("idle"); 
+
+  // Vérification des droits d'upload selon les formules MVP
+  const canUpload = isLoggedIn && (user?.subscription_status === 'pro' || user?.subscription_status === 'elite');
 
   const elementsFiltres = filtreCategorie === "TOUS" ? REALISATIONS : REALISATIONS.filter((r) => r.categorie === filtreCategorie);
 
@@ -31,8 +33,6 @@ export default function Gallery({ onRequireLogin }) {
   }
 
   function ajouterALaSelection(item) {
-    // La présélection locale (localStorage) ne nécessite pas de compte : elle est
-    // utile dès la première visite. On ne bloque donc PAS un visiteur non connecté ici.
     cart.add({ id: item.id, titre: item.titre, image_url: item.image });
     setPanierOuvert(true);
   }
@@ -47,9 +47,45 @@ export default function Gallery({ onRequireLogin }) {
     setSyncState(ok ? "done" : "error");
   }
 
+  const handleUploadClick = () => {
+    if (!canUpload) {
+      alert("🔒 L'importation de fichiers et la création de portfolios sont réservées aux abonnés Pro et Élite. Rendez-vous dans l'onglet des offres pour mettre à niveau votre compte !");
+      return;
+    }
+    alert("📤 Ouverture de votre gestionnaire de médias Boké One...");
+  };
+
   return (
     <div className="space-y-6 relative">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      
+      {/* Panel de gestion d'upload conditionnelle pour le salon */}
+      <div className="bg-[#0e1424] border border-slate-800 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+        <div>
+          <h4 className="text-sm font-bold text-white">Gestion de votre catalogue média</h4>
+          <p className="text-xs text-slate-400 mt-1">
+            Niveau de formule actuel : <span className="text-amber-400 font-black uppercase tracking-wider">{user?.subscription_status || 'Visiteur'}</span>
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleUploadClick}
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 shadow-md ${
+            canUpload
+              ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer'
+              : 'bg-slate-900 text-slate-500 border border-slate-800 cursor-pointer'
+          }`}
+        >
+          {canUpload ? (
+            <>📤 Importer une œuvre</>
+          ) : (
+            <>🔒 Importer (Pro / Élite)</>
+          )}
+        </button>
+      </div>
+
+      {/* En-tête de la Galerie */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4">
         <div>
           <h2 className="text-xl font-black text-white">🖼️ Portfolios &amp; Réalisations</h2>
           <p className="text-xs text-slate-400 mt-1">Explorez les réalisations et pré-sélectionnez vos coups de cœur pour votre projet.</p>
@@ -84,6 +120,7 @@ export default function Gallery({ onRequireLogin }) {
         </div>
       </div>
 
+      {/* Grille des réalisations */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {elementsFiltres.map((item) => {
           const liked = likedIds.has(item.id);
@@ -131,12 +168,21 @@ export default function Gallery({ onRequireLogin }) {
         })}
       </div>
 
+      {/* Rendu du Panier Latéral */}
       {panierOuvert && (
         <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-[#0e1424] border-l border-slate-800 shadow-2xl p-6 flex flex-col justify-between">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-4">
-              <h3 className="text-sm font-black text-white flex items-center gap-2"><span>🛒</span> Ma sélection</h3>
-              <button type="button" onClick={() => setPanierOuvert(false)} className="text-slate-400 hover:text-white text-base font-bold p-1 cursor-pointer">✕</button>
+          <div className="space-y-6 flex-1 flex flex-col min-h-0">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-4 shrink-0">
+              <h3 className="text-sm font-black text-white flex items-center gap-2">
+                <span>🛒</span> Ma sélection
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setPanierOuvert(false)} 
+                className="text-slate-400 hover:text-white text-base font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
 
             {cart.items.length === 0 ? (
@@ -145,14 +191,22 @@ export default function Gallery({ onRequireLogin }) {
                 <p className="text-xs text-slate-400">Votre sélection est vide.</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 flex-1">
                 {cart.items.map((p) => (
                   <div key={p.id} className="bg-[#070b12] border border-slate-800 p-3 rounded-xl flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img src={p.image_url} alt={p.titre} className="w-12 h-12 rounded-lg object-cover shrink-0" />
-                      <h4 className="text-xs font-bold text-white truncate">{p.titre}</h4>
+                      {p.image_url && (
+                        <img src={p.image_url} alt={p.titre} className="w-10 h-10 object-cover rounded-lg shrink-0" />
+                      )}
+                      <span className="text-xs text-white truncate">{p.titre}</span>
                     </div>
-                    <button type="button" onClick={() => cart.remove(p.id)} className="text-slate-500 hover:text-rose-400 text-xs font-bold p-2 cursor-pointer shrink-0">🗑️</button>
+                    <button
+                      type="button"
+                      onClick={() => cart.remove?.(p.id)}
+                      className="text-slate-500 hover:text-rose-400 text-xs font-bold px-2 py-1 cursor-pointer transition-colors"
+                    >
+                      Retirer
+                    </button>
                   </div>
                 ))}
               </div>
@@ -160,33 +214,18 @@ export default function Gallery({ onRequireLogin }) {
           </div>
 
           {cart.items.length > 0 && (
-            <div className="space-y-3 pt-4 border-t border-slate-800">
-              {!isLoggedIn && (
-                <p className="text-[11px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
-                  🔒 Connecte-toi pour rattacher cette sélection à ton compte et la transmettre au créatif.
-                </p>
-              )}
-              {syncState === "done" && (
-                <p className="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
-                  ✅ Sélection enregistrée sur votre compte. Le créatif concerné pourra la consulter.
-                </p>
-              )}
-              {syncState === "error" && (
-                <p className="text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
-                  Une erreur est survenue. Réessayez dans un instant.
-                </p>
-              )}
+            <div className="border-t border-slate-800 pt-4 space-y-3 shrink-0">
               <button
                 type="button"
                 onClick={validerLaSelection}
                 disabled={syncState === "saving"}
-                className="w-full py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 text-xs font-black rounded-xl cursor-pointer shadow-lg transition-colors"
+                className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer"
               >
-                {syncState === "saving" ? "Enregistrement…" : isLoggedIn ? "Valider ma sélection" : "Se connecter pour valider"}
+                {syncState === "saving" ? "Synchronisation..." : "✓ Valider ma sélection"}
               </button>
-              <p className="text-[10px] text-slate-500 text-center">
-                Cette action n'est pas un paiement : aucune coordonnée bancaire n'est demandée ici.
-              </p>
+              
+              {syncState === "done" && <p className="text-[11px] text-emerald-400 text-center font-bold">Sélection synchronisée avec succès !</p>}
+              {syncState === "error" && <p className="text-[11px] text-rose-400 text-center font-bold">Erreur lors de la synchronisation.</p>}
             </div>
           )}
         </div>

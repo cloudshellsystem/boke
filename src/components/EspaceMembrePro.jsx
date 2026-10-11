@@ -1,4 +1,5 @@
-﻿import React, { useState, useRef, useEffect } from "react";
+﻿// src/components/EspaceMembrePro.jsx
+import React, { useState, useRef, useEffect } from "react";
 import { formatPrice } from "../lib/formatPrice";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -193,6 +194,139 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     return (
       <div className="mx-auto w-full max-w-4xl bg-neutral-950 p-8 text-neutral-400 min-h-[70vh] flex items-center justify-center text-sm font-sans">
         {isEn ? "Checking your access..." : "Vérification de votre accès…"}
+      </div>
+    );
+  }
+
+  // 🔒 NOUVEAU BLOC DE VERROUILLAGE MVP POUR LE SALON
+  if (!isLoggedIn || !hasProTier) {
+    return (
+      <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-screen font-sans flex flex-col items-center justify-center">
+        <div className="max-w-2xl text-center space-y-4 mb-12">
+          <span className="text-5xl block animate-pulse">🔒</span>
+          <h1 className="text-3xl sm:text-4xl font-black text-amber-400">
+            {isEn ? "Professional Space Locked" : "Espace Professionnel Sécurisé"}
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-400 max-w-lg mx-auto">
+            {isEn 
+              ? "Access to legal tools, invoice/quote generators, and automated accounting modules requires a Pro or Elite subscription."
+              : "L'accès aux outils légaux, au générateur de devis/factures et aux modules de comptabilité automatisée nécessite un abonnement Pro ou Élite."}
+          </p>
+          {!isLoggedIn && (
+            <button
+              onClick={() => onRequireLogin?.()}
+              className="mt-2 text-xs font-bold text-amber-400 hover:text-amber-300 underline cursor-pointer"
+            >
+              {isEn ? "Sign in to your account ➔" : "Se connecter à un compte existant ➔"}
+            </button>
+          )}
+        </div>
+
+        {/* Grille des offres pour inciter à l'achat en direct au salon */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
+          {OFFRES_TARIFS.map((offre) => (
+            <div 
+              key={offre.id} 
+              className={`border p-6 rounded-3xl flex flex-col justify-between bg-neutral-900 transition-all ${
+                offre.popular ? 'border-amber-500/40 shadow-xl shadow-amber-500/5' : 'border-neutral-800'
+              }`}
+            >
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-bold text-white">{offre.name}</h3>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${offre.badgeColor}`}>
+                    {offre.badge}
+                  </span>
+                </div>
+                <div className="text-2xl font-black text-amber-400 mb-4">{offre.price}€<span className="text-xs text-neutral-500 font-normal"> / mois</span></div>
+                <p className="text-xs text-neutral-400 mb-6">{offre.description}</p>
+                <ul className="space-y-2 mb-8">
+                  {offre.features.map((feat, idx) => (
+                    <li key={idx} className="text-[11px] text-neutral-500 flex items-start gap-2">
+                      <span className="text-amber-500">✓</span> {feat}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isLoggedIn) return onRequireLogin?.();
+                  setSelectedPlan(offre);
+                }}
+                className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer ${offre.btnColor}`}
+              >
+                {offre.cta}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Modal de sélection de plan depuis l'écran de verrouillage */}
+        {selectedPlan && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-white">{isEn ? "Order Confirmation" : "Confirmation de commande"}</h3>
+                  <p className="text-xs text-neutral-400">Boké One Monthly Subscription</p>
+                </div>
+                <button 
+                  onClick={() => setSelectedPlan(null)}
+                  className="text-neutral-400 hover:text-white font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-2">
+                <div className="flex justify-between text-sm font-bold">
+                  <span>{selectedPlan.name} Plan</span>
+                  <span className="text-amber-400">{selectedPlan.price}€ / {isEn ? "month" : "mois"}</span>
+                </div>
+                <p className="text-xs text-neutral-400">{selectedPlan.description}</p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs text-neutral-400">
+                  {isEn ? "By clicking confirm, you subscribe to the monthly plan which can be cancelled anytime." : "En cliquant sur valider, vous souscrivez à l'abonnement mensuel résiliable à tout moment."}
+                </p>
+
+                <button
+                  onClick={async () => {
+                    setIsProcessingPayment(true);
+                    try {
+                      const { error } = await supabase
+                        .from('profiles')
+                        .update({ plan: selectedPlan.id })
+                        .eq('id', user.id);
+                      if (error) throw error;
+                      alert(isEn ? `Payment successful! Welcome to the ${selectedPlan.name} plan.` : `Paiement réussi ! Bienvenue dans l'offre ${selectedPlan.name}.`);
+                      setSelectedPlan(null);
+                      window.location.reload();
+                    } catch (err) {
+                      alert((isEn ? "Error processing subscription: " : "Erreur lors de la validation de votre abonnement : ") + err.message);
+                    } finally {
+                      setIsProcessingPayment(false);
+                    }
+                  }}
+                  disabled={isProcessingPayment}
+                  className={`w-full py-3.5 rounded-xl font-bold text-sm cursor-pointer ${selectedPlan.btnColor}`}
+                >
+                  {isProcessingPayment ? (isEn ? "Processing..." : "Traitement en cours...") : (isEn ? `Confirm & Pay ${selectedPlan.price}€` : `Valider et Payer ${selectedPlan.price}€`)}
+                </button>
+
+                <button
+                  onClick={() => setSelectedPlan(null)}
+                  className="w-full py-2 text-xs text-neutral-400 hover:text-white cursor-pointer"
+                >
+                  {isEn ? "Cancel" : "Annuler"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

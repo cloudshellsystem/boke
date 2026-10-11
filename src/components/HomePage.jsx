@@ -1,8 +1,10 @@
-﻿import React, { useState, useEffect } from "react";
+﻿// src/components/HomePage.jsx
+import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import TarifsPage from "./TarifsPage"; // ⚡ Importation de la page des tarifs
 
 const GALLERY_ITEMS = [
   {
@@ -77,6 +79,7 @@ export default function HomePage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState("gallery"); // ⚡ Gestion de l'onglet actif (gallery, tarifs, etc.)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -152,144 +155,174 @@ export default function HomePage() {
       
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-10">
 
-        {/* 1. ACTUS DÉFILANTES */}
-        <div className="max-w-3xl mx-auto space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xs font-black uppercase tracking-widest text-amber-400 flex items-center gap-2">
-              <span>⚡</span> {isEn ? "Latest News & Updates" : "Actualités & Annonces Réseau"}
-            </h3>
-            {!isLoggedIn && (
-              <button 
-                onClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
-                className="text-xs text-amber-400 hover:underline font-bold cursor-pointer"
-              >
-                {isEn ? "Sign In / Register →" : "Connexion / Inscription →"}
-              </button>
-            )}
-          </div>
-
-          <div 
-            onClick={() => setSelectedNews(currentNews)}
-            className="bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 p-6 rounded-3xl shadow-xl cursor-pointer transition duration-300 relative overflow-hidden group flex flex-col sm:flex-row gap-6 items-center"
+        {/* Barre de sélection rapide des onglets de la page d'accueil */}
+        <div className="flex items-center justify-center gap-3 border-b border-neutral-800 pb-4">
+          <button
+            onClick={() => setActiveTab("gallery")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+              activeTab === "gallery" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800"
+            }`}
           >
-            <div className="w-full sm:w-48 h-32 rounded-2xl overflow-hidden shrink-0 border border-neutral-800">
-              <img 
-                src={currentNews.image} 
-                alt={currentNews.title} 
-                className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
-              />
-            </div>
-
-            <div className="flex-1 space-y-2 text-left">
-              <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold px-2.5 py-1 rounded-full uppercase">
-                {currentNews.date}
-              </span>
-              <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition">
-                {currentNews.title}
-              </h4>
-              <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
-                {currentNews.summary}
-              </p>
-              <span className="text-[11px] text-amber-400 font-bold block pt-1 underline">
-                {isEn ? "Read full update →" : "Lire le résumé complet →"}
-              </span>
-            </div>
-
-            <div className="absolute bottom-3 right-4 flex gap-1.5">
-              {NEWS_ITEMS.map((_, idx) => (
-                <span
-                  key={idx}
-                  onClick={(e) => { e.stopPropagation(); setCurrentNewsIndex(idx); }}
-                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    idx === currentNewsIndex ? "w-6 bg-amber-400" : "w-1.5 bg-neutral-700"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
+            🖼️ {isEn ? "Gallery & News" : "Galerie & Actualités"}
+          </button>
+          <button
+            onClick={() => setActiveTab("tarifs")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+              activeTab === "tarifs" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800"
+            }`}
+          >
+            ⭐ {isEn ? "Plans & Pricing" : "Offres & Tarifs"}
+          </button>
         </div>
 
-        <div className="max-w-3xl mx-auto border-t border-neutral-800/80 my-6"></div>
+        {/* Zone d'affichage dynamique des onglets */}
+        <main className="mt-6">
+          {activeTab === "gallery" && (
+            <div className="space-y-10">
+              {/* 1. ACTUS DÉFILANTES */}
+              <div className="max-w-3xl mx-auto space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-amber-400 flex items-center gap-2">
+                    <span>⚡</span> {isEn ? "Latest News & Updates" : "Actualités & Annonces Réseau"}
+                  </h3>
+                  {!isLoggedIn && (
+                    <button 
+                      onClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
+                      className="text-xs text-amber-400 hover:underline font-bold cursor-pointer"
+                    >
+                      {isEn ? "Sign In / Register →" : "Connexion / Inscription →"}
+                    </button>
+                  )}
+                </div>
 
-        {/* 2. RECHERCHE */}
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 max-w-2xl mx-auto shadow-xl">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              placeholder={isEn ? "Search by creator name, subscription, reference..." : "Rechercher par nom de presta, abonnement, référence..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
-            />
-            <button
-              type="submit"
-              className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-md"
-            >
-              {isEn ? "SEARCH" : "RECHERCHER"}
-            </button>
-          </form>
-        </div>
+                <div 
+                  onClick={() => setSelectedNews(currentNews)}
+                  className="bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 p-6 rounded-3xl shadow-xl cursor-pointer transition duration-300 relative overflow-hidden group flex flex-col sm:flex-row gap-6 items-center"
+                >
+                  <div className="w-full sm:w-48 h-32 rounded-2xl overflow-hidden shrink-0 border border-neutral-800">
+                    <img 
+                      src={currentNews.image} 
+                      alt={currentNews.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                    />
+                  </div>
 
-        <div className="max-w-3xl mx-auto border-t border-neutral-800/80 my-6"></div>
-
-        {/* 3. GALERIE */}
-        <div className="space-y-6 pt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {GALLERY_ITEMS.map((item) => (
-              <div 
-                key={item.id} 
-                onClick={() => setSelectedGalleryItem(item)}
-                className="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between group cursor-pointer transition"
-              >
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-25">
-                    <span className="text-white font-black text-xl tracking-widest uppercase rotate-[-20deg]">
-                      BOKÉ ONE
+                  <div className="flex-1 space-y-2 text-left">
+                    <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold px-2.5 py-1 rounded-full uppercase">
+                      {currentNews.date}
+                    </span>
+                    <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition">
+                      {currentNews.title}
+                    </h4>
+                    <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
+                      {currentNews.summary}
+                    </p>
+                    <span className="text-[11px] text-amber-400 font-bold block pt-1 underline">
+                      {isEn ? "Read full update →" : "Lire le résumé complet →"}
                     </span>
                   </div>
 
-                  <span className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-amber-400 text-[10px] font-bold px-3 py-1 rounded-full border border-neutral-800">
-                    {item.category} ({item.type})
-                  </span>
-                </div>
-
-                <div className="p-5 space-y-4">
-                  <h3 className="text-sm font-bold text-white group-hover:text-amber-400 transition">{item.title}</h3>
-                  
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
-                    <span className="text-base font-black text-amber-400">{item.price} €</span>
-                    
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={(e) => handleLike(item.id, e)}
-                        className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-xl text-xs transition cursor-pointer ${
-                          userLiked[item.id]
-                            ? "bg-rose-500/20 border-rose-500 text-rose-400 font-bold"
-                            : "bg-neutral-950 hover:bg-neutral-800 border-neutral-800 text-neutral-300"
+                  <div className="absolute bottom-3 right-4 flex gap-1.5">
+                    {NEWS_ITEMS.map((_, idx) => (
+                      <span
+                        key={idx}
+                        onClick={(e) => { e.stopPropagation(); setCurrentNewsIndex(idx); }}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                          idx === currentNewsIndex ? "w-6 bg-amber-400" : "w-1.5 bg-neutral-700"
                         }`}
-                      >
-                        <span>❤️</span>
-                        <span className="font-bold">{likes[item.id]}</span>
-                      </button>
-
-                      <button
-                        onClick={(e) => handleBuyItem(item, e)}
-                        className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-4 py-1.5 rounded-xl text-xs transition cursor-pointer shadow"
-                      >
-                        {isEn ? "Buy" : "Acheter"}
-                      </button>
-                    </div>
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+
+              <div className="max-w-3xl mx-auto border-t border-neutral-800/80 my-6"></div>
+
+              {/* 2. RECHERCHE */}
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 max-w-2xl mx-auto shadow-xl">
+                <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    placeholder={isEn ? "Search by creator name, subscription, reference..." : "Rechercher par nom de presta, abonnement, référence..."}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-md"
+                  >
+                    {isEn ? "SEARCH" : "RECHERCHER"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="max-w-3xl mx-auto border-t border-neutral-800/80 my-6"></div>
+
+              {/* 3. GALERIE */}
+              <div className="space-y-6 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {GALLERY_ITEMS.map((item) => (
+                    <div 
+                      key={item.id} 
+                      onClick={() => setSelectedGalleryItem(item)}
+                      className="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between group cursor-pointer transition"
+                    >
+                      <div className="relative h-56 overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-25">
+                          <span className="text-white font-black text-xl tracking-widest uppercase rotate-[-20deg]">
+                            BOKÉ ONE
+                          </span>
+                        </div>
+
+                        <span className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-amber-400 text-[10px] font-bold px-3 py-1 rounded-full border border-neutral-800">
+                          {item.category} ({item.type})
+                        </span>
+                      </div>
+
+                      <div className="p-5 space-y-4">
+                        <h3 className="text-sm font-bold text-white group-hover:text-amber-400 transition">{item.title}</h3>
+                        
+                        <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                          <span className="text-base font-black text-amber-400">{item.price} €</span>
+                          
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={(e) => handleLike(item.id, e)}
+                              className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-xl text-xs transition cursor-pointer ${
+                                userLiked[item.id]
+                                  ? "bg-rose-500/20 border-rose-500 text-rose-400 font-bold"
+                                  : "bg-neutral-950 hover:bg-neutral-800 border-neutral-800 text-neutral-300"
+                              }`}
+                            >
+                              <span>❤️</span>
+                              <span className="font-bold">{likes[item.id]}</span>
+                            </button>
+
+                            <button
+                              onClick={(e) => handleBuyItem(item, e)}
+                              className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-4 py-1.5 rounded-xl text-xs transition cursor-pointer shadow"
+                            >
+                              {isEn ? "Buy" : "Acheter"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ⚡ VOTRE ONGLET TARIFS INDÉPENDANT */}
+          {activeTab === "tarifs" && <TarifsPage />}
+        </main>
 
       </div>
 
