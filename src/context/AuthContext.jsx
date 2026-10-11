@@ -59,9 +59,31 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    setIsLoggedIn(true);
+  // 1. VRAIE CONNEXION SUPABASE (Utilisée par AuthForm.jsx)
+  const login = async (email, password) => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(translateAuthError(error.message));
+  };
+
+  // 2. VRAIE INSCRIPTION SUPABASE (Avec gestion de la confirmation d'email)
+  const signup = async (email, password) => {
+    if (!supabase) return { needsEmailConfirmation: false };
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw new Error(translateAuthError(error.message));
+    
+    // Si la confirmation d'e-mail est active, l'utilisateur est créé mais pas encore de session
+    const needsEmailConfirmation = data?.user && !data?.session;
+    return { needsEmailConfirmation };
+  };
+
+  // 3. RÉINITIALISATION DU MOT DE PASSE
+  const resetPassword = async (email) => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw new Error(translateAuthError(error.message));
   };
 
   const logout = async () => {
@@ -73,7 +95,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, signup, logout, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
