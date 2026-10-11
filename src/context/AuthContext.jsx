@@ -3,18 +3,40 @@ import { supabase } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
+// Dictionnaire de traduction fr des erreurs Supabase
 export function translateAuthError(message) {
   if (!message) return 'Une erreur est survenue.';
+  if (typeof message !== 'string') return 'Une erreur est survenue lors de l\'authentification.';
+  
   if (message.includes('Invalid login credentials')) return 'Email ou mot de passe incorrect.';
   if (message.includes('User already registered')) return 'Cet email est déjà utilisé.';
   if (message.includes('Email not confirmed')) return '⚠️ Votre adresse e-mail n\'a pas encore été confirmée. Veuillez cliquer sur le lien reçu par e-mail avant de vous connecter.';
+  if (message.includes('Password should be at least')) return 'Le mot de passe doit contenir au moins 6 caractères.';
+  
   return message;
 }
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Fonction pour charger les données additionnelles (role, pseudo, etc.) depuis 'profiles'
+  const fetchUserProfile = async (authUser) => {
+    if (!authUser || !supabase) return null;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+      return data;
+    } catch (e) {
+      console.warn("Impossible de charger le profil :", e);
+      return null;
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -26,6 +48,8 @@ export function AuthProvider({ children }) {
           if (mounted && session?.user) {
             setUser(session.user);
             setIsLoggedIn(true);
+            const userProfile = await fetchUserProfile(session.user);
+            if (mounted) setProfile(userProfile);
           }
         }
       } catch (err) {
@@ -39,13 +63,16 @@ export function AuthProvider({ children }) {
 
     let authListener = null;
     if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (mounted) {
           if (session?.user) {
             setUser(session.user);
             setIsLoggedIn(true);
+            const userProfile = await fetchUserProfile(session.user);
+            if (mounted) setProfile(userProfile);
           } else {
             setUser(null);
+            setProfile(null);
             setIsLoggedIn(false);
           }
           setLoading(false);
@@ -60,26 +87,24 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // 1. CONNEXION SUPABASE
+  // 1. CONNEXION
   const login = async (email, password) => {
     if (!supabase) return;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    
-    if (error) {
-      throw new Error(translateAuthError(error.message));
-    }
+    if (error) throw error; // On propage l'erreur brute pour qu'AuthForm la traduise
 
     if (data?.session?.user) {
       setUser(data.session.user);
       setIsLoggedIn(true);
+      const userProfile = await fetchUserProfile(data.session.user);
+      setProfile(userProfile);
     }
   };
 
-  // 2. INSCRIPTION SUPABASE
+  // 2. INSCRIPTION
   const signup = async (email, password) => {
     if (!supabase) return { needsEmailConfirmation: false };
     
-    // Inscription avec l'URL de redirection explicite vers votre site Vercel
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -88,11 +113,8 @@ export function AuthProvider({ children }) {
       },
     });
 
-    if (error) {
-      throw new Error(translateAuthError(error.message));
-    }
+    if (error) throw error;
     
-    // Si la confirmation d'e-mail est active, l'utilisateur est créé sans session immediate
     const needsEmailConfirmation = data?.user && !data?.session;
 
     if (data?.session?.user) {
@@ -109,7 +131,7 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) throw new Error(translateAuthError(error.message));
+    if (error) throw error;
   };
 
   // 4. DÉCONNEXION
@@ -118,11 +140,12 @@ export function AuthProvider({ children }) {
       try { await supabase.auth.signOut(); } catch (e) {}
     }
     setUser(null);
+    setProfile(null);
     setIsLoggedIn(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, signup, logout, resetPassword }}>
+    <AuthContext.Provider value={{ user, profile, isLoggedIn, loading, login, signup, logout, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

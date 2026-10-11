@@ -9,6 +9,7 @@ export default function AuthForm({ onClose }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👁️ État pour afficher/masquer le mot de passe
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -153,15 +154,26 @@ export default function AuthForm({ onClose }) {
                 </button>
               )}
             </div>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition text-white"
-            />
+            
+            {/* 👁️ Conteneur avec positionnement absolu pour l'icône de l'œil */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-4 pr-10 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition text-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition text-base cursor-pointer"
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
           </div>
         )}
 
