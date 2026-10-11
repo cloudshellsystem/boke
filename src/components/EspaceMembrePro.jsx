@@ -116,19 +116,19 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     );
   }
 
-  // 🔒 SURCOUCHE DE SÉCURITÉ MVP ÉPURÉE POUR LE SALON
+  // 🔒 SURCOUCHE DE SÉCURITÉ MVP ÉPURÉE POUR LE SALON (Supprime le doublon de la grille)
   if (!isLoggedIn || !hasProTier) {
     return (
-      <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-[70vh] font-sans flex flex-col items-center justify-center">
+      <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-[75vh] font-sans flex flex-col items-center justify-center">
         <div className="max-w-xl bg-neutral-900 border border-neutral-800 p-8 rounded-3xl shadow-2xl text-center space-y-6">
-          <span className="text-6xl block animate-bounce">🔒</span>
+          <span className="text-6xl block animate-pulse">🔒</span>
           <h1 className="text-2xl sm:text-3xl font-black text-amber-400">
-            {isEn ? "Professional Tools Locked" : "Outils Business Verrouillés"}
+            {isEn ? "Business Area Restricted" : "Outils Business Verrouillés"}
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">
             {isEn 
-              ? "Access to the digital order form, automated invoicing, SIRET verification, and compliant legal contracts requires a Pro or Elite subscription."
-              : "L'accès au bon de commande numérique, à la facturation automatisée, aux vérifications SIRET et aux contrats juridiques conformes nécessite un abonnement Pro ou Élite."}
+              ? "Access to the digital order forms, automatic invoice generation, live SIRET lookup, and formal media contracts requires a Pro or Elite membership plan."
+              : "L'accès au bon de commande numérique, à la facturation automatisée, aux vérifications SIRET en temps réel et aux contrats juridiques nécessite un abonnement Pro ou Élite."}
           </p>
           <div className="pt-2">
             <button
@@ -136,7 +136,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
               onClick={() => navigate("/tarifs")}
               className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition-all duration-200 shadow-md cursor-pointer"
             >
-              {isEn ? "View Subscription Plans ➔" : "Découvrir les formules d'abonnement ➔"}
+              {isEn ? "Explore Plans ➔" : "Découvrir les formules d'abonnement ➔"}
             </button>
           </div>
         </div>

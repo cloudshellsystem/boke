@@ -1,5 +1,4 @@
-﻿// src/App.jsx
-import React, { useState, useCallback, useEffect } from "react";
+﻿import React, { useState, useCallback, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import ReactGA from "react-ga4";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -11,7 +10,7 @@ import CreatorDirectory from "./components/CreatorDirectory";
 import ForumPage from "./components/ForumPage";
 import AdminForumModeration from "./components/AdminForumModeration";
 import EspaceMembrePro from "./components/EspaceMembrePro";
-import TarifsPage from "./components/TarifsPage"; // Page des tarifs dédiée
+import Abonnes from "./components/Abonnes"; // On utilise le fichier existant
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import CGUPage from "./components/CGUPage";
@@ -22,20 +21,21 @@ import AuthModal from "./components/AuthModal";
 // Initialisation de Google Analytics 4
 ReactGA.initialize("G-FVFKNP75BZ");
 
+// Configuration des onglets avec "Tarifs" en FR et "Pricing" en EN
 const NAV_LINKS_DATA = {
   fr: [
     { to: "/", label: "Accueil / Stock" },
     { to: "/creators", label: "Créateurs" },
     { to: "/forum", label: "Forum" },
     { to: "/espace-pro", label: "Espace Pro" },
-    { to: "/tarifs", label: "Tarifs" },
+    { to: "/abonnes", label: "Tarifs" }, // Changement de libellé visuel
   ],
   en: [
     { to: "/", label: "Home / Stock" },
     { to: "/creators", label: "Creators" },
     { to: "/forum", label: "Forum" },
     { to: "/espace-pro", label: "Pro Space" },
-    { to: "/tarifs", label: "Pricing" },
+    { to: "/abonnes", label: "Pricing" }, // Changement de libellé visuel
   ],
 };
 
@@ -108,6 +108,7 @@ function GlobalNavbar({ onOpenAuth }) {
         {/* Actions Droite */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button 
+            type="button"
             onClick={toggleLanguage} 
             className="text-xs font-bold border border-neutral-800 bg-neutral-900 px-3 py-2 rounded-xl hover:border-amber-400/40 transition text-amber-400 flex items-center gap-1.5 cursor-pointer"
           >
@@ -140,7 +141,7 @@ function GlobalNavbar({ onOpenAuth }) {
 
           {isLoggedIn ? (
             <Link
-              to="/tarifs"
+              to="/abonnes"
               className="border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-500/20 flex items-center gap-2 transition hover:bg-emerald-500/20"
             >
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -148,6 +149,7 @@ function GlobalNavbar({ onOpenAuth }) {
             </Link>
           ) : (
             <button 
+              type="button"
               onClick={onOpenAuth} 
               className="rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 text-sm font-bold text-neutral-950 shadow-md hover:brightness-110 transition cursor-pointer"
             >
@@ -199,20 +201,15 @@ function AppShell() {
           <Route path="/forum" element={<ForumPage onRequireLogin={openAuth} />} />
           <Route path="/admin/moderation" element={<AdminForumModeration />} />
           <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
-          <Route path="/tarifs" element={<TarifsPage onRequireLogin={openAuth} />} />
+          <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/cgu" element={<CGUPage />} />
         </Routes>
       </main>
 
+      <Footer />
       <WhatsAppWidget />
-
-      <Footer onNavigate={(page) => {
-        if (page === "cgu") {
-          window.location.href = "/cgu";
-        }
-      }} />
 
       <AuthModal isOpen={showAuthModal} onClose={closeAuth} />
     </div>
