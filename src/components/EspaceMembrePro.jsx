@@ -20,62 +20,6 @@ const esc = (value) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-const OFFRES_TARIFS = [
-  {
-    id: 'decouverte',
-    name: 'Découverte',
-    price: 19,
-    badge: 'Standard',
-    badgeColor: 'border-green-500/40 bg-green-500/10 text-green-400',
-    btnColor: 'bg-green-500 hover:bg-green-600 text-neutral-950',
-    description: 'Idéal pour démarrer, publier vos premières offres et créer du réseau.',
-    features: [
-      '1 annonce de service / semaine',
-      'Jusqu’à 3 photos par annonce',
-      '2 offres d’emploi / opportunités',
-      'Accès complet au forum public',
-      'Profil créateur dans l’annuaire',
-    ],
-    cta: 'Démarrer avec Découverte'
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: 49,
-    badge: 'Populaire',
-    badgeColor: 'border-amber-500/40 bg-amber-500/10 text-amber-400',
-    btnColor: 'bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 text-neutral-950',
-    popular: true,
-    description: 'Pour les professionnels qui souhaitent structurer et automatiser leur activité.',
-    features: [
-      'Annonces & photos illimitées',
-      'Espace Légal : Générateur de devis & factures',
-      'Gestion automatique de la TVA & SIRET',
-      'Offres d’emploi illimitées',
-      'Support prioritaire par email & WhatsApp',
-    ],
-    cta: 'Passer à l’offre Pro'
-  },
-  {
-    id: 'elite',
-    name: 'Agence Élite',
-    price: 129,
-    badge: 'Complet',
-    badgeColor: 'border-purple-500/40 bg-purple-500/10 text-purple-400',
-    btnColor: 'bg-purple-600 hover:bg-purple-700 text-white',
-    description: 'La suite complète pour piloter une agence, gérer des tunnels de vente et la comptabilité.',
-    features: [
-      'Toutes les fonctionnalités de l’offre Pro',
-      'CRM de prospection & suivi clients',
-      'Créateur de Tunnels de Vente',
-      'Comptabilité avancée & export fiscal',
-      'Accès API & intégrations personnalisées',
-      'Badge VIP Élite sur le forum',
-    ],
-    cta: 'Rejoindre l’Agence Élite'
-  }
-];
-
 function issueErrorMessage(err, isEn) {
   const raw = String(err?.message || err || "");
   if (raw.includes("plan_required")) return isEn ? "Your plan does not allow document issuance (Pro or Elite required)." : "Votre offre ne permet pas d'émettre des documents (offre Pro ou Élite requise).";
@@ -89,13 +33,10 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   const { lang } = useLanguage();
   const isEn = lang === "en";
 
-  const [activeTab, setActiveTab] = useState("tarifs");
+  const [activeTab, setActiveTab] = useState("companyConfig");
   const [userProfile, setUserProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Modals : Restitution / Closing & Pop-up d'information restreinte
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [restrictionModal, setRestrictionModal] = useState({ open: false, title: "", text: "" });
 
   const [companyInfo, setCompanyInfo] = useState(EMPTY_COMPANY);
@@ -117,15 +58,13 @@ export default function EspaceMembrePro({ onRequireLogin }) {
 
   const [scriptStep, setScriptStep] = useState(1);
 
-  const [creatorStats] = useState({
-    totalViews: 14250,
-    totalLikes: 3840,
-    totalEarnings: 1850.0,
-  });
-
+  // Leads de démonstration pour le CRM & Scripts
   const [mockLeads] = useState([
     {
       id: 1,
+      clientName: "M. Kaba",
+      status: "Négociation en cours",
+      budget: "150 €",
       scriptSteps: {
         1: isEn ? "« Hello Mr. Kaba, I see you closely follow the work 'Lights of Conakry'. For your 150€ budget, we guarantee an immediate rights assignment. Does this meet your expectations? »" : "« Bonjour M. Kaba, je vois que vous suivez de près l'œuvre « Lumières de Conakry ». Pour votre budget de 150 €, nous vous garantissons une cession de droits immédiate. Est-ce que cela correspond à vos attentes ? »",
         2: isEn ? "« I understand your need for reflection. Please note this license includes a 72h territorial exclusivity on Paris for your campaign. »" : "« Je comprends votre besoin de réflexion. Sachez que cette licence inclut une exclusivité territoriale de 72h sur Paris pour votre campagne. »",
@@ -155,27 +94,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   const hasProTier = ['pro', 'elite', 'admin'].includes(userPlan);
   const hasEliteTier = ['elite', 'admin'].includes(userPlan);
 
-  const [notionUrl, setNotionUrl] = useState(null);
-  useEffect(() => {
-    if (!hasProTier) {
-      setNotionUrl(null);
-      return undefined;
-    }
-    let active = true;
-    supabase
-      .from("pro_resources")
-      .select("url")
-      .eq("key", "notion")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!active) return;
-        setNotionUrl(data?.url ?? null);
-      });
-    return () => {
-      active = false;
-    };
-  }, [hasProTier]);
-
   const montantHT = round2(parseFloat(itemPrice) || 0);
   const montantTVA = hasTva ? round2(montantHT * (tvaRate / 100)) : 0;
   const montantTTC = round2(montantHT + montantTVA);
@@ -198,140 +116,37 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     );
   }
 
-  // 🔒 NOUVEAU BLOC DE VERROUILLAGE MVP POUR LE SALON
+  // 🔒 BARRIÈRE DE VERROUILLAGE ÉPURÉE
   if (!isLoggedIn || !hasProTier) {
     return (
-      <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-screen font-sans flex flex-col items-center justify-center">
-        <div className="max-w-2xl text-center space-y-4 mb-12">
-          <span className="text-5xl block animate-pulse">🔒</span>
-          <h1 className="text-3xl sm:text-4xl font-black text-amber-400">
-            {isEn ? "Professional Space Locked" : "Espace Professionnel Sécurisé"}
+      <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-[80vh] font-sans flex flex-col items-center justify-center">
+        <div className="max-w-xl bg-neutral-900 border border-neutral-800 p-8 rounded-3xl shadow-2xl text-center space-y-6">
+          <span className="text-6xl block animate-bounce">🔒</span>
+          <h1 className="text-2xl sm:text-3xl font-black text-amber-400">
+            {isEn ? "Professional Tools Locked" : "Outils Business Verrouillés"}
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-400 max-w-lg mx-auto">
+          <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">
             {isEn 
-              ? "Access to legal tools, invoice/quote generators, and automated accounting modules requires a Pro or Elite subscription."
-              : "L'accès aux outils légaux, au générateur de devis/factures et aux modules de comptabilité automatisée nécessite un abonnement Pro ou Élite."}
+              ? "Access to CRM, invoice generators, SIRET settings, and legal contracts requires a Pro or Elite account."
+              : "L'accès au CRM de prospection, au générateur de devis/factures, aux paramètres SIRET et à la gestion comptable nécessite un abonnement Pro ou Élite."}
           </p>
-          {!isLoggedIn && (
+          
+          <div className="pt-2">
             <button
-              onClick={() => onRequireLogin?.()}
-              className="mt-2 text-xs font-bold text-amber-400 hover:text-amber-300 underline cursor-pointer"
+              type="button"
+              onClick={() => {
+                window.location.href = "/";
+              }}
+              className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition-all duration-200 shadow-md cursor-pointer"
             >
-              {isEn ? "Sign in to your account ➔" : "Se connecter à un compte existant ➔"}
+              {isEn ? "View Subscription Plans ➔" : "Découvrir les formules d'abonnement ➔"}
             </button>
-          )}
-        </div>
-
-        {/* Grille des offres pour inciter à l'achat en direct au salon */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
-          {OFFRES_TARIFS.map((offre) => (
-            <div 
-              key={offre.id} 
-              className={`border p-6 rounded-3xl flex flex-col justify-between bg-neutral-900 transition-all ${
-                offre.popular ? 'border-amber-500/40 shadow-xl shadow-amber-500/5' : 'border-neutral-800'
-              }`}
-            >
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-bold text-white">{offre.name}</h3>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${offre.badgeColor}`}>
-                    {offre.badge}
-                  </span>
-                </div>
-                <div className="text-2xl font-black text-amber-400 mb-4">{offre.price}€<span className="text-xs text-neutral-500 font-normal"> / mois</span></div>
-                <p className="text-xs text-neutral-400 mb-6">{offre.description}</p>
-                <ul className="space-y-2 mb-8">
-                  {offre.features.map((feat, idx) => (
-                    <li key={idx} className="text-[11px] text-neutral-500 flex items-start gap-2">
-                      <span className="text-amber-500">✓</span> {feat}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (!isLoggedIn) return onRequireLogin?.();
-                  setSelectedPlan(offre);
-                }}
-                className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer ${offre.btnColor}`}
-              >
-                {offre.cta}
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Modal de sélection de plan depuis l'écran de verrouillage */}
-        {selectedPlan && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-bold text-white">{isEn ? "Order Confirmation" : "Confirmation de commande"}</h3>
-                  <p className="text-xs text-neutral-400">Boké One Monthly Subscription</p>
-                </div>
-                <button 
-                  onClick={() => setSelectedPlan(null)}
-                  className="text-neutral-400 hover:text-white font-bold cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-2">
-                <div className="flex justify-between text-sm font-bold">
-                  <span>{selectedPlan.name} Plan</span>
-                  <span className="text-amber-400">{selectedPlan.price}€ / {isEn ? "month" : "mois"}</span>
-                </div>
-                <p className="text-xs text-neutral-400">{selectedPlan.description}</p>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-xs text-neutral-400">
-                  {isEn ? "By clicking confirm, you subscribe to the monthly plan which can be cancelled anytime." : "En cliquant sur valider, vous souscrivez à l'abonnement mensuel résiliable à tout moment."}
-                </p>
-
-                <button
-                  onClick={async () => {
-                    setIsProcessingPayment(true);
-                    try {
-                      const { error } = await supabase
-                        .from('profiles')
-                        .update({ plan: selectedPlan.id })
-                        .eq('id', user.id);
-                      if (error) throw error;
-                      alert(isEn ? `Payment successful! Welcome to the ${selectedPlan.name} plan.` : `Paiement réussi ! Bienvenue dans l'offre ${selectedPlan.name}.`);
-                      setSelectedPlan(null);
-                      window.location.reload();
-                    } catch (err) {
-                      alert((isEn ? "Error processing subscription: " : "Erreur lors de la validation de votre abonnement : ") + err.message);
-                    } finally {
-                      setIsProcessingPayment(false);
-                    }
-                  }}
-                  disabled={isProcessingPayment}
-                  className={`w-full py-3.5 rounded-xl font-bold text-sm cursor-pointer ${selectedPlan.btnColor}`}
-                >
-                  {isProcessingPayment ? (isEn ? "Processing..." : "Traitement en cours...") : (isEn ? `Confirm & Pay ${selectedPlan.price}€` : `Valider et Payer ${selectedPlan.price}€`)}
-                </button>
-
-                <button
-                  onClick={() => setSelectedPlan(null)}
-                  className="w-full py-2 text-xs text-neutral-400 hover:text-white cursor-pointer"
-                >
-                  {isEn ? "Cancel" : "Annuler"}
-                </button>
-              </div>
-            </div>
           </div>
-        )}
+        </div>
       </div>
     );
   }
 
-  // Clic sur un onglet verrouillé -> déclenche la popup propre
   const handleTabClick = (tabKey, requiredTier) => {
     if (!isLoggedIn) {
       onRequireLogin();
@@ -341,10 +156,10 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     if (requiredTier === 'pro' && !hasProTier) {
       setRestrictionModal({
         open: true,
-        title: isEn ? "Pro Tier Required (49€)" : "Abonnement Pro requis (49€)",
+        title: isEn ? "Pro Tier Required" : "Abonnement Pro requis",
         text: isEn 
-          ? "This tool is strictly reserved for Pro and Elite subscribers. Subscribe now to unlock SIRET, logo and legal invoicing."
-          : "Cet outil est strictement réservé aux abonnés Pro et Élite. Souscrivez à l'offre Pro pour générer vos devis, factures avec SIRET et logo."
+          ? "This tool is reserved for Pro and Elite subscribers."
+          : "Cet outil est strictement réservé aux abonnés Pro et Élite."
       });
       return;
     }
@@ -352,43 +167,15 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     if (requiredTier === 'elite' && !hasEliteTier) {
       setRestrictionModal({
         open: true,
-        title: isEn ? "Elite Agency Required (129€)" : "Offre Agence Élite requise (129€)",
+        title: isEn ? "Elite Agency Required" : "Offre Agence Élite requise",
         text: isEn 
-          ? "This CRM & Sales script area is reserved for Elite Agency members."
-          : "Cet espace CRM, Tunnels et Scripts de vente en direct est exclusivement réservé aux membres de l'offre Agence Élite."
+          ? "This CRM & Sales area is reserved for Elite Agency members."
+          : "Cet espace CRM, Tunnels et Scripts de vente est réservé aux membres Agence Élite."
       });
       return;
     }
 
     setActiveTab(tabKey);
-  };
-
-  const handleSelectOffer = (offer) => {
-    if (!isLoggedIn) {
-      onRequireLogin();
-      return;
-    }
-    setSelectedPlan(offer);
-  };
-
-  const handleConfirmPayment = async () => {
-    setIsProcessingPayment(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ plan: selectedPlan.id })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      alert(isEn ? `Payment successful! Welcome to the ${selectedPlan.name} plan.` : `Paiement réussi ! Bienvenue dans l'offre ${selectedPlan.name}.`);
-      setSelectedPlan(null);
-      window.location.reload();
-    } catch (err) {
-      alert((isEn ? "Error processing subscription: " : "Erreur lors de la validation de votre abonnement : ") + err.message);
-    } finally {
-      setIsProcessingPayment(false);
-    }
   };
 
   const handleLogoUpload = (e) => {
@@ -554,180 +341,61 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   return (
     <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-screen font-sans">
       
-      {/* En-tête Espace Pro & Statistiques */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-neutral-800 pb-5">
-        <div>
-          <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-            {isEn ? "Pro Space & Official Invoicing (19€ / 49€ / 129€)" : "Espace Pro & Facturation Officielle (19€ / 49€ / 129€)"}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-amber-400 mt-1.5">
-            {isEn ? "Pro Sales, Accounting & Compliance Area" : "Espace Vente, Compta & Conformité Pro"}
-          </h1>
-          <p className="text-xs sm:text-sm text-neutral-400 mt-0.5">
-            {isEn ? "Manage your subscriptions, generate your invoices and quotes in real-time." : "Gérez vos abonnements et générez vos factures et devis en temps réel."}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-neutral-900 border border-neutral-800 px-3 py-2 rounded-2xl text-center">
-            <span className="text-[9px] text-neutral-400 uppercase font-bold block">👀 {isEn ? "Views" : "Vues"}</span>
-            <span className="text-sm font-black text-amber-400">{creatorStats.totalViews.toLocaleString()}</span>
-          </div>
-          <div className="bg-neutral-900 border border-neutral-800 px-3 py-2 rounded-2xl text-center">
-            <span className="text-[9px] text-neutral-400 uppercase font-bold block">❤️ Likes</span>
-            <span className="text-sm font-black text-rose-400">{creatorStats.totalLikes.toLocaleString()}</span>
-          </div>
-          <div className="bg-neutral-900 border border-neutral-800 px-3 py-2 rounded-2xl text-center">
-            <span className="text-[9px] text-neutral-400 uppercase font-bold block">💰 {isEn ? "Earned" : "Total Gagné"}</span>
-            <span className="text-sm font-black text-emerald-400">{formatPrice(creatorStats.totalEarnings)}</span>
-          </div>
-        </div>
+      {/* ⚡ EN-TÊTE PRO ÉPURÉ & CLAIR */}
+      <div className="mb-8 border-b border-neutral-800 pb-5">
+        <h1 className="text-2xl sm:text-3xl font-black text-amber-400">
+          {isEn ? "Pro Business Space" : "Espace Pro & Outils Business"}
+        </h1>
+        <p className="text-xs sm:text-sm text-neutral-400 mt-1">
+          {isEn ? "Manage your quotes, invoices, accounting, CRM & legal compliance." : "Gérer vos devis, vos factures, votre compta, votre CRM & votre conformité."}
+        </p>
       </div>
 
-      {/* Navigation des onglets avec Verrouillage Sécurisé et Popups */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-2 border-b border-neutral-900">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setActiveTab("tarifs")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-              activeTab === "tarifs" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-amber-400 border border-amber-500/40"
-            }`}
-          >
-            ⭐ {isEn ? "Plans & Pricing" : "Offres & Tarifs"}
-          </button>
+      {/* ⚡ NAVIGATION PAR SERVICES (CRM, SIRET, FACTURES, SCRIPTS) */}
+      <div className="flex flex-wrap items-center gap-2 mb-8 pb-3 border-b border-neutral-900">
+        
+        <button
+          onClick={() => handleTabClick("companyConfig", "pro")}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            activeTab === "companyConfig" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:border-neutral-700"
+          }`}
+        >
+          <span>🏢</span> {isEn ? "Company & SIRET" : "Mon Entreprise (SIRET & Logo)"}
+        </button>
 
-          <button
-            onClick={() => handleTabClick("notionLive", "elite")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 cursor-pointer ${
-              !hasEliteTier ? "opacity-60" : ""
-            } ${activeTab === "notionLive" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800"}`}
-          >
-            <span>{!hasEliteTier && "🔒 "}💬</span> {isEn ? "Direct Sales (Script)" : "Vendre en Direct (Script)"}
-          </button>
-          
-          <button
-            onClick={() => handleTabClick("companyConfig", "pro")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap flex items-center gap-1 cursor-pointer ${
-              !hasProTier ? "opacity-60" : ""
-            } ${activeTab === "companyConfig" ? "bg-amber-500 text-neutral-950 shadow-md font-bold" : "bg-neutral-900 text-neutral-300 border border-neutral-800"}`}
-          >
-            {!hasProTier && "🔒 "}🏢 {isEn ? "My Company (SIRET & Logo)" : "Mon Entreprise (SIRET & Logo)"}
-          </button>
-          
-          <button
-            onClick={() => handleTabClick("invoices", "pro")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap flex items-center gap-1 cursor-pointer ${
-              !hasProTier ? "opacity-60" : ""
-            } ${activeTab === "invoices" ? "bg-amber-500 text-neutral-950 shadow-md font-bold" : "bg-neutral-900 text-neutral-300 border border-neutral-800"}`}
-          >
-            {!hasProTier && "🔒 "}📄 {isEn ? "Real-Time Editor & Invoices" : "Éditeur Temps Réel & Factures PDF"}
-          </button>
-        </div>
+        <button
+          onClick={() => handleTabClick("invoices", "pro")}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            activeTab === "invoices" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:border-neutral-700"
+          }`}
+        >
+          <span>📄</span> {isEn ? "Quotes & Invoices PDF" : "Devis, Factures & Compta PDF"}
+        </button>
 
-        {notionUrl && (
-          <a
-            href={notionUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3 py-2 rounded-xl text-xs font-semibold bg-neutral-900 border border-amber-500/40 text-amber-300 hover:border-amber-400 transition flex items-center gap-1.5"
-          >
-            <span>🔗</span> Notion ↗
-          </a>
-        )}
+        <button
+          onClick={() => handleTabClick("crm", "elite")}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            !hasEliteTier ? "opacity-60" : ""
+          } ${activeTab === "crm" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:border-neutral-700"}`}
+        >
+          <span>{!hasEliteTier && "🔒 "}📊</span> {isEn ? "CRM & Prospects" : "CRM & Suivi Prospects"}
+        </button>
+
+        <button
+          onClick={() => handleTabClick("notionLive", "elite")}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            !hasEliteTier ? "opacity-60" : ""
+          } ${activeTab === "notionLive" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:border-neutral-700"}`}
+        >
+          <span>{!hasEliteTier && "🔒 "}💬</span> {isEn ? "Sales Scripts" : "Scripts de Vente Directe"}
+        </button>
+
       </div>
 
-      {/* Contenu des onglets */}
+      {/* CONTENU DES SERVICES */}
       <div className="space-y-6">
         
-        {/* ONGLET 1 : OFFRES & TARIFS (Visible pour TOUS) */}
-        {activeTab === "tarifs" && (
-          <div className="space-y-8">
-            <div className="text-center max-w-2xl mx-auto space-y-2">
-              <h2 className="text-2xl font-bold text-white">
-                {isEn ? "Choose your membership plan" : "Choisissez votre formule d'abonnement"}
-              </h2>
-              <p className="text-xs sm:text-sm text-neutral-400">
-                {isEn ? "Unlock professional features instantly by selecting your tier below." : "Débloquez instantanément les fonctionnalités professionnelles en choisissant votre offre ci-dessous."}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {OFFRES_TARIFS.map((offer) => {
-                const isCurrent = userPlan === offer.id;
-
-                return (
-                  <div
-                    key={offer.id}
-                    className={`relative flex flex-col justify-between bg-neutral-900/90 border rounded-2xl p-6 transition duration-200 ${
-                      offer.popular
-                        ? 'border-amber-500/60 shadow-xl shadow-amber-500/10'
-                        : 'border-neutral-800 hover:border-neutral-700'
-                    }`}
-                  >
-                    {offer.popular && (
-                      <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-neutral-950 text-[10px] uppercase tracking-wider font-black px-3 py-1 rounded-full">
-                        {isEn ? "Most popular" : "Le plus populaire"}
-                      </span>
-                    )}
-
-                    <div>
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-white">{offer.name}</h3>
-                        <span className={`text-[11px] font-bold border px-2.5 py-1 rounded-lg ${offer.badgeColor}`}>
-                          {offer.badge}
-                        </span>
-                      </div>
-
-                      <div className="mb-4">
-                        <span className="text-4xl font-black text-white">{offer.price}€</span>
-                        <span className="text-xs text-neutral-400 font-medium"> / {isEn ? "month" : "mois"}</span>
-                      </div>
-
-                      <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
-                        {offer.description}
-                      </p>
-
-                      <ul className="space-y-3 mb-8">
-                        {offer.features.map((feat, idx) => (
-                          <li key={idx} className="flex items-start gap-2.5 text-xs text-neutral-300">
-                            <span className="text-amber-400 font-bold shrink-0">✓</span>
-                            <span>{feat}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <button
-                      disabled={isCurrent}
-                      onClick={() => handleSelectOffer(offer)}
-                      className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition cursor-pointer ${
-                        isCurrent ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : offer.btnColor
-                      }`}
-                    >
-                      {isCurrent ? (isEn ? "Current Plan" : "Offre Actuelle") : offer.cta}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ONGLET 2 : SCRIPTS DE VENTE */}
-        {activeTab === "notionLive" && hasEliteTier && (
-          <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-amber-950/20 border-2 border-amber-500/40 p-6 rounded-3xl shadow-2xl space-y-5">
-            <h2 className="text-xl font-black text-white">{isEn ? "Sales Funnel & Pro Script" : "Tunnel de Vente & Script Pro"}</h2>
-            <p className="text-sm text-neutral-300 italic">{currentActiveLead.scriptSteps[scriptStep]}</p>
-            <button
-              onClick={() => setScriptStep((prev) => (prev < 3 ? prev + 1 : 1))}
-              className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl font-bold text-xs cursor-pointer"
-            >
-              {isEn ? "Next line ➔" : "Réplique suivante ➔"}
-            </button>
-          </div>
-        )}
-
-        {/* ONGLET 3 : CONFIGURATION ENTREPRISE */}
+        {/* SERVICE 1 : CONFIGURATION ENTREPRISE */}
         {activeTab === "companyConfig" && hasProTier && (
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-2xl mx-auto space-y-5">
             <h3 className="text-base font-bold text-amber-400">{isEn ? "Company Settings & Logo" : "Paramètres de votre Entreprise & Logo"}</h3>
@@ -797,7 +465,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           </div>
         )}
 
-        {/* ONGLET 4 : ÉDITEUR DE FACTURES ET DEVIS PDF */}
+        {/* SERVICE 2 : ÉDITEUR DE FACTURES ET DEVIS PDF */}
         {activeTab === "invoices" && hasProTier && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4 h-fit">
@@ -902,9 +570,41 @@ export default function EspaceMembrePro({ onRequireLogin }) {
             </div>
           </div>
         )}
+
+        {/* SERVICE 3 : CRM & SUIVI PROSPECTS */}
+        {activeTab === "crm" && hasEliteTier && (
+          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4">
+            <h3 className="text-base font-bold text-amber-400">📊 {isEn ? "CRM & Lead Pipeline" : "CRM & Suivi des Prospects"}</h3>
+            <p className="text-xs text-neutral-400">{isEn ? "Track client leads, ongoing quotes, and pipeline status." : "Gérez vos opportunités, relances clients et le suivi des devis."}</p>
+            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-white">{currentActiveLead.clientName}</h4>
+                <p className="text-xs text-neutral-400">Budget : {currentActiveLead.budget}</p>
+              </div>
+              <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold">
+                {currentActiveLead.status}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* SERVICE 4 : SCRIPTS DE VENTE */}
+        {activeTab === "notionLive" && hasEliteTier && (
+          <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-amber-950/20 border-2 border-amber-500/40 p-6 rounded-3xl shadow-2xl space-y-5">
+            <h2 className="text-xl font-black text-white">{isEn ? "Sales Funnel & Pro Script" : "Tunnel de Vente & Script Pro"}</h2>
+            <p className="text-sm text-neutral-300 italic">{currentActiveLead.scriptSteps[scriptStep]}</p>
+            <button
+              onClick={() => setScriptStep((prev) => (prev < 3 ? prev + 1 : 1))}
+              className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl font-bold text-xs cursor-pointer"
+            >
+              {isEn ? "Next line ➔" : "Réplique suivante ➔"}
+            </button>
+          </div>
+        )}
+
       </div>
 
-      {/* MODAL 1 : Information d'Abonnement Requis (Popup Propre & Nette) */}
+      {/* MODAL RESTRICTION */}
       {restrictionModal.open && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <div className="bg-neutral-900 border border-amber-500/50 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
@@ -929,7 +629,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
               <button
                 onClick={() => {
                   setRestrictionModal({ open: false, title: "", text: "" });
-                  setActiveTab("tarifs");
+                  window.location.href = "/";
                 }}
                 className="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-bold rounded-xl text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer"
               >
@@ -940,55 +640,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
                 className="w-full py-2 text-xs text-neutral-400 hover:text-white cursor-pointer"
               >
                 {isEn ? "Close" : "Fermer"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 2 : Finalisation du Paiement / Closing */}
-      {selectedPlan && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-xl font-bold text-white">{isEn ? "Order Confirmation" : "Confirmation de commande"}</h3>
-                <p className="text-xs text-neutral-400">Boké One Monthly Subscription</p>
-              </div>
-              <button 
-                onClick={() => setSelectedPlan(null)}
-                className="text-neutral-400 hover:text-white font-bold cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-2">
-              <div className="flex justify-between text-sm font-bold">
-                <span>{selectedPlan.name} Plan</span>
-                <span className="text-amber-400">{selectedPlan.price}€ / {isEn ? "month" : "mois"}</span>
-              </div>
-              <p className="text-xs text-neutral-400">{selectedPlan.description}</p>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-xs text-neutral-400">
-                {isEn ? "By clicking confirm, you subscribe to the monthly plan which can be cancelled anytime." : "En cliquant sur valider, vous souscrivez à l'abonnement mensuel résiliable à tout moment."}
-              </p>
-
-              <button
-                onClick={handleConfirmPayment}
-                disabled={isProcessingPayment}
-                className={`w-full py-3.5 rounded-xl font-bold text-sm cursor-pointer ${selectedPlan.btnColor}`}
-              >
-                {isProcessingPayment ? (isEn ? "Processing..." : "Traitement en cours...") : (isEn ? `Confirm & Pay ${selectedPlan.price}€` : `Valider et Payer ${selectedPlan.price}€`)}
-              </button>
-
-              <button
-                onClick={() => setSelectedPlan(null)}
-                className="w-full py-2 text-xs text-neutral-400 hover:text-white cursor-pointer"
-              >
-                {isEn ? "Cancel" : "Annuler"}
               </button>
             </div>
           </div>

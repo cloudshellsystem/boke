@@ -79,7 +79,7 @@ export default function HomePage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState("gallery"); // ⚡ Gestion de l'onglet actif (gallery, tarifs, etc.)
+  const [activeTab, setActiveTab] = useState("gallery");
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -158,6 +158,7 @@ export default function HomePage() {
         {/* Barre de sélection rapide des onglets de la page d'accueil */}
         <div className="flex items-center justify-center gap-3 border-b border-neutral-800 pb-4">
           <button
+            type="button"
             onClick={() => setActiveTab("gallery")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
               activeTab === "gallery" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800"
@@ -165,13 +166,18 @@ export default function HomePage() {
           >
             🖼️ {isEn ? "Gallery & News" : "Galerie & Actualités"}
           </button>
+          
+          {/* Onglet Tarifs (Anciennement Abonnés) */}
           <button
+            type="button"
             onClick={() => setActiveTab("tarifs")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-              activeTab === "tarifs" ? "bg-amber-500 text-neutral-950 shadow-md" : "bg-neutral-900 text-neutral-300 border border-neutral-800"
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
+              activeTab === "tarifs" 
+                ? "bg-amber-500 text-neutral-950 shadow-md font-black" 
+                : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:border-neutral-700"
             }`}
           >
-            ⭐ {isEn ? "Plans & Pricing" : "Offres & Tarifs"}
+            ⭐ {isEn ? "Pricing" : "Tarifs"}
           </button>
         </div>
 
@@ -187,6 +193,7 @@ export default function HomePage() {
                   </h3>
                   {!isLoggedIn && (
                     <button 
+                      type="button"
                       onClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
                       className="text-xs text-amber-400 hover:underline font-bold cursor-pointer"
                     >
@@ -293,6 +300,7 @@ export default function HomePage() {
                           
                           <div className="flex items-center gap-3">
                             <button
+                              type="button"
                               onClick={(e) => handleLike(item.id, e)}
                               className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-xl text-xs transition cursor-pointer ${
                                 userLiked[item.id]
@@ -305,6 +313,7 @@ export default function HomePage() {
                             </button>
 
                             <button
+                              type="button"
                               onClick={(e) => handleBuyItem(item, e)}
                               className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-4 py-1.5 rounded-xl text-xs transition cursor-pointer shadow"
                             >
@@ -320,7 +329,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* ⚡ VOTRE ONGLET TARIFS INDÉPENDANT */}
+          {/* ⚡ ONGLET TARIFS INDÉPENDANT */}
           {activeTab === "tarifs" && <TarifsPage />}
         </main>
 
@@ -331,6 +340,7 @@ export default function HomePage() {
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl space-y-5 p-6 sm:p-8 relative">
             <button 
+              type="button"
               onClick={() => setSelectedNews(null)}
               className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
             >
@@ -348,6 +358,7 @@ export default function HomePage() {
             </div>
             <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">{selectedNews.fullContent}</p>
             <button 
+              type="button"
               onClick={() => setSelectedNews(null)}
               className="w-full bg-amber-500 text-neutral-950 font-bold py-3.5 rounded-xl text-xs cursor-pointer hover:bg-amber-400 transition shadow-lg"
             >
@@ -362,6 +373,7 @@ export default function HomePage() {
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl space-y-4 p-6 relative">
             <button 
+              type="button"
               onClick={() => setSelectedGalleryItem(null)}
               className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
             >
@@ -383,12 +395,14 @@ export default function HomePage() {
             </div>
             <div className="flex gap-3">
               <button 
+                type="button"
                 onClick={() => { setSelectedGalleryItem(null); navigate("/creators"); }}
                 className="flex-1 bg-neutral-950 border border-neutral-800 hover:border-neutral-700 text-neutral-200 font-bold py-3 rounded-xl text-xs transition cursor-pointer"
               >
                 {isEn ? "View full profile" : "Voir le profil complet"}
               </button>
               <button 
+                type="button"
                 onClick={() => setSelectedGalleryItem(null)}
                 className="bg-amber-500 text-neutral-950 font-bold px-6 py-3 rounded-xl text-xs cursor-pointer hover:bg-amber-400 transition"
               >
