@@ -1,176 +1,184 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-export default function AuthForm({ onAuthSuccess, onClose }) {
+export default function AuthForm({ onClose }) {
+  const { login, signup, resetPassword } = useAuth();
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const { login, signup, resetPassword } = useAuth();
-  const timerRef = useRef(null);
-
-  useEffect(() => () => clearTimeout(timerRef.current), []);
-
-  const showError = (text) => {
-    setIsError(true);
-    setMessage(text);
-  };
-  const showSuccess = (text) => {
-    setIsError(false);
-    setMessage(text);
-  };
-
-  const closeAfterSuccess = () => {
-    timerRef.current = setTimeout(() => {
-      if (onAuthSuccess) onAuthSuccess();
-      if (onClose) onClose();
-    }, 700);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (submitting) return;
+    setError("");
     setMessage("");
-    setIsError(false);
-    setSubmitting(true);
+    setLoading(true);
 
     try {
       if (isForgotPassword) {
+        // --- Récupération de mot de passe ---
         await resetPassword(email);
-        // Message volontairement identique que le compte existe ou non (pas de fuite d'information)
-        showSuccess("Si un compte existe pour cette adresse, un lien de réinitialisation vient d'être envoyé.");
-        return;
-      }
-
-      if (isSignUp) {
-        const { needsEmailConfirmation } = await signup(email, password);
-        if (needsEmailConfirmation) {
-          showSuccess("Compte créé. Un e-mail de confirmation vous a été envoyé : cliquez sur le lien, puis connectez-vous.");
-          setIsSignUp(false);
-          setPassword("");
+        setMessage("Un e-mail de réinitialisation vous a été envoyé !");
+      } else if (isSignUp) {
+        // --- Inscription ---
+        const res = await signup(email, password);
+        if (res?.needsEmailConfirmation) {
+          setMessage("Compte créé ! Veuillez vérifier votre boîte e-mail pour confirmer l'inscription.");
         } else {
-          showSuccess("Compte créé avec succès ! Bienvenue sur Boké One.");
-          closeAfterSuccess();
+          setMessage("Compte créé avec succès !");
+          if (onClose) setTimeout(onClose, 1500);
         }
-        return;
+      } else {
+        // --- Connexion ---
+        // 🔒 On attend la réponse de Supabase avant de confirmer
+        await login(email, password);
+        setMessage("Connexion réussie ! Bienvenue sur Boké One.");
+        
+        // Ferme la modale après un court délai pour laisser l'utilisateur lire
+        if (onClose) {
+          setTimeout(onClose, 800);
+        }
       }
-
-      await login(email, password);
-      showSuccess("Connexion réussie !");
-      closeAfterSuccess();
     } catch (err) {
-      // Vraie erreur affichée telle quelle : aucune session n'est créée dans ce cas.
-      showError(err?.message || "Une erreur est survenue. Réessayez.");
+      // Bloque l'alerte de succès si le mot de passe est faux ou l'email invalide
+      setError(err.message || "Une erreur est survenue lors de l'authentification.");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-3xl text-neutral-200 shadow-2xl relative">
-      {onClose && (
-        <button type="button" onClick={onClose} className="absolute top-4 right-4 text-neutral-400 hover:text-white font-bold text-lg">
-          ✕
-        </button>
+    <div className="w-full max-w-md mx-auto bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl text-neutral-100">
+      
+      {/* Onglets bascule Inscription / Connexion */}
+      {!isForgotPassword && (
+        <div className="flex bg-neutral-950 p-1 rounded-xl mb-6 border border-neutral-800">
+          <button
+            type="button"
+            onClick={() => { setIsSignUp(false); setError(""); setMessage(""); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+              !isSignUp ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
+            }`}
+          >
+            Se connecter
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIsSignUp(true); setError(""); setMessage(""); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+              isSignUp ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
+            }`}
+          >
+            S'inscrire
+          </button>
+        </div>
       )}
 
-      <h2 className="text-xl font-black text-amber-400 mb-6">
-        {isForgotPassword ? "Récupérer le mot de passe" : isSignUp ? "Créer un compte" : "Connexion"}
+      {/* Titre dynamique */}
+      <h2 className="text-xl font-black text-center mb-2">
+        {isForgotPassword
+          ? "Récupération de mot de passe"
+          : isSignUp
+          ? "Créer un compte Boké One"
+          : "Accès Membre Boké One"}
       </h2>
+      <p className="text-xs text-neutral-400 text-center mb-6">
+        {isForgotPassword
+          ? "Entrez votre e-mail pour recevoir un lien de réinitialisation."
+          : "Connectez-vous pour retrouver votre panier et vos réservations."}
+      </p>
 
+      {/* Messages d'erreur et de succès */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/40 rounded-xl text-red-400 text-xs font-semibold">
+          {error}
+        </div>
+      )}
+      {message && (
+        <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/40 rounded-xl text-emerald-400 text-xs font-semibold">
+          {message}
+        </div>
+      )}
+
+      {/* Formulaire */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-bold text-neutral-400 mb-1">Email :</label>
+          <label className="block text-xs font-semibold mb-1 text-neutral-300">
+            Adresse email
+          </label>
           <input
             type="email"
+            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-amber-500"
             placeholder="votre@email.com"
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition text-white"
           />
         </div>
 
         {!isForgotPassword && (
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-xs font-bold text-neutral-400">Mot de passe :</label>
+              <label className="block text-xs font-semibold text-neutral-300">
+                Mot de passe
+              </label>
               {!isSignUp && (
                 <button
                   type="button"
-                  onClick={() => { setIsForgotPassword(true); setMessage(""); setIsError(false); }}
-                  className="text-[11px] text-amber-400 hover:underline font-medium"
+                  onClick={() => { setIsForgotPassword(true); setError(""); setMessage(""); }}
+                  className="text-[11px] text-amber-400 hover:underline"
                 >
                   Mot de passe oublié ?
                 </button>
               )}
             </div>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={isSignUp ? 6 : undefined}
-                autoComplete={isSignUp ? "new-password" : "current-password"}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 pr-10 text-sm text-white outline-none focus:border-amber-500"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-amber-400 text-xs font-bold transition"
-                title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-              >
-                {showPassword ? "🙈" : "👁️"}
-              </button>
-            </div>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition text-white"
+            />
           </div>
         )}
 
         <button
           type="submit"
-          disabled={submitting}
-          className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-neutral-950 font-bold py-3 rounded-xl transition text-sm mt-2 shadow-md cursor-pointer"
+          disabled={loading}
+          className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 text-neutral-950 font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer disabled:opacity-50"
         >
-          {submitting
-            ? "Veuillez patienter…"
-            : isForgotPassword
-            ? "Envoyer le lien de réinitialisation"
-            : isSignUp
-            ? "S'inscrire"
-            : "Se connecter"}
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="w-4 h-4 border-2 border-neutral-950 border-t-transparent rounded-full animate-spin"></span>
+              Chargement...
+            </span>
+          ) : isForgotPassword ? (
+            "Envoyer le lien de réinitialisation"
+          ) : isSignUp ? (
+            "S'inscrire"
+          ) : (
+            "Se connecter"
+          )}
         </button>
-
-        {message && (
-          <p
-            role={isError ? "alert" : "status"}
-            className={`text-xs text-center font-bold mt-3 ${isError ? "text-red-400" : "text-emerald-400"}`}
-          >
-            {message}
-          </p>
-        )}
       </form>
 
-      <div className="mt-6 text-center text-xs text-neutral-400">
-        {isForgotPassword ? (
-          <button type="button" onClick={() => { setIsForgotPassword(false); setMessage(""); setIsError(false); }} className="text-amber-400 font-bold hover:underline">
-            ← Retour à la connexion
-          </button>
-        ) : (
-          <>
-            {isSignUp ? "Déjà un compte ?" : "Pas encore de compte ?"}{" "}
-            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setMessage(""); setIsError(false); }} className="text-amber-400 font-bold hover:underline ml-1">
-              {isSignUp ? "Se connecter" : "S'inscrire"}
-            </button>
-          </>
-        )}
-      </div>
+      {/* Bouton Retour si mode mot de passe oublié */}
+      {isForgotPassword && (
+        <button
+          type="button"
+          onClick={() => { setIsForgotPassword(false); setError(""); setMessage(""); }}
+          className="w-full mt-4 text-xs text-neutral-400 hover:text-white transition text-center"
+        >
+          ← Retour à la connexion
+        </button>
+      )}
     </div>
   );
 }

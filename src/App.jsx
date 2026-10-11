@@ -1,5 +1,5 @@
 ﻿import React, { useState, useCallback, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
 import ReactGA from "react-ga4";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
@@ -10,7 +10,7 @@ import CreatorDirectory from "./components/CreatorDirectory";
 import ForumPage from "./components/ForumPage";
 import AdminForumModeration from "./components/AdminForumModeration";
 import EspaceMembrePro from "./components/EspaceMembrePro";
-import Abonnes from "./components/Abonnes"; // On utilise le fichier existant
+import Abonnes from "./components/Abonnes";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import CGUPage from "./components/CGUPage";
@@ -28,14 +28,14 @@ const NAV_LINKS_DATA = {
     { to: "/creators", label: "Créateurs" },
     { to: "/forum", label: "Forum" },
     { to: "/espace-pro", label: "Espace Pro" },
-    { to: "/abonnes", label: "Tarifs" }, // Changement de libellé visuel
+    { to: "/abonnes", label: "Tarifs" },
   ],
   en: [
     { to: "/", label: "Home / Stock" },
     { to: "/creators", label: "Creators" },
     { to: "/forum", label: "Forum" },
     { to: "/espace-pro", label: "Pro Space" },
-    { to: "/abonnes", label: "Pricing" }, // Changement de libellé visuel
+    { to: "/abonnes", label: "Pricing" },
   ],
 };
 
@@ -43,12 +43,14 @@ const UI_LABELS = {
   fr: {
     cart: "Panier",
     connected: "Connecté",
+    logout: "Déconnexion",
     login: "Connexion",
     slogan: "RESEAU D'ELITE & BANQUE D'IMAGES NATIONALE",
   },
   en: {
     cart: "Cart",
     connected: "Connected",
+    logout: "Sign Out",
     login: "Sign In",
     slogan: "ELITE NETWORK & NATIONAL IMAGE BANK",
   },
@@ -59,7 +61,7 @@ const isActivePath = (pathname, to) =>
 
 function GlobalNavbar({ onOpenAuth }) {
   const { cart } = useCart();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user, logout } = useAuth();
   const { pathname } = useLocation();
   const { lang, toggleLanguage } = useLanguage();
 
@@ -125,7 +127,8 @@ function GlobalNavbar({ onOpenAuth }) {
             )}
           </Link>
 
-          {isLoggedIn && (
+          {/* Bouton Modération réservé EXCLUSIVEMENT à kultordi@gmail.com */}
+          {isLoggedIn && user?.email === "kultordi@gmail.com" && (
             <Link
               to="/admin/moderation"
               className={`border px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
@@ -140,13 +143,23 @@ function GlobalNavbar({ onOpenAuth }) {
           )}
 
           {isLoggedIn ? (
-            <Link
-              to="/abonnes"
-              className="border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-500/20 flex items-center gap-2 transition hover:bg-emerald-500/20"
-            >
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              {ui.connected}
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/abonnes"
+                className="border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-500/20 flex items-center gap-2 transition hover:bg-emerald-500/20"
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                {ui.connected}
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className="border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer"
+                title={ui.logout}
+              >
+                {ui.logout}
+              </button>
+            </div>
           ) : (
             <button 
               type="button"
@@ -166,7 +179,7 @@ function GlobalNavbar({ onOpenAuth }) {
             {l.label}
           </Link>
         ))}
-        {isLoggedIn && (
+        {isLoggedIn && user?.email === "kultordi@gmail.com" && (
           <Link to="/admin/moderation" className={tabClass("/admin/moderation")}>
             🛡️ Modération
           </Link>
@@ -177,7 +190,7 @@ function GlobalNavbar({ onOpenAuth }) {
 }
 
 function AppShell() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const location = useLocation();
 
@@ -199,7 +212,13 @@ function AppShell() {
           <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
           <Route path="/creators" element={<CreatorDirectory onRequireLogin={openAuth} />} />
           <Route path="/forum" element={<ForumPage onRequireLogin={openAuth} />} />
-          <Route path="/admin/moderation" element={<AdminForumModeration />} />
+          
+          {/* Protection stricte par URL : Seul kultordi@gmail.com a accès à /admin/moderation */}
+          <Route 
+            path="/admin/moderation" 
+            element={user?.email === "kultordi@gmail.com" ? <AdminForumModeration /> : <Navigate to="/" replace />} 
+          />
+          
           <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
           <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
           <Route path="/cart" element={<Cart />} />

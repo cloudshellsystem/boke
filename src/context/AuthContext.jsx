@@ -7,6 +7,7 @@ export function translateAuthError(message) {
   if (!message) return 'Une erreur est survenue.';
   if (message.includes('Invalid login credentials')) return 'Email ou mot de passe incorrect.';
   if (message.includes('User already registered')) return 'Cet email est déjà utilisé.';
+  if (message.includes('Email not confirmed')) return '⚠️ Votre adresse e-mail n\'a pas encore été confirmée. Veuillez cliquer sur le lien reçu par e-mail avant de vous connecter.';
   return message;
 }
 
@@ -59,21 +60,46 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // 1. VRAIE CONNEXION SUPABASE (Utilisée par AuthForm.jsx)
+  // 1. CONNEXION SUPABASE
   const login = async (email, password) => {
     if (!supabase) return;
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(translateAuthError(error.message));
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (error) {
+      throw new Error(translateAuthError(error.message));
+    }
+
+    if (data?.session?.user) {
+      setUser(data.session.user);
+      setIsLoggedIn(true);
+    }
   };
 
-  // 2. VRAIE INSCRIPTION SUPABASE (Avec gestion de la confirmation d'email)
+  // 2. INSCRIPTION SUPABASE
   const signup = async (email, password) => {
     if (!supabase) return { needsEmailConfirmation: false };
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw new Error(translateAuthError(error.message));
     
-    // Si la confirmation d'e-mail est active, l'utilisateur est créé mais pas encore de session
+    // Inscription avec l'URL de redirection explicite vers votre site Vercel
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/espace-pro`,
+      },
+    });
+
+    if (error) {
+      throw new Error(translateAuthError(error.message));
+    }
+    
+    // Si la confirmation d'e-mail est active, l'utilisateur est créé sans session immediate
     const needsEmailConfirmation = data?.user && !data?.session;
+
+    if (data?.session?.user) {
+      setUser(data.session.user);
+      setIsLoggedIn(true);
+    }
+    
     return { needsEmailConfirmation };
   };
 
@@ -86,6 +112,7 @@ export function AuthProvider({ children }) {
     if (error) throw new Error(translateAuthError(error.message));
   };
 
+  // 4. DÉCONNEXION
   const logout = async () => {
     if (supabase) {
       try { await supabase.auth.signOut(); } catch (e) {}
