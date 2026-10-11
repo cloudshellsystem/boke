@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, translateAuthError } from "../context/AuthContext";
 
 export default function AuthForm({ onClose }) {
   const { login, signup, resetPassword } = useAuth();
@@ -18,6 +18,13 @@ export default function AuthForm({ onClose }) {
     e.preventDefault();
     setError("");
     setMessage("");
+
+    // 1. Validation de la longueur du mot de passe côté client (hors réinitialisation)
+    if (!isForgotPassword && password.length < 6) {
+      setError("⚠️ Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -29,25 +36,33 @@ export default function AuthForm({ onClose }) {
         // --- Inscription ---
         const res = await signup(email, password);
         if (res?.needsEmailConfirmation) {
-          setMessage("Compte créé ! Veuillez vérifier votre boîte e-mail pour confirmer l'inscription.");
+          setMessage("Compte créé ! Veuillez vérifier votre boîte e-mail pour confirmer votre inscription.");
         } else {
           setMessage("Compte créé avec succès !");
           if (onClose) setTimeout(onClose, 1500);
         }
       } else {
         // --- Connexion ---
-        // 🔒 On attend la réponse de Supabase avant de confirmer
         await login(email, password);
         setMessage("Connexion réussie ! Bienvenue sur Boké One.");
-        
-        // Ferme la modale après un court délai pour laisser l'utilisateur lire
         if (onClose) {
           setTimeout(onClose, 800);
         }
       }
     } catch (err) {
-      // Bloque l'alerte de succès si le mot de passe est faux ou l'email invalide
-      setError(err.message || "Une erreur est survenue lors de l'authentification.");
+      // 2. Traitement strict de l'erreur pour empêcher l'affichage de {} ou []
+      let rawError = err;
+      if (typeof err === "object" && err !== null) {
+        rawError = err.message || err.error_description || JSON.stringify(err);
+      }
+      
+      if (rawError === "{}" || rawError === "[]" || !rawError) {
+        rawError = "Une erreur est survenue lors de l'authentification.";
+      }
+
+      // Traduction en français clair
+      const cleanMessage = translateAuthError ? translateAuthError(rawError) : rawError;
+      setError(cleanMessage);
     } finally {
       setLoading(false);
     }
@@ -56,13 +71,13 @@ export default function AuthForm({ onClose }) {
   return (
     <div className="w-full max-w-md mx-auto bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl text-neutral-100">
       
-      {/* Onglets bascule Inscription / Connexion */}
+      {/* Onglets de bascule Inscription / Connexion */}
       {!isForgotPassword && (
         <div className="flex bg-neutral-950 p-1 rounded-xl mb-6 border border-neutral-800">
           <button
             type="button"
             onClick={() => { setIsSignUp(false); setError(""); setMessage(""); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer ${
               !isSignUp ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
             }`}
           >
@@ -71,7 +86,7 @@ export default function AuthForm({ onClose }) {
           <button
             type="button"
             onClick={() => { setIsSignUp(true); setError(""); setMessage(""); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer ${
               isSignUp ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
             }`}
           >
@@ -80,7 +95,7 @@ export default function AuthForm({ onClose }) {
         </div>
       )}
 
-      {/* Titre dynamique */}
+      {/* Titres dynamiques */}
       <h2 className="text-xl font-black text-center mb-2">
         {isForgotPassword
           ? "Récupération de mot de passe"
@@ -94,9 +109,9 @@ export default function AuthForm({ onClose }) {
           : "Connectez-vous pour retrouver votre panier et vos réservations."}
       </p>
 
-      {/* Messages d'erreur et de succès */}
+      {/* Zone des messages d'erreur et de succès */}
       {error && (
-        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/40 rounded-xl text-red-400 text-xs font-semibold">
+        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/40 rounded-xl text-red-400 text-xs font-semibold animate-pulse">
           {error}
         </div>
       )}
@@ -106,7 +121,7 @@ export default function AuthForm({ onClose }) {
         </div>
       )}
 
-      {/* Formulaire */}
+      {/* Formulaire principal */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold mb-1 text-neutral-300">
@@ -126,13 +141,13 @@ export default function AuthForm({ onClose }) {
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="block text-xs font-semibold text-neutral-300">
-                Mot de passe
+                Mot de passe (6 car. min.)
               </label>
               {!isSignUp && (
                 <button
                   type="button"
                   onClick={() => { setIsForgotPassword(true); setError(""); setMessage(""); }}
-                  className="text-[11px] text-amber-400 hover:underline"
+                  className="text-[11px] text-amber-400 hover:underline cursor-pointer"
                 >
                   Mot de passe oublié ?
                 </button>
@@ -141,6 +156,7 @@ export default function AuthForm({ onClose }) {
             <input
               type="password"
               required
+              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -152,7 +168,7 @@ export default function AuthForm({ onClose }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 text-neutral-950 font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 text-neutral-950 font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer disabled:opacity-50 mt-2"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -169,12 +185,12 @@ export default function AuthForm({ onClose }) {
         </button>
       </form>
 
-      {/* Bouton Retour si mode mot de passe oublié */}
+      {/* Retour arrière pour Mot de passe oublié */}
       {isForgotPassword && (
         <button
           type="button"
           onClick={() => { setIsForgotPassword(false); setError(""); setMessage(""); }}
-          className="w-full mt-4 text-xs text-neutral-400 hover:text-white transition text-center"
+          className="w-full mt-4 text-xs text-neutral-400 hover:text-white transition text-center cursor-pointer"
         >
           ← Retour à la connexion
         </button>
