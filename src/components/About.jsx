@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 
 export default function About() {
@@ -8,72 +7,68 @@ export default function About() {
 
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20 pt-8">
-      <div className="max-w-4xl mx-auto px-4 space-y-10">
+      <div className="max-w-4xl mx-auto px-4 space-y-8">
         
-        {/* EN-TÊTE SOBRE & ÉPURÉE */}
-        <div className="text-center space-y-3">
-          <span className="inline-block text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-            {isEn ? "THE NATIONAL NETWORK" : "LE RÉSEAU NATIONAL"}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+        {/* EN-TÊTE ÉPURÉE (Pillule dorée uniquement) */}
+        <div className="text-center pt-2">
+          <span className="inline-block text-[11px] sm:text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-5 py-2 rounded-full font-black uppercase tracking-widest shadow-lg">
             {isEn ? "About Boké One" : "À propos de Boké One"}
-          </h1>
+          </span>
         </div>
 
-        {/* CONTENU PRINCIPAL DE PRÉSENTATION */}
-        <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl">
-          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-            {isEn
-              ? "Boké One stands as a national network and image bank, designed to connect talented photographers, directors, and visual creators with demanding buyers and projects seeking uncompromising quality."
-              : "Boké One s'impose comme le réseau et la banque d'images nationale de référence, conçue pour rassembler les créateurs, photographes et artistes visuels les plus talentueux. Nous faisons le lien entre des signatures visuelles d'exception et des projets exigeants en quête d'une qualité sans compromis."}
-          </p>
+        {/* ENCART STORYTELLING & PRÉSENTATION */}
+        <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-6 sm:p-10 space-y-6 shadow-2xl backdrop-blur-md">
+          
+          <div className="space-y-4 text-xs sm:text-sm text-neutral-300 leading-relaxed font-normal">
+            <p>
+              Après un constat simple évident que la France regorge de décors incroyables, de rues chargées d'histoire, de monuments iconiques et de domaines d'exception. Pourtant, chaque jour, des entreprises et des créateurs galèrent. Les clients ne trouvent pas les images locales dont ils ont besoin, et les meilleurs talents de nos régions passent trop de temps à chercher des clients ou à se battre avec la paperasse au lieu de créer.
+            </p>
+            
+            <p className="font-semibold text-white">
+              Boké One est né sur le terrain, pour briser ce plafond de verre.
+            </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-            <div className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 space-y-2">
-              <span className="text-xl">🎯</span>
-              <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
-                {isEn ? "EXCELLENCE & CURATION" : "EXIGENCE ET RIGUEUR"}
-              </h3>
-              <p className="text-xs text-neutral-400 leading-relaxed">
-                {isEn
-                  ? "Every portfolio hosted on our platform is carefully reviewed to guarantee professional excellence across all visual mediums."
-                  : "Chaque portfolio hébergé sur notre plateforme fait l'objet d'une sélection rigoureuse afin de garantir l'excellence professionnelle sur tous les supports visuels."}
-              </p>
-            </div>
+            <p>
+              Nous ne sommes pas une banque d'images de plus. Nous sommes le réseau national qui connecte l'identité de nos territoires aux projets qui en ont besoin. Nous avons conçu cet espace pour être l'allié numéro un de ceux qui font vivre l'image en France.
+            </p>
 
-            <div className="bg-neutral-950 p-6 rounded-2xl border border-neutral-800 space-y-2">
-              <span className="text-xl">🛡️</span>
-              <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
-                {isEn ? "SECURE COLLABORATION" : "COLLABORATION SÉCURISÉE"}
-              </h3>
-              <p className="text-xs text-neutral-400 leading-relaxed">
-                {isEn
-                  ? "A centralized ecosystem built to streamline communications, secure transactions, and simplify administrative processes for buyers and creators."
-                  : "Un écosystème centralisé pensé pour fluidifier les échanges, sécuriser les transactions et simplifier les démarches administratives des professionnels."}
-              </p>
-            </div>
+            <p>
+              Nous avons décidé pour cette plateforme de ne pas faire de clichés génériques stockés à l'autre bout du monde. Nous mettons en avant la vraie signature visuelle de nos régions, notre population. Que vous soyez un photographe passionné par les oiseaux, un droniste expert en survol de châteaux ou une maquilleuse artistique de talent, Boké One met votre savoir-faire directement sous les yeux des recruteurs.
+            </p>
+
+            <p>
+              Et comme votre temps est précieux, nous avons éliminé la friction. Boké One intègre un écosystème complet conçu pour booster votre activité, en mettant un tableau de missions pour décrocher des contrats, un outil de gestion pour générer vos devis et factures en deux clics, et une communauté soudée pour échanger sur notre forum ou en direct sur WhatsApp. C'est aujourd'hui la plateforme qu'il vous faut.
+            </p>
           </div>
 
-          {/* FORMULAIRE / CONTACT DIRECT ADMIN */}
-          <div className="border-t border-neutral-800/80 pt-8 space-y-4">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider text-center">
+          {/* SIGNATURE */}
+          <div className="pt-4 border-t border-neutral-800/60 flex justify-end">
+            <span className="text-xs font-bold text-amber-400 italic tracking-wider">
+              — L'équipe Boké One
+            </span>
+          </div>
+
+          {/* CONTACT ADMINISTRATIF */}
+          <div className="border-t border-neutral-800/80 pt-8 space-y-4 text-center">
+            <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
               {isEn ? "Contact Administration" : "Écrire à l'Administration"}
             </h3>
-            <p className="text-xs text-neutral-400 text-center max-w-md mx-auto">
+            <p className="text-xs text-neutral-400 max-w-md mx-auto">
               {isEn
-                ? "Questions about memberships, partnership requests, or custom curation? Contact us directly."
+                ? "Questions about memberships, partnerships, or custom requests? Contact us directly."
                 : "Une question sur les abonnements, une demande de partenariat ou un besoin spécifique de sélection d'auteurs ? Contactez-nous directement."}
             </p>
 
             <div className="flex justify-center pt-2">
               <a
-                href="mailto:kultordi@gmail.com"
-                className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-8 py-3.5 rounded-xl text-xs uppercase tracking-wider transition shadow-xl inline-flex items-center gap-2"
+                href="mailto:contact@bokeone.com"
+                className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-8 py-3.5 rounded-xl text-xs uppercase tracking-wider transition shadow-xl inline-flex items-center gap-2 cursor-pointer"
               >
-                ✉️ kultordi@gmail.com
+                ✉️ contact@bokeone.com
               </a>
             </div>
           </div>
+
         </div>
 
       </div>
