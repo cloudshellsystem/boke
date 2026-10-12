@@ -1,5 +1,5 @@
 ﻿import React, { useState, useCallback, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import ReactGA from "react-ga4";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
@@ -7,7 +7,6 @@ import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 
 import HomePage from "./components/HomePage";
 import CreatorDirectory from "./components/CreatorDirectory";
-import AdminForumModeration from "./components/AdminForumModeration";
 import EspaceMembrePro from "./components/EspaceMembrePro";
 import Abonnes from "./components/Abonnes";
 import About from "./components/About";
@@ -23,14 +22,14 @@ ReactGA.initialize("G-FVFKNP75BZ");
 const NAV_LINKS_DATA = {
   fr: [
     { to: "/", label: "Home" },
-    { to: "/creators", label: "Annuaire Créateurs" },
+    { to: "/creators", label: "Annuaire" },
     { to: "/espace-pro", label: "Espace Pro" },
     { to: "/abonnes", label: "Tarifs" },
     { to: "/about", label: "À propos" },
   ],
   en: [
     { to: "/", label: "Home" },
-    { to: "/creators", label: "Creators Directory" },
+    { to: "/creators", label: "Directory" },
     { to: "/espace-pro", label: "Pro Space" },
     { to: "/abonnes", label: "Pricing" },
     { to: "/about", label: "About" },
@@ -47,7 +46,7 @@ const isActivePath = (pathname, to) =>
 
 function GlobalNavbar({ onOpenAuth }) {
   const { cart } = useCart();
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   const { pathname } = useLocation();
   const { lang, toggleLanguage } = useLanguage();
 

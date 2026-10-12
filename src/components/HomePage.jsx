@@ -15,6 +15,15 @@ const ACTUALITES_ITEMS = [
   },
   {
     id: 2,
+    date: "Novembre 2026",
+    title: "Paris Audio Video Show — Innovation & Matériel Pro",
+    summary: "Découvrez les dernières innovations son, image et tournages au Palais des Congrès de Paris.",
+    fullContent: "Le rendez-vous incontournable des passionnés d'image et de son haute fidélité ouvre ses portes au Palais des Congrès. Tests de matériel cinéma, écoutes studio et conférences dédiées aux nouvelles technologies audiovisuelles.",
+    image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80",
+    alt: "Équipement audio et studio au Paris Audio Video Show",
+  },
+  {
+    id: 3,
     date: "Décembre 2026",
     title: "Appel à Projets — Curation Nationale & Prix de la Jeune Création",
     summary: "Soumettez vos séries documentaires et portfolios pour la sélection officielle 2027.",
@@ -23,10 +32,10 @@ const ACTUALITES_ITEMS = [
     alt: "Exposition et jury de sélection photographique",
   },
   {
-    id: 3,
+    id: 4,
     date: "Janvier 2027",
     title: "Mise à jour des certifications nationales de l'audiovisuel",
-    summary: "Renforcement des protocoles de sécurité pour les tournages en espace public et en milieu aquatique.",
+    summary: "Renforcement des protocoles de sécurité pour les tournages en espace public.",
     fullContent: "Dans le cadre de notre démarche d'élite, cette mise à jour intègre de nouvelles normes obligatoires pour tous les prestataires du réseau Boké One intervenant sur le domaine public.",
     image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=800&q=80",
     alt: "Équipe de tournage audiovisuel",
@@ -38,7 +47,7 @@ const ANNONCES_ITEMS = [
     id: 101,
     date: "OFFRE D'EMPLOI / CASTING",
     title: "Recherche Chef Opérateur & Pilote Drone S1-S3 (Série Docu)",
-    summary: "🔒 Offre réservée aux adhérents Élite : Tournage 3 semaines en région PACA à partir de Novembre.",
+    summary: "🔒 Offre réservée aux adhérents Élite : Tournage 3 semaines en région PACA.",
     fullContent: "Tournage d'une série documentaire de 4 épisodes. Expérience exigée en drone FPV et caméras cinéma grand capteur.",
     image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80",
     alt: "Pilote de drone",
@@ -48,7 +57,7 @@ const ANNONCES_ITEMS = [
     id: 102,
     date: "MISSION PACKSHOT",
     title: "Photographe Studio Luxe — Campagne Horlogerie Paris 8e",
-    summary: "🔒 Offre réservée aux adhérents : Shooting 2 jours en studio avec retouche haute définition.",
+    summary: "🔒 Offre réservée aux adhérents : Shooting 2 jours en studio avec retouche HD.",
     fullContent: "Mandat confié par une grande maison horlogère parisienne. Maîtrise des éclairages studio exigée.",
     image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80",
     alt: "Photographe packshot studio",
@@ -56,33 +65,30 @@ const ANNONCES_ITEMS = [
   },
 ];
 
-// 3 Étages de Planche Contact (18 photos) avec système de Likes interactifs
 const INITIAL_PLANCHE_ITEMS = [
-  { id: 1, title: "Horlogerie & Lumière", author: "Marc L.", category: "Studio", likes: 142, image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80" },
-  { id: 2, title: "Série Humaniste", author: "Sophie T.", category: "Reportage", likes: 98, image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" },
-  { id: 3, title: "Lignes Béton & Verre", author: "Antoine V.", category: "Architecture", likes: 210, image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" },
-  { id: 4, title: "Collections Capsule", author: "Elena R.", category: "Mode", likes: 185, image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80" },
-  { id: 5, title: "Vol Côtier FPV", author: "Lucas M.", category: "Drone", likes: 312, image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=600&q=80" },
-  { id: 6, title: "Regards Complices", author: "Claire B.", category: "Portrait", likes: 89, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" },
-  
-  { id: 7, title: "Espaces Intérieurs", author: "Antoine V.", category: "Architecture", likes: 76, image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80" },
-  { id: 8, title: "Couture Automne", author: "Elena R.", category: "Mode", likes: 134, image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80" },
-  { id: 9, title: "Ombres Studio", author: "Marc L.", category: "Studio", likes: 201, image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=600&q=80" },
-  { id: 10, title: "Scènes de Rue", author: "Sophie T.", category: "Reportage", likes: 115, image: "https://images.unsplash.com/photo-1477959858617-67f30ac4ce78?auto=format&fit=crop&w=600&q=80" },
-  { id: 11, title: "Survol Alpin", author: "Lucas M.", category: "Drone", likes: 267, image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" },
-  { id: 12, title: "Portraits Noir & Blanc", author: "Claire B.", category: "Portrait", likes: 154, image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80" },
-
-  { id: 13, title: "Flacons & Cosmetiques", author: "Marc L.", category: "Studio", likes: 92, image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80" },
-  { id: 14, title: "Festivals & Lumières", author: "Sophie T.", category: "Reportage", likes: 178, image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80" },
-  { id: 15, title: "Façades Contemporaines", author: "Antoine V.", category: "Architecture", likes: 143, image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80" },
-  { id: 16, title: "Defilé & Backstage", author: "Elena R.", category: "Mode", likes: 221, image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=600&q=80" },
-  { id: 17, title: "Falaises & Mer", author: "Lucas M.", category: "Drone", likes: 199, image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" },
-  { id: 18, title: "Expressions Naturelles", author: "Claire B.", category: "Portrait", likes: 110, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80" },
+  { id: 1, title: "Horlogerie & Lumière", author: "Marc L.", creatorId: "1002", category: "Studio", defaultLikes: 142, image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80" },
+  { id: 2, title: "Série Humaniste", author: "Sophie T.", creatorId: "1001", category: "Reportage", defaultLikes: 98, image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" },
+  { id: 3, title: "Lignes Béton & Verre", author: "Antoine V.", creatorId: "1002", category: "Architecture", defaultLikes: 210, image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" },
+  { id: 4, title: "Collections Capsule", author: "Elena R.", creatorId: "1003", category: "Mode", defaultLikes: 185, image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80" },
+  { id: 5, title: "Vol Côtier FPV", author: "Lucas M.", creatorId: "1001", category: "Drone", defaultLikes: 312, image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=600&q=80" },
+  { id: 6, title: "Regards Complices", author: "Claire B.", creatorId: "1003", category: "Portrait", defaultLikes: 89, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" },
+  { id: 7, title: "Espaces Intérieurs", author: "Antoine V.", creatorId: "1002", category: "Architecture", defaultLikes: 76, image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80" },
+  { id: 8, title: "Couture Automne", author: "Elena R.", creatorId: "1003", category: "Mode", defaultLikes: 134, image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80" },
+  { id: 9, title: "Ombres Studio", author: "Marc L.", creatorId: "1002", category: "Studio", defaultLikes: 201, image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=600&q=80" },
+  { id: 10, title: "Scènes de Rue", author: "Sophie T.", creatorId: "1001", category: "Reportage", defaultLikes: 115, image: "https://images.unsplash.com/photo-1477959858617-67f30ac4ce78?auto=format&fit=crop&w=600&q=80" },
+  { id: 11, title: "Survol Alpin", author: "Lucas M.", creatorId: "1001", category: "Drone", defaultLikes: 267, image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" },
+  { id: 12, title: "Portraits Noir & Blanc", author: "Claire B.", creatorId: "1003", category: "Portrait", defaultLikes: 154, image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80" },
+  { id: 13, title: "Flacons & Cosmetiques", author: "Marc L.", creatorId: "1002", category: "Studio", defaultLikes: 92, image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80" },
+  { id: 14, title: "Festivals & Lumières", author: "Sophie T.", creatorId: "1001", category: "Reportage", defaultLikes: 178, image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80" },
+  { id: 15, title: "Façades Contemporaines", author: "Antoine V.", creatorId: "1002", category: "Architecture", defaultLikes: 143, image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80" },
+  { id: 16, title: "Defilé & Backstage", author: "Elena R.", creatorId: "1003", category: "Mode", defaultLikes: 221, image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=600&q=80" },
+  { id: 17, title: "Falaises & Mer", author: "Lucas M.", creatorId: "1001", category: "Drone", defaultLikes: 199, image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" },
+  { id: 18, title: "Expressions Naturelles", author: "Claire B.", creatorId: "1003", category: "Portrait", defaultLikes: 110, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80" },
 ];
 
 const SEARCH_SUGGESTIONS = {
-  fr: ["Portrait", "Reportage", "Mariage", "Corporate", "Packshot", "Architecture", "Mode", "Drone", "Vidéaste"],
-  en: ["Portrait", "Editorial", "Wedding", "Corporate", "Product", "Architecture", "Fashion", "Drone", "Videographer"],
+  fr: ["Portrait", "Reportage", "Mariage", "Corporate", "Packshot", "Architecture", "Mode", "Drone", "#1001"],
+  en: ["Portrait", "Editorial", "Wedding", "Corporate", "Product", "Architecture", "Fashion", "Drone", "#1001"],
 };
 
 export default function HomePage({ onRequireLogin }) {
@@ -96,17 +102,29 @@ export default function HomePage({ onRequireLogin }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedNews, setSelectedNews] = useState(null);
 
-  // Gestion dynamique des Likes
-  const [plancheItems, setPlancheItems] = useState(INITIAL_PLANCHE_ITEMS);
-  const [likedIds, setLikedIds] = useState([]);
+  const [likedIds, setLikedIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem("boke_liked_photos");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
-  const handleLike = (e, id) => {
+  const handleLikeToggle = (e, id) => {
     e.stopPropagation();
-    if (likedIds.includes(id)) return;
-    setLikedIds([...likedIds, id]);
-    setPlancheItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, likes: item.likes + 1 } : item))
-    );
+    let updated;
+    if (likedIds.includes(id)) {
+      updated = likedIds.filter((item) => item !== id);
+    } else {
+      updated = [...likedIds, id];
+    }
+    setLikedIds(updated);
+    try {
+      localStorage.setItem("boke_liked_photos", JSON.stringify(updated));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const currentList = activeSubTab === "actualites" ? ACTUALITES_ITEMS : ANNONCES_ITEMS;
@@ -142,8 +160,8 @@ export default function HomePage({ onRequireLogin }) {
 
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20">
-      <div className="w-full border-b border-neutral-800/80 mb-8" />
-      <div className="max-w-5xl mx-auto px-4 space-y-12">
+      <div className="w-full border-b border-neutral-800/80 mb-6" />
+      <div className="max-w-5xl mx-auto px-4 space-y-8">
         
         <h1 className="sr-only">
           {isEn
@@ -153,7 +171,7 @@ export default function HomePage({ onRequireLogin }) {
 
         {/* MOTEUR DE RECHERCHE */}
         <section aria-label={isEn ? "Search a photographer or creator" : "Rechercher un photographe ou un créateur"}>
-          <div className="bg-neutral-900/60 border border-neutral-800/80 p-4 rounded-2xl shadow-xl backdrop-blur-md">
+          <div className="bg-neutral-900/60 border border-neutral-800/80 p-3.5 rounded-2xl shadow-xl backdrop-blur-md">
             <form onSubmit={handleSearchSubmit} role="search" className="flex flex-col sm:flex-row gap-3 items-center">
               <div className="relative flex-1 w-full">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm" aria-hidden="true">
@@ -164,17 +182,17 @@ export default function HomePage({ onRequireLogin }) {
                   aria-label={isEn ? "Search" : "Recherche"}
                   placeholder={
                     isEn
-                      ? "Search a photographer, videographer, drone pilot, specialty, city..."
-                      : "Rechercher un photographe, vidéaste, pilote de drone, spécialité, ville..."
+                      ? "Search photographer, pseudo, #ID (e.g. #1001), specialty, city..."
+                      : "Rechercher par nom, pseudo, N° CRM (ex: #1001), spécialité, ville..."
                   }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-11 pr-4 py-3 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-11 pr-4 py-2.5 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-8 py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer shrink-0"
+                className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-7 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer shrink-0"
               >
                 {isEn ? "Search" : "Rechercher"}
               </button>
@@ -182,7 +200,7 @@ export default function HomePage({ onRequireLogin }) {
           </div>
           <nav
             aria-label={isEn ? "Popular specialties" : "Spécialités populaires"}
-            className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-neutral-500"
+            className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-neutral-500"
           >
             <span className="uppercase tracking-wider text-neutral-600">
               {isEn ? "Popular" : "Populaires"}
@@ -199,15 +217,15 @@ export default function HomePage({ onRequireLogin }) {
           </nav>
         </section>
 
-        {/* CARROUSEL ACTUALITÉS / ANNONCES */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-3" role="tablist">
+        {/* CARROUSEL ACTUALITÉS (ENCART HAUTEUR RÉDUITE) */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-2.5" role="tablist">
             <button
               type="button"
               role="tab"
               aria-selected={activeSubTab === "actualites"}
               onClick={() => setActiveSubTab("actualites")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
                 activeSubTab === "actualites"
                   ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                   : "text-neutral-400 hover:text-white border border-transparent"
@@ -220,7 +238,7 @@ export default function HomePage({ onRequireLogin }) {
               role="tab"
               aria-selected={activeSubTab === "annonces"}
               onClick={() => setActiveSubTab("annonces")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
                 activeSubTab === "annonces"
                   ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                   : "text-neutral-400 hover:text-white border border-transparent"
@@ -232,31 +250,31 @@ export default function HomePage({ onRequireLogin }) {
 
           <article
             onClick={() => setSelectedNews(item)}
-            className="bg-neutral-900/60 border border-neutral-800/80 hover:border-amber-500/40 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer group"
+            className="bg-neutral-900/60 border border-neutral-800/80 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-xl transition-all duration-300 cursor-pointer group"
           >
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-              <div className="md:col-span-5 relative overflow-hidden rounded-2xl border border-neutral-800 h-48 md:h-56">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+              <div className="md:col-span-4 relative overflow-hidden rounded-xl border border-neutral-800 h-36 sm:h-44">
                 <img
                   src={item.image}
                   alt={item.alt || item.title}
                   loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <span className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2.5 py-1 rounded-md">
+                <span className="absolute top-2 left-2 bg-neutral-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30 text-[9px] font-bold px-2 py-0.5 rounded-md">
                   {item.date}
                 </span>
               </div>
-              <div className="md:col-span-7 space-y-4">
-                <span className="inline-block text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full">
+              <div className="md:col-span-8 space-y-2.5">
+                <span className="inline-block text-[9px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
                   {activeSubTab === "actualites"
                     ? isEn ? "Network Information" : "Information Réseau"
                     : isEn ? "Members Only" : "Réservé Adhérents"}
                 </span>
-                <h2 className="text-xl md:text-2xl font-black text-white group-hover:text-amber-400 transition leading-tight">
+                <h2 className="text-lg md:text-xl font-black text-white group-hover:text-amber-400 transition leading-snug">
                   {item.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">{item.summary}</p>
-                <div className="pt-2">
+                <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">{item.summary}</p>
+                <div className="pt-1">
                   {!isLoggedIn && item.restricted ? (
                     <button
                       type="button"
@@ -264,7 +282,7 @@ export default function HomePage({ onRequireLogin }) {
                         e.stopPropagation();
                         onRequireLogin?.();
                       }}
-                      className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-5 py-2.5 rounded-xl text-xs transition shadow-lg cursor-pointer"
+                      className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-lg cursor-pointer"
                     >
                       {isEn ? "🔒 Log in to apply" : "🔒 Se connecter pour postuler à cette offre"}
                     </button>
@@ -276,7 +294,7 @@ export default function HomePage({ onRequireLogin }) {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-1.5 mt-4">
+            <div className="flex justify-end gap-1.5 mt-2">
               {currentList.map((_, idx) => (
                 <span
                   key={idx}
@@ -285,7 +303,7 @@ export default function HomePage({ onRequireLogin }) {
                     setCurrentIndex(idx);
                   }}
                   className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    currentIndex === idx ? "w-6 bg-amber-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                    currentIndex === idx ? "w-5 bg-amber-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
                   }`}
                 />
               ))}
@@ -294,10 +312,10 @@ export default function HomePage({ onRequireLogin }) {
         </section>
 
         {/* FILET DE SÉPARATION ÉLÉGANT */}
-        <div className="w-full border-b border-neutral-900 my-10" />
+        <div className="w-full border-b border-neutral-900 my-6" />
 
-        {/* GALERIE PLANCHE CONTACT SUR 3 ÉTAGES */}
-        <section className="space-y-6">
+        {/* GALERIE PLANCHE CONTACT SUR 3 ÉTAGES (DIRECTEMENT PERCEPTIBLE) */}
+        <section className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
@@ -315,14 +333,15 @@ export default function HomePage({ onRequireLogin }) {
             </Link>
           </div>
 
-          {/* Grille 3 Étages (6 photos par ligne) */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {plancheItems.map((c) => {
+            {INITIAL_PLANCHE_ITEMS.map((c) => {
               const isLiked = likedIds.includes(c.id);
+              const totalLikes = c.defaultLikes + (isLiked ? 1 : 0);
+
               return (
                 <div
                   key={c.id}
-                  onClick={() => navigate(`/creators?search=${encodeURIComponent(c.author)}`)}
+                  onClick={() => navigate(`/creators?id=${c.creatorId}`)}
                   className="group relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 transition cursor-pointer aspect-square"
                 >
                   <img
@@ -333,18 +352,18 @@ export default function HomePage({ onRequireLogin }) {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent opacity-85 group-hover:opacity-95 transition" />
 
-                  {/* Bouton Like en haut à droite */}
+                  {/* Bouton Like Persistant (+1 / -1) */}
                   <button
                     type="button"
-                    onClick={(e) => handleLike(e, c.id)}
+                    onClick={(e) => handleLikeToggle(e, c.id)}
                     className={`absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 backdrop-blur-md border transition ${
                       isLiked
-                        ? "bg-red-500/20 border-red-500/50 text-red-400"
+                        ? "bg-red-500/20 border-red-500/60 text-red-400 shadow-md scale-105"
                         : "bg-neutral-950/60 border-neutral-800 text-neutral-300 hover:text-red-400"
                     }`}
                   >
                     <span>{isLiked ? "❤️" : "🤍"}</span>
-                    <span>{c.likes}</span>
+                    <span>{totalLikes}</span>
                   </button>
 
                   <div className="absolute bottom-2 left-2 right-2 space-y-0.5">
@@ -360,12 +379,12 @@ export default function HomePage({ onRequireLogin }) {
           </div>
         </section>
 
-        {/* INVITATION CONTACT & REJOINDRIE */}
-        <section className="border-t border-neutral-800/80 pt-10 text-center space-y-4">
+        {/* INVITATION CONTACT */}
+        <section className="border-t border-neutral-800/80 pt-8 text-center space-y-4">
           <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
             {isEn
               ? "Photographers & videographers: showcase your portfolio"
-              : "Photographes & vidéastes : valorisez votre portfolio"}
+              : "Photographes & créateurs : valorisez votre portfolio"}
           </h2>
           <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl mx-auto leading-relaxed">
             {isEn
@@ -390,7 +409,7 @@ export default function HomePage({ onRequireLogin }) {
 
       </div>
 
-      {/* MODALE AJUSTÉE (PLUS COMPACTE & NON-ENVAHISSANTE) */}
+      {/* MODALE ACTU */}
       {selectedNews && (
         <div
           role="dialog"
