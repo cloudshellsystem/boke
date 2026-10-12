@@ -56,14 +56,28 @@ const ANNONCES_ITEMS = [
   },
 ];
 
-// Galerie Planche Contact des Créatifs
-const PLANCHE_CONTACT_ITEMS = [
-  { id: 1, title: "Studio Luxe & Horlogerie", author: "Marc L.", category: "Studio", image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80" },
-  { id: 2, title: "Reportage Humaniste", author: "Sophie T.", category: "Reportage", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" },
-  { id: 3, title: "Architecture & Design", author: "Antoine V.", category: "Architecture", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" },
-  { id: 4, title: "Mode & Haute Couture", author: "Elena R.", category: "Mode", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80" },
-  { id: 5, title: "Prises de vue FPV Drone", author: "Lucas M.", category: "Drone", image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=600&q=80" },
-  { id: 6, title: "Portrait d'Auteur", author: "Claire B.", category: "Portrait", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" },
+// 3 Étages de Planche Contact (18 photos) avec système de Likes interactifs
+const INITIAL_PLANCHE_ITEMS = [
+  { id: 1, title: "Horlogerie & Lumière", author: "Marc L.", category: "Studio", likes: 142, image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80" },
+  { id: 2, title: "Série Humaniste", author: "Sophie T.", category: "Reportage", likes: 98, image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" },
+  { id: 3, title: "Lignes Béton & Verre", author: "Antoine V.", category: "Architecture", likes: 210, image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" },
+  { id: 4, title: "Collections Capsule", author: "Elena R.", category: "Mode", likes: 185, image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80" },
+  { id: 5, title: "Vol Côtier FPV", author: "Lucas M.", category: "Drone", likes: 312, image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=600&q=80" },
+  { id: 6, title: "Regards Complices", author: "Claire B.", category: "Portrait", likes: 89, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" },
+  
+  { id: 7, title: "Espaces Intérieurs", author: "Antoine V.", category: "Architecture", likes: 76, image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80" },
+  { id: 8, title: "Couture Automne", author: "Elena R.", category: "Mode", likes: 134, image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80" },
+  { id: 9, title: "Ombres Studio", author: "Marc L.", category: "Studio", likes: 201, image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=600&q=80" },
+  { id: 10, title: "Scènes de Rue", author: "Sophie T.", category: "Reportage", likes: 115, image: "https://images.unsplash.com/photo-1477959858617-67f30ac4ce78?auto=format&fit=crop&w=600&q=80" },
+  { id: 11, title: "Survol Alpin", author: "Lucas M.", category: "Drone", likes: 267, image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" },
+  { id: 12, title: "Portraits Noir & Blanc", author: "Claire B.", category: "Portrait", likes: 154, image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80" },
+
+  { id: 13, title: "Flacons & Cosmetiques", author: "Marc L.", category: "Studio", likes: 92, image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80" },
+  { id: 14, title: "Festivals & Lumières", author: "Sophie T.", category: "Reportage", likes: 178, image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80" },
+  { id: 15, title: "Façades Contemporaines", author: "Antoine V.", category: "Architecture", likes: 143, image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80" },
+  { id: 16, title: "Defilé & Backstage", author: "Elena R.", category: "Mode", likes: 221, image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=600&q=80" },
+  { id: 17, title: "Falaises & Mer", author: "Lucas M.", category: "Drone", likes: 199, image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" },
+  { id: 18, title: "Expressions Naturelles", author: "Claire B.", category: "Portrait", likes: 110, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80" },
 ];
 
 const SEARCH_SUGGESTIONS = {
@@ -81,6 +95,19 @@ export default function HomePage({ onRequireLogin }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedNews, setSelectedNews] = useState(null);
+
+  // Gestion dynamique des Likes
+  const [plancheItems, setPlancheItems] = useState(INITIAL_PLANCHE_ITEMS);
+  const [likedIds, setLikedIds] = useState([]);
+
+  const handleLike = (e, id) => {
+    e.stopPropagation();
+    if (likedIds.includes(id)) return;
+    setLikedIds([...likedIds, id]);
+    setPlancheItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, likes: item.likes + 1 } : item))
+    );
+  };
 
   const currentList = activeSubTab === "actualites" ? ACTUALITES_ITEMS : ANNONCES_ITEMS;
 
@@ -124,7 +151,7 @@ export default function HomePage({ onRequireLogin }) {
             : "Boké One – Réseau de photographes professionnels et banque d'images nationale en France"}
         </h1>
 
-        {/* 1. MOTEUR DE RECHERCHE */}
+        {/* MOTEUR DE RECHERCHE */}
         <section aria-label={isEn ? "Search a photographer or creator" : "Rechercher un photographe ou un créateur"}>
           <div className="bg-neutral-900/60 border border-neutral-800/80 p-4 rounded-2xl shadow-xl backdrop-blur-md">
             <form onSubmit={handleSearchSubmit} role="search" className="flex flex-col sm:flex-row gap-3 items-center">
@@ -172,11 +199,8 @@ export default function HomePage({ onRequireLogin }) {
           </nav>
         </section>
 
-        {/* 2. ONGLETS ACTUALITÉS / ANNONCES */}
-        <section
-          className="space-y-4"
-          aria-label={isEn ? "News and member job offers" : "Actualités et offres réservées aux adhérents"}
-        >
+        {/* CARROUSEL ACTUALITÉS / ANNONCES */}
+        <section className="space-y-4">
           <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-3" role="tablist">
             <button
               type="button"
@@ -269,8 +293,11 @@ export default function HomePage({ onRequireLogin }) {
           </article>
         </section>
 
-        {/* 3. GALERIE PLANCHE CONTACT RESPONSIVE DES CRÉATIFS */}
-        <section className="space-y-6 pt-4 border-t border-neutral-900">
+        {/* FILET DE SÉPARATION ÉLÉGANT */}
+        <div className="w-full border-b border-neutral-900 my-10" />
+
+        {/* GALERIE PLANCHE CONTACT SUR 3 ÉTAGES */}
+        <section className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
@@ -284,37 +311,57 @@ export default function HomePage({ onRequireLogin }) {
               to="/creators"
               className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1"
             >
-              {isEn ? "View all →" : "Voir tout →"}
+              {isEn ? "Access Full Directory →" : "Accéder à l'Annuaire Complet →"}
             </Link>
           </div>
 
+          {/* Grille 3 Étages (6 photos par ligne) */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {PLANCHE_CONTACT_ITEMS.map((c) => (
-              <div
-                key={c.id}
-                onClick={() => navigate(`/creators?search=${encodeURIComponent(c.category)}`)}
-                className="group relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 transition cursor-pointer aspect-square"
-              >
-                <img
-                  src={c.image}
-                  alt={c.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent opacity-80 group-hover:opacity-90 transition" />
-                <div className="absolute bottom-2 left-2 right-2 space-y-0.5">
-                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block">
-                    {c.category}
-                  </span>
-                  <p className="text-xs font-bold text-white truncate">{c.title}</p>
-                  <p className="text-[10px] text-neutral-400 truncate">{c.author}</p>
+            {plancheItems.map((c) => {
+              const isLiked = likedIds.includes(c.id);
+              return (
+                <div
+                  key={c.id}
+                  onClick={() => navigate(`/creators?search=${encodeURIComponent(c.author)}`)}
+                  className="group relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 transition cursor-pointer aspect-square"
+                >
+                  <img
+                    src={c.image}
+                    alt={c.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent opacity-85 group-hover:opacity-95 transition" />
+
+                  {/* Bouton Like en haut à droite */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleLike(e, c.id)}
+                    className={`absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 backdrop-blur-md border transition ${
+                      isLiked
+                        ? "bg-red-500/20 border-red-500/50 text-red-400"
+                        : "bg-neutral-950/60 border-neutral-800 text-neutral-300 hover:text-red-400"
+                    }`}
+                  >
+                    <span>{isLiked ? "❤️" : "🤍"}</span>
+                    <span>{c.likes}</span>
+                  </button>
+
+                  <div className="absolute bottom-2 left-2 right-2 space-y-0.5">
+                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block">
+                      {c.category}
+                    </span>
+                    <p className="text-xs font-bold text-white truncate">{c.title}</p>
+                    <p className="text-[10px] text-neutral-400 truncate">{c.author}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
-        {/* 4. INVITATION PHOTOGRAPHES */}
-        <section className="border-t border-neutral-800/80 pt-8 text-center space-y-3">
+        {/* INVITATION CONTACT & REJOINDRIE */}
+        <section className="border-t border-neutral-800/80 pt-10 text-center space-y-4">
           <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
             {isEn
               ? "Photographers & videographers: showcase your portfolio"
@@ -322,31 +369,39 @@ export default function HomePage({ onRequireLogin }) {
           </h2>
           <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl mx-auto leading-relaxed">
             {isEn
-              ? "Join the elite network: verified profile, visibility with demanding clients, access to missions and to the national image bank."
-              : "Rejoignez le réseau d'élite : profil vérifié, visibilité auprès de clients exigeants, accès aux missions et à la banque d'images nationale."}
+              ? "Join the elite network: verified profile, custom portfolio page, and direct contact with demanding buyers."
+              : "Rejoignez le réseau d'élite : profil vérifié, page portfolio personnalisée et mise en relation directe avec les acheteurs d'art."}
           </p>
-          <Link
-            to="/abonnes"
-            className="inline-block text-xs font-bold text-amber-400 hover:text-amber-300 underline underline-offset-4 transition"
-          >
-            {isEn ? "Discover memberships →" : "Découvrir les abonnements →"}
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <Link
+              to="/about"
+              className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg"
+            >
+              {isEn ? "Contact Boké One" : "Écrire à l'administration / Contact"}
+            </Link>
+            <Link
+              to="/abonnes"
+              className="border border-neutral-800 bg-neutral-900 hover:border-amber-500/40 text-neutral-200 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition"
+            >
+              {isEn ? "Discover Memberships" : "Découvrir les Abonnements"}
+            </Link>
+          </div>
         </section>
 
       </div>
 
-      {/* MODALE DÉTAIL ACTU / ANNONCE */}
+      {/* MODALE AJUSTÉE (PLUS COMPACTE & NON-ENVAHISSANTE) */}
       {selectedNews && (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={selectedNews.title}
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setSelectedNews(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl space-y-5 p-6 sm:p-8 relative"
+            className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl space-y-4 p-6 relative"
           >
             <button
               type="button"
@@ -356,25 +411,38 @@ export default function HomePage({ onRequireLogin }) {
             >
               ✕
             </button>
-            <div className="space-y-1">
-              <span className="text-xs text-amber-400 font-bold">{selectedNews.date}</span>
-              <h2 className="text-xl sm:text-2xl font-black text-white">{selectedNews.title}</h2>
+            
+            <div className="space-y-1 pr-6">
+              <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">{selectedNews.date}</span>
+              <h2 className="text-lg sm:text-xl font-black text-white leading-snug">{selectedNews.title}</h2>
             </div>
-            <div className="relative h-64 rounded-2xl overflow-hidden border border-neutral-800 shadow-inner">
+
+            <div className="relative h-44 rounded-xl overflow-hidden border border-neutral-800 shadow-inner">
               <img
                 src={selectedNews.image}
                 alt={selectedNews.alt || selectedNews.title}
                 className="w-full h-full object-cover"
               />
             </div>
-            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">{selectedNews.fullContent}</p>
-            <button
-              type="button"
-              onClick={() => setSelectedNews(null)}
-              className="w-full bg-amber-500 text-neutral-950 font-bold py-3.5 rounded-xl text-xs cursor-pointer hover:bg-amber-400 transition shadow-lg"
-            >
-              {isEn ? "Close" : "Fermer"}
-            </button>
+
+            <p className="text-xs text-neutral-300 leading-relaxed">{selectedNews.fullContent}</p>
+
+            <div className="flex gap-3 pt-2">
+              <Link
+                to="/about"
+                onClick={() => setSelectedNews(null)}
+                className="flex-1 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3 rounded-xl text-xs text-center transition shadow-lg"
+              >
+                {isEn ? "Contact Us Direct" : "Nous écrire / Contact direct"}
+              </Link>
+              <button
+                type="button"
+                onClick={() => setSelectedNews(null)}
+                className="px-5 border border-neutral-800 bg-neutral-800 text-neutral-300 font-bold rounded-xl text-xs hover:bg-neutral-700 transition cursor-pointer"
+              >
+                {isEn ? "Close" : "Fermer"}
+              </button>
+            </div>
           </div>
         </div>
       )}
