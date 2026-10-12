@@ -21,21 +21,21 @@ import AuthModal from "./components/AuthModal";
 // Initialisation de Google Analytics 4
 ReactGA.initialize("G-FVFKNP75BZ");
 
-// Configuration des onglets simplifiés avec "À propos"
+// Configuration des onglets avec "À propos" placé en dernier
 const NAV_LINKS_DATA = {
   fr: [
     { to: "/", label: "Accueil / Stock" },
     { to: "/creators", label: "Créateurs" },
-    { to: "/about", label: "À propos" },
     { to: "/espace-pro", label: "Espace Pro" },
     { to: "/abonnes", label: "Tarifs" },
+    { to: "/about", label: "À propos" },
   ],
   en: [
     { to: "/", label: "Home / Stock" },
     { to: "/creators", label: "Creators" },
-    { to: "/about", label: "About" },
     { to: "/espace-pro", label: "Pro Space" },
     { to: "/abonnes", label: "Pricing" },
+    { to: "/about", label: "About" },
   ],
 };
 
