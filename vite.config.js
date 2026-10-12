@@ -2,9 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  base: './', // <--- C'est cette ligne qui manquait et qui corrige les chemins CSS/JS
   plugins: [react()],
   build: {
-    chunkSizeWarningLimit: 800, // Relève légèrement la limite d'avertissement
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         manualChunks(id) {
