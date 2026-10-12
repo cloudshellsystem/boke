@@ -1,10 +1,9 @@
 ﻿import React, { useState, useEffect } from "react";
-import { useCart } from "../context/CartContext";
+import { useSearchParams } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 
-// Métiers proposés dans la liste déroulante
 const TRADES = [
   { id: "chef-operateur", fr: "Chef Opérateur", en: "Director of Photography" },
   { id: "cadreur", fr: "Cadreur", en: "Camera Operator" },
@@ -27,454 +26,323 @@ const TRADES = [
 
 const CREATORS_DATA = [
   {
-    id: 101,
+    id: "1001",
     name: "Antoine Leroy",
-    specialty: { fr: "Pilote Drone Certifié", en: "Certified Drone Pilot" },
+    pseudo: "AntoineL_Photo",
     category: "pilote-drone",
+    role: { fr: "Pilote Drone & Vidéaste", en: "Drone Pilot & Videographer" },
     city: "Paris / Île-de-France",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
-    starting_price: 450,
-    certifications: ["BAPD 2026", "CATS", "S1-S3"],
+    rate: "450 €",
     bio: {
-      fr: "Télépilote professionnel passionné d'audiovisuel depuis plus de 8 ans. Spécialisé dans les prises de vues aériennes techniques et cinématiques pour l'immobilier de prestige, le cinéma et les grands suivis de chantier en Île-de-France.",
-      en: "Professional drone pilot passionate about audiovisuals for over 8 years. Specialized in technical and cinematic aerial shooting for luxury real estate, cinema, and large construction projects in Île-de-France.",
+      fr: "Télépilote professionnel et vidéaste spécialisé dans les prises de vues aériennes techniques et cinématiques pour l'immobilier, le cinéma et la publicité.",
+      en: "Professional drone pilot and videographer specialized in technical and cinematic aerial shots for real estate, cinema, and advertising.",
     },
     equipment: ["DJI Inspire 3 (8K RAW)", "DJI Mavic 3 Cine", "Station FPV CGO"],
     portfolio: [
       "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800",
       "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800",
-      "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800"
+      "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800",
     ],
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
   },
   {
-    id: 102,
+    id: "1002",
     name: "Camille Morel",
-    specialty: { fr: "Photographe Immobilier & Architecture", en: "Real Estate & Architecture Photographer" },
+    pseudo: "CamilleStudio",
     category: "photographe",
+    role: { fr: "Photographe Studio & Architecture", en: "Studio & Architecture Photographer" },
     city: "Lyon / Auvergne-Rhône-Alpes",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
-    starting_price: 350,
-    certifications: ["SIRET Vérifié", "HDR Pro"],
+    rate: "350 €",
     bio: {
-      fr: "Photographe d'architecture chevronnée, spécialisée dans la mise en valeur de biens immobiliers haut de gamme et d'ouvrages d'art. Mon travail repose sur la maîtrise de la lumière naturelle et la précision des perspectives.",
-      en: "Seasoned architectural photographer, specialized in showcasing high-end real estate and engineering structures. My work relies on mastering natural light and precise perspective balance.",
+      fr: "Photographe d'architecture et de studio chevronnée, spécialisée dans la mise en valeur de biens haut de gamme, d'objets de luxe et d'ouvrages d'art.",
+      en: "Seasoned architectural and studio photographer, specialized in high-end real estate, luxury goods, and art pieces.",
     },
     equipment: ["Sony A7R V (61MP)", "Objectifs Tilt-Shift", "Éclairage Studio Profoto"],
     portfolio: [
-      "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800",
-      "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
+      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800",
     ],
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
   },
   {
-    id: 103,
+    id: "1003",
     name: "Mateo Fernandez",
-    specialty: { fr: "Régisseur Général & Chef Opérateur", en: "General Line Producer & Director of Photography" },
-    category: "regisseur",
+    pseudo: "Mateo_Art",
+    category: "chef-operateur",
+    role: { fr: "Chef Opérateur & Réalisateur", en: "Director of Photography & Director" },
     city: "Marseille / PACA",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
-    starting_price: 500,
-    certifications: ["Permis Côtier", "Habilitation Électrique"],
+    rate: "500 €",
     bio: {
-      fr: "Régisseur général et chef opérateur fort de 12 ans d'expérience sur le terrain (décors complexes, tournages maritimes, événements institutionnels). Expert en logistique d'équipe et sécurisation des tournages.",
-      en: "General line producer and cinematographer with 12 years of field experience (complex sets, maritime shoots, corporate events). Expert in team logistics and shoot safety management.",
+      fr: "Chef opérateur et réalisateur fort de 12 ans d'expérience (fictions, clips, films institutionnels). Maîtrise totale des grands capteurs et de l'éclairage cinéma.",
+      en: "Cinematographer and director with 12 years of experience. Total mastery of large sensors and cinematic lighting.",
     },
-    equipment: ["RED V-Raptor 8K", "Gréement Ronin 2", "Véhicule Régie Tout-Terrain"],
+    equipment: ["RED V-Raptor 8K", "Gréement Ronin 2", "Optiques Anamorphiques"],
     portfolio: [
+      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800",
       "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800",
-      "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800"
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800",
     ],
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
   },
 ];
 
-const DIRECTORY_TEXT = {
-  fr: {
-    badge: "ANNUAIRE NATIONAL DES CRÉATEURS",
-    title: "Trouvez vos experts audiovisuels certifiés",
-    subtitle: "Chefs opérateurs, photographes, vidéastes, monteurs, étalonneurs, pilotes drone et bien d'autres métiers de l'image et du son.",
-    searchPlaceholder: "Rechercher un créateur, une spécialité, une ville...",
-    filterLabel: "Filtrer par métier",
-    filterAll: "Tous les métiers",
-    certifiedBadge: "CERTIFIÉ 2026",
-    fromPrice: "À partir de",
-    btnPortfolio: "📷 Voir le Portfolio ➔",
-    btnBook: "Réserver",
-    modalBioTitle: "Biographie & Style",
-    modalEquipTitle: "🛠️ Matériel Pro",
-    modalPortfolioTitle: "📸 Œuvres & Réalisations",
-    noticePlatformOnly: "🔒 Réservé aux abonnés : inscrivez-vous ou connectez-vous pour réserver ce prestataire.",
-    noResult: "Aucun créateur ne correspond à votre recherche.",
-  },
-  en: {
-    badge: "NATIONAL CREATORS DIRECTORY",
-    title: "Find your certified audiovisual experts",
-    subtitle: "Directors of photography, photographers, videographers, editors, colorists, drone pilots and many more image and sound professions.",
-    searchPlaceholder: "Search creator, specialty, city...",
-    filterLabel: "Filter by profession",
-    filterAll: "All professions",
-    certifiedBadge: "CERTIFIED 2026",
-    fromPrice: "Starting from",
-    btnPortfolio: "📷 View Portfolio ➔",
-    btnBook: "Book",
-    modalBioTitle: "Biography & Style",
-    modalEquipTitle: "🛠️ Pro Gear",
-    modalPortfolioTitle: "📸 Works & Realizations",
-    noticePlatformOnly: "🔒 Reserved for members: sign up or log in to book this provider.",
-    noResult: "No creator matches your search.",
-  },
-};
-
 export default function CreatorDirectory({ onRequireLogin }) {
   const { lang } = useLanguage();
-  const { isLoggedIn, login } = useAuth();
+  const { isLoggedIn } = useAuth();
   const { addToCart } = useCart();
-  const navigate = useNavigate();
-  const t = DIRECTORY_TEXT[lang] || DIRECTORY_TEXT.fr;
-  const L = lang === "en" ? "en" : "fr";
+  const isEn = lang === "en";
+  const L = isEn ? "en" : "fr";
 
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedCreator, setSelectedCreator] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
-  const [showModalAuth, setShowModalAuth] = useState(false);
-  const [authTab, setAuthTab] = useState("register");
-  const [emailInput, setEmailInput] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
-
+  // Synchronisation des paramètres d'URL (?search= ou ?id=)
   useEffect(() => {
-    if (!selectedCreator && !showModalAuth) return undefined;
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        setSelectedCreator(null);
-        setShowModalAuth(false);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [selectedCreator, showModalAuth]);
+    const creatorId = searchParams.get("id");
+    const query = searchParams.get("search");
 
-  const query = search.trim().toLowerCase();
-  const filteredCreators = CREATORS_DATA.filter((creator) => {
+    if (creatorId) {
+      const found = CREATORS_DATA.find((c) => c.id === creatorId);
+      if (found) setSelectedCreator(found);
+    } else {
+      setSelectedCreator(null);
+    }
+
+    if (query !== null) {
+      setSearchTerm(query);
+    }
+  }, [searchParams]);
+
+  const filteredCreators = CREATORS_DATA.filter((c) => {
+    const term = searchTerm.toLowerCase().trim().replace("#", "");
     const matchSearch =
-      !query ||
-      creator.name.toLowerCase().includes(query) ||
-      creator.specialty[L].toLowerCase().includes(query) ||
-      creator.city.toLowerCase().includes(query);
-    const matchCategory = selectedCategory === "all" || creator.category === selectedCategory;
+      !term ||
+      c.name.toLowerCase().includes(term) ||
+      c.pseudo.toLowerCase().includes(term) ||
+      c.id.includes(term) ||
+      c.role[L].toLowerCase().includes(term) ||
+      c.city.toLowerCase().includes(term);
+
+    const matchCategory = selectedCategory === "all" || c.category === selectedCategory;
     return matchSearch && matchCategory;
   });
 
+  const handleOpenCreator = (creator) => {
+    setSelectedCreator(creator);
+    setSearchParams({ id: creator.id });
+  };
+
+  const handleCloseCreator = () => {
+    setSelectedCreator(null);
+    setSearchParams(searchTerm ? { search: searchTerm } : {});
+  };
+
+  const handleCopyShareLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
   const handleBookAction = (e, creator) => {
     e.stopPropagation();
-
     if (!isLoggedIn) {
-      setSelectedCreator(null);
-      setAuthTab("register");
-      setShowModalAuth(true);
       onRequireLogin?.();
       return;
     }
-
-    const added = addToCart(creator);
-    if (added === false) return;
-    setSelectedCreator(null);
-    navigate("/cart");
-  };
-
-  const handleAuthSubmit = (e) => {
-    e.preventDefault();
-    login?.({ email: emailInput });
-    setShowModalAuth(false);
-    alert(lang === "en" ? "Successfully connected!" : "Connexion réussie ! Bienvenue sur Boké One.");
+    addToCart(creator);
   };
 
   return (
-    <div className="bg-neutral-950 min-h-screen text-neutral-200 p-6 sm:p-12 font-sans">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         
-        {/* En-tête */}
-        <div className="text-center space-y-3">
-          <span className="inline-block text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-            {t.badge}
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-black text-white">{t.title}</h1>
-          <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl mx-auto">{t.subtitle}</p>
-        </div>
-
-        {/* Barre de recherche & liste déroulante des métiers */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-neutral-900 border border-neutral-800 p-4 rounded-2xl">
-          <input
-            type="text"
-            placeholder={t.searchPlaceholder}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-96 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 outline-none focus:border-amber-500"
-          />
-
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            aria-label={t.filterLabel}
-            className="w-full sm:w-72 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-amber-500 cursor-pointer"
-          >
-            <option value="all">{t.filterAll}</option>
-            {TRADES.map((trade) => (
-              <option key={trade.id} value={trade.id}>
-                {trade[L]}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Grille des cartes créateurs */}
-        {filteredCreators.length === 0 ? (
-          <p className="text-center text-sm text-neutral-500 py-12">{t.noResult}</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCreators.map((creator) => (
-              <div
-                key={creator.id}
-                className="bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 rounded-3xl p-6 flex flex-col justify-between shadow-xl transition group"
+        {/* PORTFOLIO EN PLEINE PAGE (PARTAGEABLE) */}
+        {selectedCreator ? (
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative">
+            
+            {/* Barre supérieure : Retour & Partage */}
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-5">
+              <button
+                type="button"
+                onClick={handleCloseCreator}
+                className="text-xs font-bold text-neutral-400 hover:text-white flex items-center gap-2 cursor-pointer bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800"
               >
-                <div>
-                  <div className="flex items-center gap-4 mb-4">
-                    <img
-                      src={creator.avatar}
-                      alt={creator.name}
-                      className="w-16 h-16 rounded-2xl object-cover border border-amber-500/30 group-hover:scale-105 transition"
-                    />
-                    <div>
-                      <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase">
-                        {t.certifiedBadge}
-                      </span>
-                      <h3 className="text-base font-bold text-white mt-1">{creator.name}</h3>
-                      <p className="text-xs text-neutral-400">{creator.city}</p>
-                    </div>
-                  </div>
+                ← {isEn ? "Back to Directory" : "Retour à l'Annuaire"}
+              </button>
 
-                  <p className="text-xs text-amber-400/90 font-medium mb-4">{creator.specialty[L]}</p>
+              <button
+                type="button"
+                onClick={handleCopyShareLink}
+                className="text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-4 py-2 rounded-xl transition flex items-center gap-2 cursor-pointer"
+              >
+                <span>🔗</span>
+                <span>{copiedLink ? (isEn ? "Link Copied!" : "Lien Copié !") : (isEn ? "Share Portfolio URL" : "Partager ce portfolio")}</span>
+              </button>
+            </div>
 
-                  {/* Bouton épuré "Voir le Portfolio" sans fioritures */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCreator(creator)}
-                    className="w-full text-center text-xs text-amber-400 hover:text-amber-300 font-bold bg-neutral-950 border border-amber-500/30 px-4 py-3 rounded-xl mb-4 transition flex items-center justify-center gap-2 cursor-pointer shadow"
-                  >
-                    <span>{t.btnPortfolio}</span>
-                  </button>
-
-                  <div className="flex flex-wrap gap-1.5 mb-6">
-                    {creator.certifications.map((cert, idx) => (
-                      <span key={idx} className="text-[10px] bg-neutral-950 text-neutral-300 border border-neutral-800 px-2.5 py-1 rounded-md font-semibold">
-                        ✓ {cert}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="border-t border-neutral-800 pt-4 flex items-center justify-between gap-2">
-                  <div>
-                    <span className="text-[10px] text-neutral-500 block">{t.fromPrice}</span>
-                    <span className="text-lg font-black text-amber-400">{creator.starting_price} €</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={(e) => handleBookAction(e, creator)}
-                    className="bg-amber-500 hover:bg-amber-400 text-neutral-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow cursor-pointer"
-                  >
-                    {t.btnBook}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* MODALE PORTFOLIO ÉLÉGANTE ET CLASSE (SANS FIORITURES) */}
-      {selectedCreator && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md overflow-y-auto"
-          onClick={() => setSelectedCreator(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-10 space-y-8 relative shadow-2xl my-8"
-          >
-            {/* Bouton Fermer */}
-            <button
-              type="button"
-              onClick={() => setSelectedCreator(null)}
-              className="absolute top-5 right-5 text-neutral-400 hover:text-white font-bold text-lg cursor-pointer bg-neutral-950 rounded-full h-9 w-9 flex items-center justify-center border border-neutral-800"
-            >
-              ✕
-            </button>
-
-            {/* En-tête du portfolio de l'artiste */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-neutral-800 pb-6">
-              <div className="flex items-center gap-5">
+            {/* En-tête Créateur */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-3 flex justify-center">
                 <img
                   src={selectedCreator.avatar}
                   alt={selectedCreator.name}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-amber-500/50 shadow-lg"
+                  className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover border-2 border-amber-500/40 shadow-xl"
                 />
-                <div>
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded font-bold uppercase tracking-wider">
-                    PORTFOLIO CERTIFIÉ
+              </div>
+
+              <div className="md:col-span-9 space-y-2 text-center md:text-left">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-md">
+                    CERTIFIÉ 2026
                   </span>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white mt-1.5">{selectedCreator.name}</h2>
-                  <p className="text-xs sm:text-sm text-amber-400 font-semibold mt-0.5">
-                    {selectedCreator.specialty[L]} • {selectedCreator.city}
-                  </p>
+                  <span className="text-[10px] font-mono text-neutral-400 bg-neutral-950 px-2.5 py-0.5 rounded border border-neutral-800">
+                    #{selectedCreator.id}
+                  </span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-black text-white">{selectedCreator.name}</h2>
+                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">{selectedCreator.role[L]}</p>
+                <p className="text-xs text-neutral-400">📍 {selectedCreator.city}</p>
+              </div>
+            </div>
+
+            {/* Biographie & Matériel */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-4 border-t border-neutral-800/80">
+              <div className="md:col-span-8 bg-neutral-950 p-5 rounded-2xl border border-neutral-800 space-y-2">
+                <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Biographie & Style</h3>
+                <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">{selectedCreator.bio[L]}</p>
+              </div>
+
+              <div className="md:col-span-4 bg-neutral-950 p-5 rounded-2xl border border-neutral-800 space-y-2">
+                <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Matériel Pro</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedCreator.equipment.map((eq, i) => (
+                    <span key={i} className="text-[10px] font-semibold bg-neutral-900 border border-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg">
+                      🛠️ {eq}
+                    </span>
+                  ))}
                 </div>
               </div>
-
-              <div className="text-left sm:text-right space-y-1 w-full sm:w-auto bg-neutral-950 sm:bg-transparent p-4 sm:p-0 rounded-2xl border sm:border-0 border-neutral-800">
-                <span className="text-[10px] text-neutral-400 uppercase tracking-widest">{t.fromPrice}</span>
-                <p className="text-2xl font-black text-amber-400">{selectedCreator.starting_price} €</p>
-                <button
-                  type="button"
-                  onClick={(e) => handleBookAction(e, selectedCreator)}
-                  className="w-full sm:w-auto mt-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 px-6 py-2.5 rounded-xl font-bold text-xs transition shadow-lg cursor-pointer"
-                >
-                  {t.btnBook} / Réserver
-                </button>
-              </div>
             </div>
 
-            {!isLoggedIn && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-xs text-amber-300 leading-relaxed">
-                {t.noticePlatformOnly}
-              </div>
-            )}
+            {/* Galerie Portfolio */}
+            <div className="space-y-4 pt-4">
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                Travaux & Réalisations
+              </h3>
 
-            {/* Biographie & Style */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest">{t.modalBioTitle}</h4>
-              <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed bg-neutral-950 p-5 rounded-2xl border border-neutral-800 shadow-inner">
-                {selectedCreator.bio[L]}
-              </p>
-            </div>
-
-            {/* Matériel Pro */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest">{t.modalEquipTitle}</h4>
-              <div className="flex flex-wrap gap-2 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
-                {selectedCreator.equipment.map((eq, i) => (
-                  <span key={i} className="text-xs bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded-xl text-neutral-300 font-medium">
-                    🛠️ {eq}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Galerie d'œuvres / Portfolio Pro épuré */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest">{t.modalPortfolioTitle}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {selectedCreator.portfolio.map((imgUrl, i) => (
-                  <div key={i} className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 group shadow-md">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {selectedCreator.portfolio.map((imgUrl, idx) => (
+                  <div key={idx} className="relative h-64 rounded-2xl overflow-hidden border border-neutral-800 group shadow-lg">
                     <img
                       src={imgUrl}
-                      alt={`${selectedCreator.name} — ${i + 1}`}
-                      loading="lazy"
-                      className="w-full h-52 object-cover group-hover:scale-105 transition duration-300"
+                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* MODALE D'INSCRIPTION / CONNEXION SUR-MESURE */}
-      {showModalAuth && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 relative shadow-2xl">
-            <button 
-              type="button"
-              onClick={() => setShowModalAuth(false)}
-              className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
-            >
-              ✕
-            </button>
-
-            <div className="flex bg-neutral-950 p-1.5 rounded-2xl border border-neutral-800">
+            {/* Action Réservation */}
+            <div className="pt-6 border-t border-neutral-800 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase">Tarif indicatif</span>
+                <p className="text-xl font-black text-amber-400">{selectedCreator.rate}</p>
+              </div>
               <button
                 type="button"
-                onClick={() => setAuthTab("register")}
-                className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
-                  authTab === "register" ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
-                }`}
+                onClick={(e) => handleBookAction(e, selectedCreator)}
+                className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-8 py-3.5 rounded-xl text-xs uppercase tracking-wider transition shadow-xl cursor-pointer"
               >
-                S'inscrire
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthTab("login")}
-                className={`flex-1 py-2 text-xs font-bold rounded-xl transition cursor-pointer ${
-                  authTab === "login" ? "bg-amber-500 text-neutral-950 shadow" : "text-neutral-400 hover:text-white"
-                }`}
-              >
-                Se connecter
+                Réserver ce créateur
               </button>
             </div>
 
-            <div className="space-y-1 text-center">
-              <h3 className="text-lg font-black text-white">
-                {authTab === "register" ? "Rejoignez le réseau Boké One" : "Accès Membre Boké One"}
-              </h3>
-              <p className="text-xs text-neutral-400">
-                {authTab === "register" 
-                  ? "Créez votre compte pour réserver vos prestataires en toute sécurité." 
-                  : "Connectez-vous pour retrouver votre panier et vos réservations."}
-              </p>
+          </div>
+        ) : (
+          /* ANNUAIRE & RECHERCHE ÉPURÉE */
+          <div className="space-y-8">
+            
+            {/* Barre de Recherche + Menu déroulant des Métiers complets */}
+            <div className="bg-neutral-900/60 border border-neutral-800 p-4 rounded-2xl backdrop-blur-md flex flex-col sm:flex-row gap-3">
+              <input
+                type="search"
+                placeholder={isEn ? "Search creator, pseudo, #ID, specialty..." : "Rechercher par nom, pseudo, N° CRM (ex: #1001), spécialité..."}
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setSearchParams(e.target.value ? { search: e.target.value } : {});
+                }}
+                className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
+              />
+
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                aria-label="Filtrer par métier"
+                className="w-full sm:w-72 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-400 transition cursor-pointer"
+              >
+                <option value="all">{isEn ? "All professions" : "Tous les métiers"}</option>
+                {TRADES.map((trade) => (
+                  <option key={trade.id} value={trade.id}>
+                    {trade[L]}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-neutral-300">Adresse email</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="nom@exemple.com"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
-                />
-              </div>
+            {/* Grille des profils */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              {filteredCreators.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => handleOpenCreator(c)}
+                  className="bg-neutral-900/60 border border-neutral-800/80 hover:border-amber-500/40 rounded-3xl p-5 space-y-4 transition duration-300 cursor-pointer group shadow-lg relative overflow-hidden"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={c.avatar}
+                      alt={c.name}
+                      className="w-14 h-14 rounded-2xl object-cover border border-neutral-800 group-hover:border-amber-400 transition"
+                    />
+                    <div className="space-y-0.5 overflow-hidden">
+                      <span className="text-[9px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                        #{c.id}
+                      </span>
+                      <h3 className="text-sm font-bold text-white group-hover:text-amber-400 transition truncate">
+                        {c.name}
+                      </h3>
+                      <p className="text-[11px] text-neutral-400 truncate">@{c.pseudo}</p>
+                    </div>
+                  </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-neutral-300">Mot de passe</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-amber-500"
-                />
-              </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-neutral-200 truncate">{c.role[L]}</p>
+                    <p className="text-[11px] text-neutral-500">📍 {c.city}</p>
+                  </div>
 
-              <button
-                type="submit"
-                className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3.5 rounded-xl text-xs transition cursor-pointer shadow-lg"
-              >
-                {authTab === "register" ? "Créer mon compte" : "Se connecter"}
-              </button>
-            </form>
+                  <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-xs font-bold text-amber-400 group-hover:underline">
+                    <span>{isEn ? "View Portfolio →" : "Consulter le Portfolio →"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filteredCreators.length === 0 && (
+              <div className="text-center py-12 text-neutral-500 text-xs">
+                {isEn ? "No creators match your search." : "Aucun créateur ne correspond à votre recherche."}
+              </div>
+            )}
+
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 }
