@@ -7,16 +7,19 @@ import ModulePaiementStripe from "./ModulePaiementStripe";
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useCart();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth(); // Récupération de l'utilisateur
   const [success, setSuccess] = useState(false);
 
   const handleOrderSuccess = async () => {
     try {
+      // Enregistrement de la commande liée au compte utilisateur
       const { error } = await supabase.from("orders").insert({
+        user_id: user?.id,
+        user_email: user?.email,
         items: cart,
         total: cartTotal,
         payment_method: "Stripe Mode Test (€)",
-        status: "paid_simulated"
+        status: "paid"
       });
 
       if (error) throw error;
@@ -32,7 +35,9 @@ export default function Checkout() {
       <div className="flex min-h-[50vh] flex-col items-center justify-center bg-neutral-950 text-neutral-200 text-center p-6 font-sans">
         <div className="mb-4 rounded-full bg-emerald-500/10 p-4 text-emerald-400 text-4xl">✓</div>
         <h2 className="text-3xl font-bold text-amber-400 mb-2">Paiement validé !</h2>
-        <p className="text-neutral-400 max-w-md">Votre transaction de test Stripe a réussi. Vos prestations ont été enregistrées.</p>
+        <p className="text-neutral-400 max-w-md">
+          Votre paiement a été confirmé. Les détails de votre commande sont enregistrés sur votre compte.
+        </p>
       </div>
     );
   }
@@ -47,10 +52,10 @@ export default function Checkout() {
               {cart.map((item) => (
                 <div key={item.id} className="pt-3 flex justify-between text-sm">
                   <div>
-                    <p className="font-semibold text-neutral-100">{item.display_name}</p>
+                    <p className="font-semibold text-neutral-100">{item.display_name || item.name}</p>
                     <p className="text-xs text-neutral-500">{item.specialty}</p>
                   </div>
-                  <span className="font-bold text-amber-400">{formatPrice(item.starting_price)}</span>
+                  <span className="font-bold text-amber-400">{formatPrice(item.starting_price || item.price)}</span>
                 </div>
               ))}
             </div>
