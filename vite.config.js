@@ -1,9 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  base: './', // <--- Indispensable pour que les chemins CSS/JS fonctionnent partout
-  plugins: [react()],
+  base: './', // Nécessaire pour les chemins relatifs sur Vercel
+  plugins: [
+    react(),
+    tailwindcss(), // <--- Le plugin officiel Tailwind v4 pour Vite
+  ],
   build: {
     chunkSizeWarningLimit: 800,
     rollupOptions: {
