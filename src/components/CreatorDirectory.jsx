@@ -41,8 +41,9 @@ const CREATORS_DATA = [
     },
     equipment: ["DJI Inspire 3 (8K RAW)", "DJI Mavic 3 Cine", "Station FPV CGO"],
     portfolio: [
-      "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600",
-      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600",
+      "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800",
+      "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800"
     ],
   },
   {
@@ -60,8 +61,9 @@ const CREATORS_DATA = [
     },
     equipment: ["Sony A7R V (61MP)", "Objectifs Tilt-Shift", "Éclairage Studio Profoto"],
     portfolio: [
-      "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=600",
-      "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=600",
+      "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800",
+      "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800",
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800"
     ],
   },
   {
@@ -78,7 +80,10 @@ const CREATORS_DATA = [
       en: "General line producer and cinematographer with 12 years of field experience (complex sets, maritime shoots, corporate events). Expert in team logistics and shoot safety management.",
     },
     equipment: ["RED V-Raptor 8K", "Gréement Ronin 2", "Véhicule Régie Tout-Terrain"],
-    portfolio: ["https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600"],
+    portfolio: [
+      "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800",
+      "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800"
+    ],
   },
 ];
 
@@ -92,14 +97,12 @@ const DIRECTORY_TEXT = {
     filterAll: "Tous les métiers",
     certifiedBadge: "CERTIFIÉ 2026",
     fromPrice: "À partir de",
-    btnStory: "📖 En savoir plus ➔",
+    btnPortfolio: "📷 Voir le Portfolio ➔",
     btnBook: "Réserver",
-    modalTitle: "En savoir plus",
-    modalBioTitle: "Biographie",
-    modalEquipTitle: "🛠️ Matériel & Équipement de Tournage",
-    modalPortfolioTitle: "📸 Aperçu du Portfolio",
+    modalBioTitle: "Biographie & Style",
+    modalEquipTitle: "🛠️ Matériel Pro",
+    modalPortfolioTitle: "📸 Œuvres & Réalisations",
     noticePlatformOnly: "🔒 Réservé aux abonnés : inscrivez-vous ou connectez-vous pour réserver ce prestataire.",
-    closeLabel: "Fermer",
     noResult: "Aucun créateur ne correspond à votre recherche.",
   },
   en: {
@@ -111,14 +114,12 @@ const DIRECTORY_TEXT = {
     filterAll: "All professions",
     certifiedBadge: "CERTIFIED 2026",
     fromPrice: "Starting from",
-    btnStory: "📖 Learn more ➔",
+    btnPortfolio: "📷 View Portfolio ➔",
     btnBook: "Book",
-    modalTitle: "Learn more",
-    modalBioTitle: "Biography",
-    modalEquipTitle: "🛠️ Gear & Filming Equipment",
-    modalPortfolioTitle: "📸 Portfolio Preview",
+    modalBioTitle: "Biography & Style",
+    modalEquipTitle: "🛠️ Pro Gear",
+    modalPortfolioTitle: "📸 Works & Realizations",
     noticePlatformOnly: "🔒 Reserved for members: sign up or log in to book this provider.",
-    closeLabel: "Close",
     noResult: "No creator matches your search.",
   },
 };
@@ -135,9 +136,8 @@ export default function CreatorDirectory({ onRequireLogin }) {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedCreator, setSelectedCreator] = useState(null);
 
-  // État local pour notre belle modale d'inscription / connexion sur-mesure
   const [showModalAuth, setShowModalAuth] = useState(false);
-  const [authTab, setAuthTab] = useState("register"); // "register" ou "login"
+  const [authTab, setAuthTab] = useState("register");
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
 
@@ -172,7 +172,6 @@ export default function CreatorDirectory({ onRequireLogin }) {
   const handleBookAction = (e, creator) => {
     e.stopPropagation();
 
-    // Visiteur non connecté : on ferme la fiche et on ouvre notre belle modale sur-mesure
     if (!isLoggedIn) {
       setSelectedCreator(null);
       setAuthTab("register");
@@ -197,6 +196,7 @@ export default function CreatorDirectory({ onRequireLogin }) {
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 p-6 sm:p-12 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
+        
         {/* En-tête */}
         <div className="text-center space-y-3">
           <span className="inline-block text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
@@ -257,14 +257,15 @@ export default function CreatorDirectory({ onRequireLogin }) {
                     </div>
                   </div>
 
-                  <p className="text-xs text-amber-400/90 font-medium mb-3">{creator.specialty[L]}</p>
+                  <p className="text-xs text-amber-400/90 font-medium mb-4">{creator.specialty[L]}</p>
 
+                  {/* Bouton épuré "Voir le Portfolio" sans fioritures */}
                   <button
                     type="button"
                     onClick={() => setSelectedCreator(creator)}
-                    className="w-full text-left text-xs text-amber-400 hover:underline font-bold bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-xl mb-4 transition flex items-center justify-between cursor-pointer"
+                    className="w-full text-center text-xs text-amber-400 hover:text-amber-300 font-bold bg-neutral-950 border border-amber-500/30 px-4 py-3 rounded-xl mb-4 transition flex items-center justify-center gap-2 cursor-pointer shadow"
                   >
-                    <span>{t.btnStory}</span>
+                    <span>{t.btnPortfolio}</span>
                   </button>
 
                   <div className="flex flex-wrap gap-1.5 mb-6">
@@ -296,98 +297,106 @@ export default function CreatorDirectory({ onRequireLogin }) {
         )}
       </div>
 
-      {/* POP-UP "EN SAVOIR PLUS" */}
+      {/* MODALE PORTFOLIO ÉLÉGANTE ET CLASSE (SANS FIORITURES) */}
       {selectedCreator && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md overflow-y-auto"
           onClick={() => setSelectedCreator(null)}
           role="dialog"
           aria-modal="true"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl"
+            className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-10 space-y-8 relative shadow-2xl my-8"
           >
-            <div className="flex justify-between items-start border-b border-neutral-800 pb-4">
-              <div className="flex items-center gap-4">
+            {/* Bouton Fermer */}
+            <button
+              type="button"
+              onClick={() => setSelectedCreator(null)}
+              className="absolute top-5 right-5 text-neutral-400 hover:text-white font-bold text-lg cursor-pointer bg-neutral-950 rounded-full h-9 w-9 flex items-center justify-center border border-neutral-800"
+            >
+              ✕
+            </button>
+
+            {/* En-tête du portfolio de l'artiste */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-neutral-800 pb-6">
+              <div className="flex items-center gap-5">
                 <img
                   src={selectedCreator.avatar}
                   alt={selectedCreator.name}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-amber-500/40"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-amber-500/50 shadow-lg"
                 />
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-white">{t.modalTitle}</h2>
-                  <p className="text-sm font-bold text-neutral-200 mt-1">{selectedCreator.name}</p>
-                  <p className="text-xs text-amber-400 font-bold">
+                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded font-bold uppercase tracking-wider">
+                    PORTFOLIO CERTIFIÉ
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-white mt-1.5">{selectedCreator.name}</h2>
+                  <p className="text-xs sm:text-sm text-amber-400 font-semibold mt-0.5">
                     {selectedCreator.specialty[L]} • {selectedCreator.city}
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedCreator(null)}
-                className="text-neutral-400 hover:text-white font-bold text-xl cursor-pointer bg-neutral-950 rounded-full h-8 w-8 flex items-center justify-center border border-neutral-800"
-              >
-                ✕
-              </button>
+
+              <div className="text-left sm:text-right space-y-1 w-full sm:w-auto bg-neutral-950 sm:bg-transparent p-4 sm:p-0 rounded-2xl border sm:border-0 border-neutral-800">
+                <span className="text-[10px] text-neutral-400 uppercase tracking-widest">{t.fromPrice}</span>
+                <p className="text-2xl font-black text-amber-400">{selectedCreator.starting_price} €</p>
+                <button
+                  type="button"
+                  onClick={(e) => handleBookAction(e, selectedCreator)}
+                  className="w-full sm:w-auto mt-2 bg-amber-500 hover:bg-amber-400 text-neutral-950 px-6 py-2.5 rounded-xl font-bold text-xs transition shadow-lg cursor-pointer"
+                >
+                  {t.btnBook} / Réserver
+                </button>
+              </div>
             </div>
 
             {!isLoggedIn && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 text-[11px] text-amber-300 leading-relaxed">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-xs text-amber-300 leading-relaxed">
                 {t.noticePlatformOnly}
               </div>
             )}
 
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">{t.modalBioTitle}</h4>
-              <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+            {/* Biographie & Style */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest">{t.modalBioTitle}</h4>
+              <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed bg-neutral-950 p-5 rounded-2xl border border-neutral-800 shadow-inner">
                 {selectedCreator.bio[L]}
               </p>
             </div>
 
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">{t.modalEquipTitle}</h4>
-              <ul className="text-xs text-neutral-300 space-y-1 bg-neutral-950 p-4 rounded-2xl border border-neutral-800 list-disc list-inside">
+            {/* Matériel Pro */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest">{t.modalEquipTitle}</h4>
+              <div className="flex flex-wrap gap-2 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
                 {selectedCreator.equipment.map((eq, i) => (
-                  <li key={i}>{eq}</li>
+                  <span key={i} className="text-xs bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded-xl text-neutral-300 font-medium">
+                    🛠️ {eq}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">{t.modalPortfolioTitle}</h4>
-              <div className="grid grid-cols-2 gap-3">
+            {/* Galerie d'œuvres / Portfolio Pro épuré */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest">{t.modalPortfolioTitle}</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {selectedCreator.portfolio.map((imgUrl, i) => (
-                  <img
-                    key={i}
-                    src={imgUrl}
-                    alt={`${selectedCreator.name} — ${i + 1}`}
-                    loading="lazy"
-                    className="rounded-xl h-32 w-full object-cover border border-neutral-800"
-                  />
+                  <div key={i} className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 group shadow-md">
+                    <img
+                      src={imgUrl}
+                      alt={`${selectedCreator.name} — ${i + 1}`}
+                      loading="lazy"
+                      className="w-full h-52 object-cover group-hover:scale-105 transition duration-300"
+                    />
+                  </div>
                 ))}
               </div>
-            </div>
-
-            <div className="pt-4 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] text-neutral-500 block">{t.fromPrice}</span>
-                <span className="text-xl font-black text-amber-400">{selectedCreator.starting_price} €</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={(e) => handleBookAction(e, selectedCreator)}
-                className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-neutral-950 px-8 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
-              >
-                {t.btnBook}
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* VRAIE FENÊTRE MODALE (POP-IN) D'INSCRIPTION / CONNEXION SUR-MESURE */}
+      {/* MODALE D'INSCRIPTION / CONNEXION SUR-MESURE */}
       {showModalAuth && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
           <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 relative shadow-2xl">
@@ -399,7 +408,6 @@ export default function CreatorDirectory({ onRequireLogin }) {
               ✕
             </button>
 
-            {/* Onglets bascule Inscription / Connexion */}
             <div className="flex bg-neutral-950 p-1.5 rounded-2xl border border-neutral-800">
               <button
                 type="button"

@@ -7,10 +7,10 @@ import { LanguageProvider, useLanguage } from "./context/LanguageContext";
 
 import HomePage from "./components/HomePage";
 import CreatorDirectory from "./components/CreatorDirectory";
-import ForumPage from "./components/ForumPage";
 import AdminForumModeration from "./components/AdminForumModeration";
 import EspaceMembrePro from "./components/EspaceMembrePro";
 import Abonnes from "./components/Abonnes";
+import About from "./components/About";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import CGUPage from "./components/CGUPage";
@@ -21,19 +21,19 @@ import AuthModal from "./components/AuthModal";
 // Initialisation de Google Analytics 4
 ReactGA.initialize("G-FVFKNP75BZ");
 
-// Configuration des onglets avec "Tarifs" en FR et "Pricing" en EN
+// Configuration des onglets simplifiés avec "À propos"
 const NAV_LINKS_DATA = {
   fr: [
     { to: "/", label: "Accueil / Stock" },
     { to: "/creators", label: "Créateurs" },
-    { to: "/forum", label: "Forum" },
+    { to: "/about", label: "À propos" },
     { to: "/espace-pro", label: "Espace Pro" },
     { to: "/abonnes", label: "Tarifs" },
   ],
   en: [
     { to: "/", label: "Home / Stock" },
     { to: "/creators", label: "Creators" },
-    { to: "/forum", label: "Forum" },
+    { to: "/about", label: "About" },
     { to: "/espace-pro", label: "Pro Space" },
     { to: "/abonnes", label: "Pricing" },
   ],
@@ -211,7 +211,7 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
           <Route path="/creators" element={<CreatorDirectory onRequireLogin={openAuth} />} />
-          <Route path="/forum" element={<ForumPage onRequireLogin={openAuth} />} />
+          <Route path="/about" element={<About />} />
           
           {/* Protection stricte par URL : Seul kultordi@gmail.com a accès à /admin/moderation */}
           <Route 
