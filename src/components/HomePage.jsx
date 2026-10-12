@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from "react";
+﻿@"
+import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
@@ -10,7 +11,7 @@ const ACTUALITES_ITEMS = [
     date: "Salon Pro 2026",
     title: "Ouverture des accréditations Élite & Pro - Salon de la Photo",
     summary: "Accédez en avant-première aux masterclasses et plannings exclusifs à la Grande Halle de la Villette.",
-    fullContent: "Le grand Salon Photo & Vidéo bat actuellement son plein à la Grande Halle de la Villette ! Quatre jours exceptionnels dédiés à la pratique, aux masterclasses de pointe, aux tests de matériel en situation réelle (studio, macro, architecture) et aux rencontres exclusives avec l'élite de la création visuelle française.",
+    fullContent: "Le grand Salon Photo & Vidéo bat actuellement son plein à la Grande Halle de la Villette ! Quatre jours exceptionnels dédiés à la pratique, aux masterclasses de pointe, aux tests de matériel en situation réelle et aux rencontres exclusives avec l'élite de la création visuelle française.",
     image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80",
   },
   {
@@ -18,7 +19,7 @@ const ACTUALITES_ITEMS = [
     date: "Octobre 2026",
     title: "Mise à jour des certifications nationales de l'audiovisuel",
     summary: "Renforcement des protocoles de sécurité pour les tournages en espace public et en milieu aquatique.",
-    fullContent: "Dans le cadre de notre démarche d'élite, cette mise à jour intègre de nouvelles normes obligatoires pour tous les prestataires du réseau Boké One intervenant sur le domaine public en Île-de-France.",
+    fullContent: "Dans le cadre de notre démarche d'élite, cette mise à jour intègre de nouvelles normes obligatoires pour tous les prestataires du réseau Boké One intervenant sur le domaine public.",
     image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=800&q=80",
   },
 ];
@@ -29,7 +30,7 @@ const ANNONCES_ITEMS = [
     date: "OFFRE D'EMPLOI / CASTING",
     title: "Recherche Chef Opérateur & Pilote Drone S1-S3 (Série Docu)",
     summary: "🔒 Offre réservée aux adhérents Élite : Tournage 3 semaines en région PACA à partir de Novembre.",
-    fullContent: "Tournage d'une série documentaire de 4 épisodes. Expérience exigée en drone FPV et caméras cinéma grand capteur. Rémunération selon grille conventionnelle + défraiements complets.",
+    fullContent: "Tournage d'une série documentaire de 4 épisodes. Expérience exigée en drone FPV et caméras cinéma grand capteur.",
     image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80",
     restricted: true,
   },
@@ -38,7 +39,7 @@ const ANNONCES_ITEMS = [
     date: "MISSION PACKSHOT",
     title: "Photographe Studio Luxe — Campagne Horlogerie Paris 8e",
     summary: "🔒 Offre réservée aux adhérents : Shooting 2 jours en studio avec retouche haute définition.",
-    fullContent: "Mandat confié par une grande maison horlogère parisienne. Maîtrise des éclairages Profoto et focus stacking exigée. Portfolio haut de gamme requis.",
+    fullContent: "Mandat confié par une grande maison horlogère parisienne. Maîtrise des éclairages studio exigée.",
     image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80",
     restricted: true,
   },
@@ -51,7 +52,7 @@ export default function HomePage({ onRequireLogin }) {
 
   const isEn = lang === "en";
 
-  const [activeSubTab, setActiveSubTab] = useState("actualites"); // "actualites" ou "annonces"
+  const [activeSubTab, setActiveSubTab] = useState("actualites");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -70,7 +71,7 @@ export default function HomePage({ onRequireLogin }) {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/creators?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/creators?search=\${encodeURIComponent(searchQuery)}`);
     } else {
       navigate("/creators");
     }
@@ -79,14 +80,14 @@ export default function HomePage({ onRequireLogin }) {
   const item = currentList[currentIndex] || currentList[0];
 
   return (
-    <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans selection:bg-amber-500 selection:text-neutral-950 pb-16">
+    <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-16">
       
-      {/* Filet gris simple de séparation sous la navbar (boutons superflus supprimés) */}
+      {/* Filet gris simple de séparation sous la navbar */}
       <div className="w-full border-b border-neutral-800/80 mb-6" />
 
       <div className="max-w-6xl mx-auto px-4 space-y-8">
 
-        {/* 1. MOTEUR DE RECHERCHE REMONTÉ EN HAUT */}
+        {/* 1. MOTEUR DE RECHERCHE EN HAUT */}
         <div className="bg-neutral-900/80 border border-neutral-800 p-4 rounded-2xl shadow-xl backdrop-blur-md">
           <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3 items-center">
             <div className="relative flex-1 w-full">
@@ -116,11 +117,11 @@ export default function HomePage({ onRequireLogin }) {
             <button
               type="button"
               onClick={() => setActiveSubTab("actualites")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+              className={\`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 \${
                 activeSubTab === "actualites"
                   ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                   : "text-neutral-400 hover:text-white"
-              }`}
+              }\`}
             >
               <span>⚡</span> {isEn ? "News" : "Actualités"}
             </button>
@@ -128,11 +129,11 @@ export default function HomePage({ onRequireLogin }) {
             <button
               type="button"
               onClick={() => setActiveSubTab("annonces")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+              className={\`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 \${
                 activeSubTab === "annonces"
                   ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                   : "text-neutral-400 hover:text-white"
-              }`}
+              }\`}
             >
               <span>📢</span> {isEn ? "Ads (Job Offers)" : "Annonces (Offres d'emploi)"}
             </button>
@@ -199,9 +200,9 @@ export default function HomePage({ onRequireLogin }) {
                     e.stopPropagation();
                     setCurrentIndex(idx);
                   }}
-                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                  className={\`h-1.5 rounded-full transition-all cursor-pointer \${
                     currentIndex === idx ? "w-6 bg-amber-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
-                  }`}
+                  }\`}
                 />
               ))}
             </div>
@@ -243,3 +244,4 @@ export default function HomePage({ onRequireLogin }) {
     </div>
   );
 }
+"@ | Set-Content -Path "src/components/HomePage.jsx" -Encoding utf8
