@@ -57,4 +57,327 @@ const ANNONCES_ITEMS = [
 ];
 
 // Galerie Planche Contact des Créatifs
-const PLANCHE_CONTACT_ITEMS =
+const PLANCHE_CONTACT_ITEMS = [
+  { id: 1, title: "Studio Luxe & Horlogerie", author: "Marc L.", category: "Studio", image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80" },
+  { id: 2, title: "Reportage Humaniste", author: "Sophie T.", category: "Reportage", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" },
+  { id: 3, title: "Architecture & Design", author: "Antoine V.", category: "Architecture", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" },
+  { id: 4, title: "Mode & Haute Couture", author: "Elena R.", category: "Mode", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80" },
+  { id: 5, title: "Prises de vue FPV Drone", author: "Lucas M.", category: "Drone", image: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=600&q=80" },
+  { id: 6, title: "Portrait d'Auteur", author: "Claire B.", category: "Portrait", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" },
+];
+
+const SEARCH_SUGGESTIONS = {
+  fr: ["Portrait", "Reportage", "Mariage", "Corporate", "Packshot", "Architecture", "Mode", "Drone", "Vidéaste"],
+  en: ["Portrait", "Editorial", "Wedding", "Corporate", "Product", "Architecture", "Fashion", "Drone", "Videographer"],
+};
+
+export default function HomePage({ onRequireLogin }) {
+  const { lang } = useLanguage();
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const isEn = lang === "en";
+
+  const [activeSubTab, setActiveSubTab] = useState("actualites");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedNews, setSelectedNews] = useState(null);
+
+  const currentList = activeSubTab === "actualites" ? ACTUALITES_ITEMS : ANNONCES_ITEMS;
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % currentList.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [activeSubTab, currentList.length]);
+
+  useEffect(() => {
+    if (!selectedNews) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") setSelectedNews(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedNews]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/creators?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate("/creators");
+    }
+  };
+
+  const item = currentList[currentIndex] || currentList[0];
+  const suggestions = SEARCH_SUGGESTIONS[isEn ? "en" : "fr"];
+
+  return (
+    <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20">
+      <div className="w-full border-b border-neutral-800/80 mb-8" />
+      <div className="max-w-5xl mx-auto px-4 space-y-12">
+        
+        <h1 className="sr-only">
+          {isEn
+            ? "Boké One – Professional photographers network and national image bank in France"
+            : "Boké One – Réseau de photographes professionnels et banque d'images nationale en France"}
+        </h1>
+
+        {/* 1. MOTEUR DE RECHERCHE */}
+        <section aria-label={isEn ? "Search a photographer or creator" : "Rechercher un photographe ou un créateur"}>
+          <div className="bg-neutral-900/60 border border-neutral-800/80 p-4 rounded-2xl shadow-xl backdrop-blur-md">
+            <form onSubmit={handleSearchSubmit} role="search" className="flex flex-col sm:flex-row gap-3 items-center">
+              <div className="relative flex-1 w-full">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm" aria-hidden="true">
+                  🔍
+                </span>
+                <input
+                  type="search"
+                  aria-label={isEn ? "Search" : "Recherche"}
+                  placeholder={
+                    isEn
+                      ? "Search a photographer, videographer, drone pilot, specialty, city..."
+                      : "Rechercher un photographe, vidéaste, pilote de drone, spécialité, ville..."
+                  }
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-11 pr-4 py-3 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-8 py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer shrink-0"
+              >
+                {isEn ? "Search" : "Rechercher"}
+              </button>
+            </form>
+          </div>
+          <nav
+            aria-label={isEn ? "Popular specialties" : "Spécialités populaires"}
+            className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-neutral-500"
+          >
+            <span className="uppercase tracking-wider text-neutral-600">
+              {isEn ? "Popular" : "Populaires"}
+            </span>
+            {suggestions.map((s) => (
+              <Link
+                key={s}
+                to={`/creators?search=${encodeURIComponent(s)}`}
+                className="hover:text-amber-400 transition"
+              >
+                {s}
+              </Link>
+            ))}
+          </nav>
+        </section>
+
+        {/* 2. ONGLETS ACTUALITÉS / ANNONCES */}
+        <section
+          className="space-y-4"
+          aria-label={isEn ? "News and member job offers" : "Actualités et offres réservées aux adhérents"}
+        >
+          <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-3" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeSubTab === "actualites"}
+              onClick={() => setActiveSubTab("actualites")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                activeSubTab === "actualites"
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                  : "text-neutral-400 hover:text-white border border-transparent"
+              }`}
+            >
+              <span aria-hidden="true">⚡</span> {isEn ? "News" : "Actualités"}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeSubTab === "annonces"}
+              onClick={() => setActiveSubTab("annonces")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                activeSubTab === "annonces"
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                  : "text-neutral-400 hover:text-white border border-transparent"
+              }`}
+            >
+              <span aria-hidden="true">📢</span> {isEn ? "Ads (Job Offers)" : "Annonces (Offres d'emploi)"}
+            </button>
+          </div>
+
+          <article
+            onClick={() => setSelectedNews(item)}
+            className="bg-neutral-900/60 border border-neutral-800/80 hover:border-amber-500/40 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer group"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-5 relative overflow-hidden rounded-2xl border border-neutral-800 h-48 md:h-56">
+                <img
+                  src={item.image}
+                  alt={item.alt || item.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <span className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2.5 py-1 rounded-md">
+                  {item.date}
+                </span>
+              </div>
+              <div className="md:col-span-7 space-y-4">
+                <span className="inline-block text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full">
+                  {activeSubTab === "actualites"
+                    ? isEn ? "Network Information" : "Information Réseau"
+                    : isEn ? "Members Only" : "Réservé Adhérents"}
+                </span>
+                <h2 className="text-xl md:text-2xl font-black text-white group-hover:text-amber-400 transition leading-tight">
+                  {item.title}
+                </h2>
+                <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">{item.summary}</p>
+                <div className="pt-2">
+                  {!isLoggedIn && item.restricted ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRequireLogin?.();
+                      }}
+                      className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-5 py-2.5 rounded-xl text-xs transition shadow-lg cursor-pointer"
+                    >
+                      {isEn ? "🔒 Log in to apply" : "🔒 Se connecter pour postuler à cette offre"}
+                    </button>
+                  ) : (
+                    <span className="text-xs font-bold text-amber-400 underline">
+                      {isEn ? "Read full details →" : "Lire le détail complet →"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-1.5 mt-4">
+              {currentList.map((_, idx) => (
+                <span
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentIndex(idx);
+                  }}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    currentIndex === idx ? "w-6 bg-amber-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                  }`}
+                />
+              ))}
+            </div>
+          </article>
+        </section>
+
+        {/* 3. GALERIE PLANCHE CONTACT RESPONSIVE DES CRÉATIFS */}
+        <section className="space-y-6 pt-4 border-t border-neutral-900">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                {isEn ? "National Directory" : "Répertoire National"}
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-white">
+                {isEn ? "Creators' Contact Sheet" : "Planche Contact des Créatifs"}
+              </h2>
+            </div>
+            <Link
+              to="/creators"
+              className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1"
+            >
+              {isEn ? "View all →" : "Voir tout →"}
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            {PLANCHE_CONTACT_ITEMS.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => navigate(`/creators?search=${encodeURIComponent(c.category)}`)}
+                className="group relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 transition cursor-pointer aspect-square"
+              >
+                <img
+                  src={c.image}
+                  alt={c.title}
+                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent opacity-80 group-hover:opacity-90 transition" />
+                <div className="absolute bottom-2 left-2 right-2 space-y-0.5">
+                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block">
+                    {c.category}
+                  </span>
+                  <p className="text-xs font-bold text-white truncate">{c.title}</p>
+                  <p className="text-[10px] text-neutral-400 truncate">{c.author}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 4. INVITATION PHOTOGRAPHES */}
+        <section className="border-t border-neutral-800/80 pt-8 text-center space-y-3">
+          <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+            {isEn
+              ? "Photographers & videographers: showcase your portfolio"
+              : "Photographes & vidéastes : valorisez votre portfolio"}
+          </h2>
+          <p className="text-xs sm:text-sm text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+            {isEn
+              ? "Join the elite network: verified profile, visibility with demanding clients, access to missions and to the national image bank."
+              : "Rejoignez le réseau d'élite : profil vérifié, visibilité auprès de clients exigeants, accès aux missions et à la banque d'images nationale."}
+          </p>
+          <Link
+            to="/abonnes"
+            className="inline-block text-xs font-bold text-amber-400 hover:text-amber-300 underline underline-offset-4 transition"
+          >
+            {isEn ? "Discover memberships →" : "Découvrir les abonnements →"}
+          </Link>
+        </section>
+
+      </div>
+
+      {/* MODALE DÉTAIL ACTU / ANNONCE */}
+      {selectedNews && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={selectedNews.title}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setSelectedNews(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl space-y-5 p-6 sm:p-8 relative"
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedNews(null)}
+              aria-label={isEn ? "Close" : "Fermer"}
+              className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
+            >
+              ✕
+            </button>
+            <div className="space-y-1">
+              <span className="text-xs text-amber-400 font-bold">{selectedNews.date}</span>
+              <h2 className="text-xl sm:text-2xl font-black text-white">{selectedNews.title}</h2>
+            </div>
+            <div className="relative h-64 rounded-2xl overflow-hidden border border-neutral-800 shadow-inner">
+              <img
+                src={selectedNews.image}
+                alt={selectedNews.alt || selectedNews.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">{selectedNews.fullContent}</p>
+            <button
+              type="button"
+              onClick={() => setSelectedNews(null)}
+              className="w-full bg-amber-500 text-neutral-950 font-bold py-3.5 rounded-xl text-xs cursor-pointer hover:bg-amber-400 transition shadow-lg"
+            >
+              {isEn ? "Close" : "Fermer"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
