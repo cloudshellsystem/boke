@@ -84,7 +84,7 @@ export default function HomePage({ onRequireLogin }) {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(\/creators?search=\\);
+      navigate(`/creators?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
       navigate("/creators");
     }
@@ -140,7 +140,7 @@ export default function HomePage({ onRequireLogin }) {
             {suggestions.map((s) => (
               <Link
                 key={s}
-                to={\/creators?search=\\}
+                to={`/creators?search=${encodeURIComponent(s)}`}
                 className="hover:text-amber-400 transition"
               >
                 {s}
@@ -158,7 +158,11 @@ export default function HomePage({ onRequireLogin }) {
               role="tab"
               aria-selected={activeSubTab === "actualites"}
               onClick={() => setActiveSubTab("actualites")}
-              className={\px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 \\}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                activeSubTab === "actualites"
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                  : "text-neutral-400 hover:text-white border border-transparent"
+              }`}
             >
               <span aria-hidden="true">⚡</span> {isEn ? "News" : "Actualités"}
             </button>
@@ -167,7 +171,11 @@ export default function HomePage({ onRequireLogin }) {
               role="tab"
               aria-selected={activeSubTab === "annonces"}
               onClick={() => setActiveSubTab("annonces")}
-              className={\px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 \\}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                activeSubTab === "annonces"
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                  : "text-neutral-400 hover:text-white border border-transparent"
+              }`}
             >
               <span aria-hidden="true">📢</span> {isEn ? "Ads (Job Offers)" : "Annonces (Offres d'emploi)"}
             </button>
@@ -226,7 +234,9 @@ export default function HomePage({ onRequireLogin }) {
                     e.stopPropagation();
                     setCurrentIndex(idx);
                   }}
-                  className={\h-1.5 rounded-full transition-all cursor-pointer \\}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    currentIndex === idx ? "w-6 bg-amber-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                  }`}
                 />
               ))}
             </div>
