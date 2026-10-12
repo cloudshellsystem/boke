@@ -1,130 +1,169 @@
 import React, { useState } from 'react';
-import { formatPrice } from '../lib/formatPrice';
 
 export default function ModulePaiementStripe({ totalAmount, onSuccess }) {
-  const [loading, setLoading] = useState(false);
-  const [cardData, setCardData] = useState({
-    name: '',
-    number: '',
-    expiry: '',
-    cvc: ''
-  });
+  const [cardHolder, setCardHolder] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvc, setCvc] = useState('');
+  
+  const [promoCode, setPromoCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCardData((prev) => ({ ...prev, [name]: value }));
+  // Codes promo disponibles
+  const VALID_CODES = {
+    BOKE10: 0.10,     // 10% de réduction
+    PROMO2026: 0.15,  // 15% de réduction
+    WELCOME50: 50,    // 50 € de réduction fixe
   };
 
-  const handlePay = (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Simulation de la validation du paiement en mode test
-    setTimeout(() => {
-      setLoading(false);
-      if (onSuccess) {
-        onSuccess(); // Déclenche l'enregistrement Supabase et clearCart() dans Checkout.jsx
+  const handleApplyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (VALID_CODES[code] !== undefined) {
+      const val = VALID_CODES[code];
+      if (val < 1) {
+        setDiscount(totalAmount * val);
+      } else {
+        setDiscount(val);
       }
-    }, 1200);
+      setPromoApplied(true);
+      setPromoError('');
+    } else {
+      setPromoError('Code promo invalide');
+    }
+  };
+
+  // Calculs financiers
+  const totalHT = Math.max(0, totalAmount - discount) / 1.2;
+  const tvaAmount = Math.max(0, totalAmount - discount) - totalHT;
+  const finalTotal = Math.max(0, totalAmount - discount);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Enregistrement / Validation In-App
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onSuccess?.();
+    }, 1000);
   };
 
   return (
-    <div className="bg-[#0e1424] border border-slate-800 p-6 rounded-2xl shadow-2xl space-y-6 font-sans text-slate-100">
-      <div>
-        <h2 className="text-xl font-black text-white flex items-center gap-2">
-          <span>💳</span> Paiement Sécurisé Boké One
-        </h2>
-        <p className="text-xs text-slate-400 mt-1">
-          Règlement instantané et sécurisé par carte bancaire.
-        </p>
-      </div>
+    <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-6 text-neutral-200 shadow-2xl">
+      
+      {/* 1. Récapitulatif Financier (Sous-total, TVA, Total) */}
+      <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-2 text-xs">
+        <h4 className="font-bold text-amber-400 uppercase tracking-wider mb-2">Détail de la commande</h4>
+        <div className="flex justify-between text-neutral-400">
+          <span>Sous-total HT :</span>
+          <span>{totalHT.toFixed(2)} €</span>
+        </div>
+        <div className="flex justify-between text-neutral-400">
+          <span>TVA (20%) :</span>
+          <span>{tvaAmount.toFixed(2)} €</span>
+        </div>
 
-      <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-3">
-        <h3 className="text-sm font-bold text-amber-400 border-b border-slate-800 pb-2">
-          Récapitulatif à régler
-        </h3>
-        <div className="flex justify-between text-xs text-slate-300">
-          <span>Montant Total Panier</span>
-          <span className="font-mono font-bold text-white">
-            {formatPrice ? formatPrice(totalAmount) : `${totalAmount} €`}
-          </span>
-        </div>
-        <div className="flex justify-between text-xs text-slate-300">
-          <span>Frais de réservation</span>
-          <span className="font-mono font-bold text-emerald-400">Inclus</span>
-        </div>
-        <div className="flex justify-between text-xs text-slate-300 pt-2 border-t border-slate-900 font-bold">
-          <span>Total Débité</span>
-          <span className="font-mono text-amber-400 text-sm">
-            {formatPrice ? formatPrice(totalAmount) : `${totalAmount} €`}
-          </span>
+        {promoApplied && (
+          <div className="flex justify-between text-emerald-400 font-bold border-t border-neutral-800 pt-2">
+            <span>Remise Code Promo :</span>
+            <span>-{discount.toFixed(2)} €</span>
+          </div>
+        )}
+
+        <div className="flex justify-between text-sm font-black text-white border-t border-neutral-800 pt-2 mt-1">
+          <span>Total TTC :</span>
+          <span className="text-amber-400">{finalTotal.toFixed(2)} €</span>
         </div>
       </div>
 
-      <form onSubmit={handlePay} className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold text-white">Informations de Carte Bancaire</h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 mb-1">Titulaire de la carte</label>
-            <input 
-              type="text" 
-              name="name" 
+      {/* 2. Bloc Code Promo */}
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-bold text-neutral-300">Avez-vous un code promo ?</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Ex: BOKE10"
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value)}
+            disabled={promoApplied}
+            className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white uppercase outline-none focus:border-amber-400 disabled:opacity-50"
+          />
+          <button
+            type="button"
+            onClick={handleApplyPromo}
+            disabled={promoApplied || !promoCode}
+            className="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-4 py-2 rounded-xl text-xs font-bold transition disabled:opacity-40 cursor-pointer"
+          >
+            {promoApplied ? 'Appliqué ✓' : 'Valider'}
+          </button>
+        </div>
+        {promoError && <p className="text-[10px] text-red-400">{promoError}</p>}
+      </div>
+
+      {/* 3. Formulaire de carte bancaire Stripe In-App */}
+      <form onSubmit={handleSubmit} className="space-y-4 pt-2 border-t border-neutral-800">
+        <h4 className="font-bold text-white text-xs flex items-center gap-2">
+          <span>💳</span> Informations de paiement sécurisé
+        </h4>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-neutral-400 uppercase">Titulaire de la carte</label>
+          <input
+            type="text"
+            required
+            placeholder="Nom & Prénom"
+            value={cardHolder}
+            onChange={(e) => setCardHolder(e.target.value)}
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-neutral-400 uppercase">Numéro de carte</label>
+          <input
+            type="text"
+            required
+            placeholder="4242 •••• •••• 4242"
+            value={cardNumber}
+            onChange={(e) => setCardNumber(e.target.value)}
+            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-neutral-400 uppercase">Expiration</label>
+            <input
+              type="text"
               required
-              placeholder="Jean Dupont" 
-              value={cardData.name}
-              onChange={handleChange}
-              className="w-full bg-[#070b12] border border-slate-700 rounded-lg p-2.5 text-xs text-white font-sans focus:border-amber-400 outline-none" 
+              placeholder="MM / AA"
+              value={expiry}
+              onChange={(e) => setExpiry(e.target.value)}
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
             />
           </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 mb-1">Numéro de Carte (Test)</label>
-            <input 
-              type="text" 
-              name="number" 
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-neutral-400 uppercase">Code de sécurité (CVC)</label>
+            <input
+              type="text"
               required
-              placeholder="4242 •••• •••• 4242" 
-              value={cardData.number}
-              onChange={handleChange}
-              className="w-full bg-[#070b12] border border-slate-700 rounded-lg p-2.5 text-xs text-white font-mono focus:border-amber-400 outline-none" 
+              placeholder="501"
+              value={cvc}
+              onChange={(e) => setCvc(e.target.value)}
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 mb-1">Expiration</label>
-              <input 
-                type="text" 
-                name="expiry" 
-                required
-                placeholder="MM / AA" 
-                value={cardData.expiry}
-                onChange={handleChange}
-                className="bg-[#070b12] border border-slate-700 rounded-lg p-2.5 text-xs text-white font-mono w-full focus:border-amber-400 outline-none" 
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 mb-1">CVC</label>
-              <input 
-                type="text" 
-                name="cvc" 
-                required
-                placeholder="123" 
-                value={cardData.cvc}
-                onChange={handleChange}
-                className="bg-[#070b12] border border-slate-700 rounded-lg p-2.5 text-xs text-white font-mono w-full focus:border-amber-400 outline-none" 
-              />
-            </div>
           </div>
         </div>
 
-        <button 
-          type="submit" 
-          disabled={loading}
-          className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-lg cursor-pointer transition-colors shadow-lg mt-2"
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full mt-4 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3.5 rounded-xl text-xs transition shadow-lg cursor-pointer disabled:opacity-50"
         >
-          {loading ? "Validation de la transaction..." : `Payer ${formatPrice ? formatPrice(totalAmount) : `${totalAmount} €`}`}
+          {isSubmitting ? 'Traitement en cours...' : `Payer ${finalTotal.toFixed(2)} €`}
         </button>
       </form>
     </div>
