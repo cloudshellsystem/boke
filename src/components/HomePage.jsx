@@ -10,8 +10,10 @@ const ACTUALITES_ITEMS = [
     title: "Paris Photo Grand Palais — Accréditations Galerie & Presse",
     summary: "Rencontrez les galeristes, acheteurs d'art et éditeurs majeurs au Grand Palais.",
     fullContent: "Boké One organise un parcours réservé à ses membres lors du rendez-vous international de la photographie d'art au Grand Palais. Accès exclusif aux signatures, vernissages privés et rencontres avec les directeurs artistiques.",
-    image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80",
-    alt: "Galerie de photographie d'art au Grand Palais",
+    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80",
+    alt: "Exposition de photographie au Grand Palais",
+    externalUrl: "https://www.parisphoto.com",
+    externalLabel: "Site officiel Paris Photo ↗"
   },
   {
     id: 2,
@@ -21,6 +23,8 @@ const ACTUALITES_ITEMS = [
     fullContent: "Le rendez-vous incontournable des passionnés d'image et de son haute fidélité ouvre ses portes au Palais des Congrès. Tests de matériel cinéma, écoutes studio et conférences dédiées aux nouvelles technologies audiovisuelles.",
     image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80",
     alt: "Équipement audio et studio au Paris Audio Video Show",
+    externalUrl: "https://www.parisaudiovideoshow.com",
+    externalLabel: "Site officiel Paris Audio Video Show ↗"
   },
   {
     id: 3,
@@ -217,7 +221,7 @@ export default function HomePage({ onRequireLogin }) {
           </nav>
         </section>
 
-        {/* CARROUSEL ACTUALITÉS (ENCART HAUTEUR RÉDUITE) */}
+        {/* CARROUSEL ACTUALITÉS */}
         <section className="space-y-3">
           <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-2.5" role="tablist">
             <button
@@ -253,7 +257,7 @@ export default function HomePage({ onRequireLogin }) {
             className="bg-neutral-900/60 border border-neutral-800/80 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-xl transition-all duration-300 cursor-pointer group"
           >
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-              <div className="md:col-span-4 relative overflow-hidden rounded-xl border border-neutral-800 h-36 sm:h-44">
+              <div className="md:col-span-4 relative overflow-hidden rounded-xl border border-neutral-800 h-36 sm:h-44 bg-neutral-950">
                 <img
                   src={item.image}
                   alt={item.alt || item.title}
@@ -274,7 +278,8 @@ export default function HomePage({ onRequireLogin }) {
                   {item.title}
                 </h2>
                 <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">{item.summary}</p>
-                <div className="pt-1">
+                
+                <div className="pt-1 flex items-center gap-4">
                   {!isLoggedIn && item.restricted ? (
                     <button
                       type="button"
@@ -290,6 +295,18 @@ export default function HomePage({ onRequireLogin }) {
                     <span className="text-xs font-bold text-amber-400 underline">
                       {isEn ? "Read full details →" : "Lire le détail complet →"}
                     </span>
+                  )}
+
+                  {item.externalUrl && (
+                    <a
+                      href={item.externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs font-bold text-neutral-300 hover:text-white bg-neutral-950 border border-neutral-800 hover:border-amber-500/40 px-3 py-1.5 rounded-lg transition"
+                    >
+                      {item.externalLabel}
+                    </a>
                   )}
                 </div>
               </div>
@@ -311,10 +328,10 @@ export default function HomePage({ onRequireLogin }) {
           </article>
         </section>
 
-        {/* FILET DE SÉPARATION ÉLÉGANT */}
+        {/* FILET DE SÉPARATION */}
         <div className="w-full border-b border-neutral-900 my-6" />
 
-        {/* GALERIE PLANCHE CONTACT SUR 3 ÉTAGES (DIRECTEMENT PERCEPTIBLE) */}
+        {/* GALERIE PLANCHE CONTACT SUR 3 ÉTAGES */}
         <section className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
@@ -352,7 +369,6 @@ export default function HomePage({ onRequireLogin }) {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent opacity-85 group-hover:opacity-95 transition" />
 
-                  {/* Bouton Like Persistant (+1 / -1) */}
                   <button
                     type="button"
                     onClick={(e) => handleLikeToggle(e, c.id)}
@@ -436,7 +452,7 @@ export default function HomePage({ onRequireLogin }) {
               <h2 className="text-lg sm:text-xl font-black text-white leading-snug">{selectedNews.title}</h2>
             </div>
 
-            <div className="relative h-44 rounded-xl overflow-hidden border border-neutral-800 shadow-inner">
+            <div className="relative h-44 rounded-xl overflow-hidden border border-neutral-800 shadow-inner bg-neutral-950">
               <img
                 src={selectedNews.image}
                 alt={selectedNews.alt || selectedNews.title}
@@ -446,7 +462,17 @@ export default function HomePage({ onRequireLogin }) {
 
             <p className="text-xs text-neutral-300 leading-relaxed">{selectedNews.fullContent}</p>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              {selectedNews.externalUrl && (
+                <a
+                  href={selectedNews.externalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-neutral-950 hover:bg-neutral-800 text-amber-400 border border-amber-500/30 font-bold py-3 px-4 rounded-xl text-xs text-center transition"
+                >
+                  {selectedNews.externalLabel}
+                </a>
+              )}
               <Link
                 to="/about"
                 onClick={() => setSelectedNews(null)}
