@@ -17,13 +17,16 @@ const CGU_TEXT = {
     sec3Title: "3. Droit au Respect de la Vie Privée & Droit à l'Image",
     sec3Desc: "Chaque créateur/contributeur garantit être titulaire des autorisations d'exploitation du droit à l'image et du droit au respect de la vie privée des personnes, biens ou propriétés privées reconnaissables figurant dans ses œuvres (autorisations de captation, autorisations de vol drone 2026). BOKÉ ONE s'engage à respecter les réglementations sur la protection des données personnelles (RGPD).",
     sec4Title: "4. Propriété Intellectuelle & Cessions de Droits",
-    sec4Desc: "Toutes les œuvres exposées sur BOKÉ ONE (banque d'images, clips, prestations) sont protégées par les lois internationales sur la propriété intellectuelle. Les acquisitions de licences (stock numérique) ou les commandes de prestations en salon donnent lieu à une cession de droits encadrée (territoriale, temporelle ou exclusive selon les termes négociés). Toute revente ou utilisation non autorisée est strictement interdite.",
+    sec4Desc: "Toutes les œuvres exposées sur BOKÉ ONE (banque d'images, clips, prestations) sont protégées par les lois internationales sur la propriété intellectuelle. Les acquisitions de licences (stock numérique) ou les commandes de prestations en salon donnent lieu à une cession de droits encadrée (territoriale, temporelle ou exclusive selon les termes négociés). Toute revente ou utilisation non autorisée est strictly interdite.",
     sec5Title: "5. Transactions, Commissions & Acomptes",
     sec5Desc: "Les transactions réalisées via la plateforme ou validées en salon impliquent un système de commissionnement transparent (15 % prélevés par la structure jusqu'à 100 €, puis 20 % au-delà). Les accords conclus en direct peuvent nécessiter le versement d'un acompte de sécurité (généralement 30 %) pour bloquer les plannings et valider les cessions immédiates.",
     sec6Title: "6. Protection Technique (Basse Résolution, RAW, Filigranes) & Exonération de Responsabilité",
     sec6Desc: "Afin de protéger le travail des créateurs, BOKÉ ONE applique volontairement un affichage en basse résolution et compresse les aperçus sur la plateforme, complétés par des filigranes dynamiques superposés et la désactivation des accès directs au téléchargement. Les œuvres ne sont proposées et délivrées dans leur format d'origine haute définition (RAW, fichiers natifs non compressés, Ultra-HD / 4K) qu'exclusivement lors de la finalisation de l'achat ou du paiement d'une licence valide. L'utilisateur et le créateur reconnaissent qu'aucune technologie web n'est totalement infaillible face aux tentatives d'extraction ou de capture d'écran frauduleuses. BOKÉ ONE ne pourra être tenu responsable des détournements réalisés par des tiers en dehors de son infrastructure, mais collaborera activement à l'identification de toute infraction.",
     sec7Title: "7. Responsabilité & Juridiction",
-    sec7Desc: "BOKÉ ONE s'engage à assurer la sécurité des données de ses membres et la fiabilité des outils de mise en relation. En cas de litige, les parties privilégieront une résolution amiable via la conciergerie. À défaut, les tribunaux compétents de Bruxelles (Belgique) seront saisis."
+    sec7Desc: "BOKÉ ONE s'engage à assurer la sécurité des données de ses membres et la fiabilité des outils de mise en relation. En cas de litige, les parties privilégieront une résolution amiable via la conciergerie. À défaut, les tribunaux compétents de Bruxelles (Belgique) seront saisis.",
+    sec8Title: "8. Gestion des Cookies & Protection des Données (RGPD)",
+    sec8P1: "Un cookie est un petit fichier texte déposé sur le disque dur de votre ordinateur ou de votre appareil (smartphone, tablette...) lors de la visite d'un site Internet ou de la consultation d'une publicité. Les cookies ont pour but de collecter des informations relatives à votre navigation et de vous adresser des services adaptés.",
+    sec8P2: "Sur BOKÉ ONE, les cookies sont utilisés pour assurer le bon fonctionnement technique de la plateforme (sauvegarde des sessions, gestion du panier et préférences d'affichage) et, le cas échéant, pour mesurer l'audience et l'utilisation de nos services (statistiques anonymisées). Vous pouvez à tout moment configurer votre navigateur pour accepter ou refuser les cookies."
   },
   en: {
     badge: "Legal Framework & Trust",
@@ -46,13 +49,16 @@ const CGU_TEXT = {
     sec6Title: "6. Technical Protection (Low Resolution, RAW Files, Watermarks) & Limitation of Liability",
     sec6Desc: "To protect creators' work, BOKÉ ONE intentionally displays content in low resolution and compressed preview formats across the platform, combined with overlaid dynamic watermarks and disabled direct downloads. Original high-definition files (RAW, uncompressed native assets, Ultra-HD / 4K) are exclusively provided upon full purchase completion or payment of a valid license. Users and creators acknowledge that no web technology is completely immune to fraudulent extraction or screenshots. BOKÉ ONE cannot be held liable for third-party unauthorized captures outside its infrastructure, but will actively assist in identifying infringements.",
     sec7Title: "7. Liability & Jurisdiction",
-    sec7Desc: "BOKÉ ONE is committed to ensuring member data security and networking tool reliability. In the event of a dispute, parties will prioritize an amicable resolution through conciergence. Otherwise, competent courts in Brussels (Belgium) shall have jurisdiction."
+    sec7Desc: "BOKÉ ONE is committed to ensuring member data security and networking tool reliability. In the event of a dispute, parties will prioritize an amicable resolution through conciergence. Otherwise, competent courts in Brussels (Belgium) shall have jurisdiction.",
+    sec8Title: "8. Cookies Management & Data Protection (GDPR)",
+    sec8P1: "A cookie is a small text file stored on your computer or device (smartphone, tablet...) when visiting a website or viewing an advertisement. Cookies collect information regarding your browsing activity to provide tailored services.",
+    sec8P2: "On BOKÉ ONE, cookies are used to guarantee technical platform performance (session preservation, shopping cart management, display preferences) and measure service usage (anonymous statistics). You can configure your browser preferences at any time."
   }
 };
 
 export default function CGUPage() {
   const { lang } = useLanguage();
-  const t = CGU_TEXT[lang];
+  const t = CGU_TEXT[lang] || CGU_TEXT.fr;
 
   return (
     <main className="mx-auto w-full max-w-4xl bg-neutral-950 p-6 sm:p-12 text-neutral-300 min-h-screen font-sans space-y-8">
@@ -71,7 +77,7 @@ export default function CGUPage() {
           <p className="text-neutral-400">
             <strong>{t.sec1HQ}</strong> {t.sec1Address}
             <br />
-            <strong>{t.sec1Contact}</strong> contact@boke-one.com | {t.sec1WhatsApp}
+            <strong>{t.sec1Contact}</strong> contact@bokeone.com | {t.sec1WhatsApp}
           </p>
         </div>
 
@@ -103,6 +109,12 @@ export default function CGUPage() {
         <div className="space-y-3">
           <h2 className="text-base font-bold text-amber-400">{t.sec7Title}</h2>
           <p>{t.sec7Desc}</p>
+        </div>
+
+        <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec8Title}</h2>
+          <p className="text-neutral-300">{t.sec8P1}</p>
+          <p className="text-neutral-400">{t.sec8P2}</p>
         </div>
       </section>
     </main>
