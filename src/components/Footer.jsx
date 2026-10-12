@@ -1,99 +1,122 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 
-export default function Footer({ onNavigate }) {
-  const handleLegalClick = (e, route) => {
-    if (onNavigate) {
-      e.preventDefault();
-      onNavigate(route);
-    }
-  };
+const CGU_TEXT = {
+  fr: {
+    badge: "Cadre Juridique & Confiance",
+    title: "Conditions Générales d'Utilisation (CGU)",
+    lastUpdate: "Dernière mise à jour : Octobre 2026",
+    sec1Title: "1. Présentation de la Structure & Édition",
+    sec1P1: "La plateforme BOKÉ ONE (réseau d'élite et banque d'images nationale) est éditée et opérée sous le numéro SIRET : 882 507 643 00022 (SIREN : 882 507 643), dédiée aux prestations artistiques, aux cessions de droits d'auteur et à la mise en relation professionnelle.",
+    sec1HQ: "Siège administratif & de coordination :",
+    sec1Address: "Avenue Louise, 1050 Bruxelles, Belgique.",
+    sec1Contact: "Contact officiel :",
+    sec1WhatsApp: "Support WhatsApp dédié disponible sur la plateforme.",
+    sec2Title: "2. Objet de la Plateforme & Accès Membre",
+    sec2Desc: "BOKÉ ONE met en relation des créateurs d'élite (artistes, cinéastes, photographes) et des acheteurs professionnels ou institutionnels (agences, marques). L'accès à certaines sections stratégiques (Espace Pro, tunnels de vente en direct, statistiques de gains) requiert un statut de membre abonné ou validé.",
+    sec3Title: "3. Droit au Respect de la Vie Privée & Droit à l'Image",
+    sec3Desc: "Chaque créateur/contributeur garantit être titulaire des autorisations d'exploitation du droit à l'image et du droit au respect de la vie privée des personnes, biens ou propriétés privées reconnaissables figurant dans ses œuvres (autorisations de captation, autorisations de vol drone 2026). BOKÉ ONE s'engage à respecter les réglementations sur la protection des données personnelles (RGPD).",
+    sec4Title: "4. Propriété Intellectuelle & Cessions de Droits",
+    sec4Desc: "Toutes les œuvres exposées sur BOKÉ ONE (banque d'images, clips, prestations) sont protégées par les lois internationales sur la propriété intellectuelle. Les acquisitions de licences (stock numérique) ou les commandes de prestations en salon donnent lieu à une cession de droits encadrée (territoriale, temporelle ou exclusive selon les termes négociés). Toute revente ou utilisation non autorisée est strictement interdite.",
+    sec5Title: "5. Transactions, Commissions & Acomptes",
+    sec5Desc: "Les transactions réalisées via la plateforme ou validées en salon impliquent un système de commissionnement transparent (15 % prélevés par la structure jusqu'à 100 €, puis 20 % au-delà). Les accords conclus en direct peuvent nécessiter le versement d'un acompte de sécurité (généralement 30 %) pour bloquer les plannings et valider les cessions immédiates.",
+    sec6Title: "6. Protection Technique (Basse Résolution, RAW, Filigranes) & Exonération de Responsabilité",
+    sec6Desc: "Afin de protéger le travail des créateurs, BOKÉ ONE applique volontairement un affichage en basse résolution et compresse les aperçus sur la plateforme, complétés par des filigranes dynamiques superposés et la désactivation des accès directs au téléchargement. Les œuvres ne sont proposées et délivrées dans leur format d'origine haute définition (RAW, fichiers natifs non compressés, Ultra-HD / 4K) qu'exclusivement lors de la finalisation de l'achat ou du paiement d'une licence valide. L'utilisateur et le créateur reconnaissent qu'aucune technologie web n'est totalement infaillible face aux tentatives d'extraction ou de capture d'écran frauduleuses. BOKÉ ONE ne pourra être tenu responsable des détournements réalisés par des tiers en dehors de son infrastructure, mais collaborera activement à l'identification de toute infraction.",
+    sec7Title: "7. Responsabilité & Conciliation",
+    sec7Desc: "BOKÉ ONE s'engage à assurer la sécurité des données de ses membres et la fiabilité des outils de mise en relation. En cas de litige, les parties privilégieront une résolution amiable via la conciergerie.",
+    sec8Title: "8. Gestion des Cookies & Protection des Données (RGPD)",
+    sec8P1: "Un cookie est un petit fichier texte déposé sur le disque dur de votre ordinateur ou de votre appareil (smartphone, tablette...) lors de la visite d'un site Internet ou de la consultation d'une publicité. Les cookies ont pour but de collecter des informations relatives à votre navigation et de vous adresser des services adaptés.",
+    sec8P2: "Sur BOKÉ ONE, les cookies sont utilisés pour assurer le bon fonctionnement technique de la plateforme (sauvegarde des sessions, gestion du panier et préférences d'affichage) et, le cas échéant, pour mesurer l'audience et l'utilisation de nos services (statistiques anonymisées). Vous pouvez à tout moment configurer votre navigateur pour accepter ou refuser les cookies."
+  },
+  en: {
+    badge: "Legal Framework & Trust",
+    title: "Terms of Service (ToS)",
+    lastUpdate: "Last updated: October 2026",
+    sec1Title: "1. Structure Presentation & Publishing",
+    sec1P1: "The BOKÉ ONE platform (elite network & national image bank) is published and operated under SIRET number: 882 507 643 00022 (SIREN: 882 507 643), dedicated to artistic services, copyright transfers, and professional networking.",
+    sec1HQ: "Administrative & coordination headquarters:",
+    sec1Address: "Avenue Louise, 1050 Brussels, Belgium.",
+    sec1Contact: "Official contact:",
+    sec1WhatsApp: "Dedicated WhatsApp support available on the platform.",
+    sec2Title: "2. Platform Purpose & Member Access",
+    sec2Desc: "BOKÉ ONE connects elite creators (artists, filmmakers, photographers) with professional or institutional buyers (agencies, brands). Access to strategic sections (Pro Space, direct sales funnels, earnings statistics) requires subscriber or validated member status.",
+    sec3Title: "3. Privacy Rights & Model Release",
+    sec3Desc: "Each contributor guarantees possession of all necessary image rights, property releases, and privacy clearances for recognizable individuals or private properties featured in uploaded works (including 2026 drone flight clearances). BOKÉ ONE complies with GDPR personal data protection standards.",
+    sec4Title: "4. Intellectual Property & Rights Transfers",
+    sec4Desc: "All works showcased on BOKÉ ONE (image bank, video clips, services) are protected by international intellectual property laws. License acquisitions (digital stock) or event service bookings entail structured rights assignments (territorial, time-bound, or exclusive according to negotiated terms). Any unauthorized resale or use is strictly prohibited.",
+    sec5Title: "5. Transactions, Commissions & Deposits",
+    sec5Desc: "Transactions completed via the platform or validated on-site involve a transparent commission structure (15% platform fee up to €100, then 20% beyond). Direct agreements may require a security deposit (typically 30%) to lock schedules and confirm immediate transfers.",
+    sec6Title: "6. Technical Protection (Low Resolution, RAW Files, Watermarks) & Limitation of Liability",
+    sec6Desc: "To protect creators' work, BOKÉ ONE intentionally displays content in low resolution and compressed preview formats across the platform, combined with overlaid dynamic watermarks and disabled direct downloads. Original high-definition files (RAW, uncompressed native assets, Ultra-HD / 4K) are exclusively provided upon full purchase completion or payment of a valid license. Users and creators acknowledge that no web technology is completely immune to fraudulent extraction or screenshots. BOKÉ ONE cannot be held liable for third-party unauthorized captures outside its infrastructure, but will actively assist in identifying infringements.",
+    sec7Title: "7. Liability & Conciliation",
+    sec7Desc: "BOKÉ ONE is committed to ensuring member data security and networking tool reliability. In the event of a dispute, parties will prioritize an amicable resolution through conciergence.",
+    sec8Title: "8. Cookies Management & Data Protection (GDPR)",
+    sec8P1: "A cookie is a small text file stored on your computer or device (smartphone, tablet...) when visiting a website or viewing an advertisement. Cookies collect information regarding your browsing activity to provide tailored services.",
+    sec8P2: "On BOKÉ ONE, cookies are used to guarantee technical platform performance (session preservation, shopping cart management, display preferences) and measure service usage (anonymous statistics). You can configure your browser preferences at any time."
+  }
+};
+
+export default function CGUPage() {
+  const { lang } = useLanguage();
+  const t = CGU_TEXT[lang] || CGU_TEXT.fr;
 
   return (
-    <footer className="w-full bg-neutral-950 border-t border-neutral-900 text-neutral-400 py-8 px-6 sm:px-12 font-sans mt-auto relative z-30">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        
-        {/* Identité & Confiance */}
-        <div className="space-y-1 text-center md:text-left">
-          <h3 className="text-xs font-black text-amber-400 tracking-wider uppercase">BOKÉ ONE</h3>
-          <p className="text-[11px] text-neutral-400">
-            SIRET : 882 507 643 00022 • Avenue Louise, 1050 Bruxelles, Belgique.
+    <main className="mx-auto w-full max-w-4xl bg-neutral-950 p-6 sm:p-12 text-neutral-300 min-h-screen font-sans space-y-8">
+      <header className="border-b border-neutral-800 pb-6">
+        <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+          {t.badge}
+        </span>
+        <h1 className="text-3xl font-black text-amber-400 mt-2">{t.title}</h1>
+        <p className="text-xs text-neutral-400 mt-1">{t.lastUpdate}</p>
+      </header>
+
+      <section className="space-y-6 text-xs sm:text-sm leading-relaxed">
+        <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec1Title}</h2>
+          <p>{t.sec1P1}</p>
+          <p className="text-neutral-400">
+            <strong>{t.sec1HQ}</strong> {t.sec1Address}
+            <br />
+            <strong>{t.sec1Contact}</strong> contact@bokeone.com | {t.sec1WhatsApp}
           </p>
         </div>
 
-        {/* 🔹 MINI-PICTOS RONDS DISCRETS (Réseaux Sociaux Cliquables) */}
-        <div className="flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 px-3 py-1.5 rounded-full shadow-lg backdrop-blur-md">
-          
-          {/* Instagram */}
-          <a 
-            href="https://instagram.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="w-7 h-7 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center text-neutral-300 hover:text-pink-400 hover:border-pink-500 transition transform hover:scale-110 shadow-sm cursor-pointer"
-            title="Instagram"
-          >
-            <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-          </a>
-
-          {/* LinkedIn */}
-          <a 
-            href="https://linkedin.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="w-7 h-7 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center text-neutral-300 hover:text-amber-400 hover:border-amber-500 transition transform hover:scale-110 shadow-sm cursor-pointer"
-            title="LinkedIn"
-          >
-            <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-          </a>
-
-          {/* Pinterest */}
-          <a 
-            href="https://www.pinterest.com/bokeone_photographes" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="w-7 h-7 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center text-neutral-300 hover:text-red-400 hover:border-red-500 transition transform hover:scale-110 shadow-sm cursor-pointer"
-            title="Pinterest"
-          >
-            <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.372-12 12 0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345-.09.375-.291 1.199-.331 1.363-.053.225-.172.273-.395.164-1.478-.688-2.404-2.852-2.404-4.594 0-3.745 2.721-7.185 7.843-7.185 4.128 0 7.331 2.942 7.331 6.879 0 4.102-2.589 7.41-6.183 7.41-1.207 0-2.339-.627-2.728-1.36l-.744 2.836c-.269 1.034-1.001 2.332-1.492 3.123 1.121.346 2.315.534 3.551.534 6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg>
-          </a>
-
-          {/* Facebook */}
-          <a 
-            href="https://facebook.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="w-7 h-7 rounded-full bg-neutral-950 border border-neutral-800 flex items-center justify-center text-neutral-300 hover:text-blue-400 hover:border-blue-500 transition transform hover:scale-110 shadow-sm cursor-pointer"
-            title="Facebook"
-          >
-            <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
-          </a>
-
+        <div className="space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec2Title}</h2>
+          <p>{t.sec2Desc}</p>
         </div>
 
-        {/* Liens légaux avec curseur main (cursor-pointer) */}
-        <div className="flex items-center gap-6 text-xs font-medium">
-          <Link
-            to="/cgu"
-            onClick={(e) => handleLegalClick(e, "cgu")}
-            className="hover:text-amber-400 transition text-neutral-400 cursor-pointer underline-offset-4 hover:underline"
-          >
-            CGU / CGV
-          </Link>
-          <Link
-            to="/cgu"
-            onClick={(e) => handleLegalClick(e, "mentions")}
-            className="hover:text-amber-400 transition text-neutral-400 cursor-pointer underline-offset-4 hover:underline"
-          >
-            Mentions Légales
-          </Link>
+        <div className="space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec3Title}</h2>
+          <p>{t.sec3Desc}</p>
         </div>
 
-      </div>
+        <div className="space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec4Title}</h2>
+          <p>{t.sec4Desc}</p>
+        </div>
 
-      <div className="max-w-7xl mx-auto border-t border-neutral-900/60 mt-6 pt-4 flex items-center justify-between text-[11px] text-neutral-500">
-        <p>© {new Date().getFullYear()} BOKÉ ONE. Tous droits réservés.</p>
-        <p className="text-amber-500/80 font-medium">Design Quartz & Or ⚡</p>
-      </div>
-    </footer>
+        <div className="space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec5Title}</h2>
+          <p>{t.sec5Desc}</p>
+        </div>
+
+        <div className="bg-neutral-900/60 border border-neutral-800 p-5 rounded-2xl space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec6Title}</h2>
+          <p className="text-neutral-300">{t.sec6Desc}</p>
+        </div>
+
+        <div className="space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec7Title}</h2>
+          <p>{t.sec7Desc}</p>
+        </div>
+
+        <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl space-y-3">
+          <h2 className="text-base font-bold text-amber-400">{t.sec8Title}</h2>
+          <p className="text-neutral-300">{t.sec8P1}</p>
+          <p className="text-neutral-400">{t.sec8P2}</p>
+        </div>
+      </section>
+    </main>
   );
 }
