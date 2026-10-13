@@ -1,6 +1,6 @@
 // src/components/Gallery.jsx
 import React, { useState } from "react";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { useSelectionCart } from "../hooks/useSelectionCart";
 
 // ⚠️ Démo : ces réalisations sont codées en dur, pas encore issues d'une table Supabase.
