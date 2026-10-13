@@ -12,18 +12,21 @@ export default function ModulePaiementStripe({ totalAmount, onSuccess }) {
   const [promoError, setPromoError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Codes promo disponibles
+  // Codes promo disponibles (ajoutez un code 100% gratuit si besoin ex: FREE100)
   const VALID_CODES = {
     BOKE10: 0.10,     // 10% de réduction
     PROMO2026: 0.15,  // 15% de réduction
     WELCOME50: 50,    // 50 € de réduction fixe
+    FREE100: totalAmount, // Réduction totale pour test à 0 €
   };
 
   const handleApplyPromo = () => {
     const code = promoCode.trim().toUpperCase();
     if (VALID_CODES[code] !== undefined) {
       const val = VALID_CODES[code];
-      if (val < 1) {
+      if (code === 'FREE100') {
+        setDiscount(totalAmount);
+      } else if (val < 1) {
         setDiscount(totalAmount * val);
       } else {
         setDiscount(val);
@@ -36,19 +39,21 @@ export default function ModulePaiementStripe({ totalAmount, onSuccess }) {
   };
 
   // Calculs financiers
-  const totalHT = Math.max(0, totalAmount - discount) / 1.2;
-  const tvaAmount = Math.max(0, totalAmount - discount) - totalHT;
-  const finalTotal = Math.max(0, totalAmount - discount);
+  const calculatedDiscount = Math.min(totalAmount, discount);
+  const totalHT = Math.max(0, totalAmount - calculatedDiscount) / 1.2;
+  const tvaAmount = Math.max(0, totalAmount - calculatedDiscount) - totalHT;
+  const finalTotal = Math.max(0, totalAmount - calculatedDiscount);
+  const isFreeTotal = finalTotal === 0;
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setIsSubmitting(true);
 
-    // Enregistrement / Validation In-App
+    // Enregistrement / Validation In-App ou Téléchargement Direct
     setTimeout(() => {
       setIsSubmitting(false);
       onSuccess?.();
-    }, 1000);
+    }, 800);
   };
 
   return (
@@ -69,13 +74,15 @@ export default function ModulePaiementStripe({ totalAmount, onSuccess }) {
         {promoApplied && (
           <div className="flex justify-between text-emerald-400 font-bold border-t border-neutral-800 pt-2">
             <span>Remise Code Promo :</span>
-            <span>-{discount.toFixed(2)} €</span>
+            <span>-{calculatedDiscount.toFixed(2)} €</span>
           </div>
         )}
 
         <div className="flex justify-between text-sm font-black text-white border-t border-neutral-800 pt-2 mt-1">
           <span>Total TTC :</span>
-          <span className="text-amber-400">{finalTotal.toFixed(2)} €</span>
+          <span className={isFreeTotal ? "text-emerald-400 font-mono" : "text-amber-400"}>
+            {isFreeTotal ? "0,00 € (GRATUIT)" : `${finalTotal.toFixed(2)} €`}
+          </span>
         </div>
       </div>
 
@@ -85,7 +92,7 @@ export default function ModulePaiementStripe({ totalAmount, onSuccess }) {
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Ex: BOKE10"
+            placeholder="Ex: BOKE10 ou FREE100"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
             disabled={promoApplied}
@@ -103,69 +110,89 @@ export default function ModulePaiementStripe({ totalAmount, onSuccess }) {
         {promoError && <p className="text-[10px] text-red-400">{promoError}</p>}
       </div>
 
-      {/* 3. Formulaire de carte bancaire Stripe In-App */}
-      <form onSubmit={handleSubmit} className="space-y-4 pt-2 border-t border-neutral-800">
-        <h4 className="font-bold text-white text-xs flex items-center gap-2">
-          <span>💳</span> Informations de paiement sécurisé
-        </h4>
+      {/* 3. SI TOTAL = 0 € : BOUTON DE TÉLÉCHARGEMENT DIRECT SANS CARTE */}
+      {isFreeTotal ? (
+        <div className="space-y-4 pt-2 border-t border-neutral-800">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl text-center">
+            <p className="text-xs text-emerald-400 font-bold">✨ Commande 100% Gratuite après remise</p>
+            <p className="text-[11px] text-neutral-300 mt-1">Aucun paiement par carte n'est requis. Validez pour obtenir vos fichiers.</p>
+          </div>
 
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-neutral-400 uppercase">Titulaire de la carte</label>
-          <input
-            type="text"
-            required
-            placeholder="Nom & Prénom"
-            value={cardHolder}
-            onChange={(e) => setCardHolder(e.target.value)}
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
-          />
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-black py-4 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer"
+          >
+            {isSubmitting ? 'Traitement...' : '📥 Télécharger directement sans carte'}
+          </button>
         </div>
+      ) : (
+        /* 4. SINON : FORMULAIRE DE CARTE BANCAIRE STRIPE IN-APP CLASSIQUE */
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2 border-t border-neutral-800">
+          <h4 className="font-bold text-white text-xs flex items-center gap-2">
+            <span>💳</span> Informations de paiement sécurisé
+          </h4>
 
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-neutral-400 uppercase">Numéro de carte</label>
-          <input
-            type="text"
-            required
-            placeholder="4242 •••• •••• 4242"
-            value={cardNumber}
-            onChange={(e) => setCardNumber(e.target.value)}
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-neutral-400 uppercase">Expiration</label>
+            <label className="text-[10px] font-bold text-neutral-400 uppercase">Titulaire de la carte</label>
             <input
               type="text"
               required
-              placeholder="MM / AA"
-              value={expiry}
-              onChange={(e) => setExpiry(e.target.value)}
+              placeholder="Nom & Prénom"
+              value={cardHolder}
+              onChange={(e) => setCardHolder(e.target.value)}
               className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
             />
           </div>
+
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-neutral-400 uppercase">Code de sécurité (CVC)</label>
+            <label className="text-[10px] font-bold text-neutral-400 uppercase">Numéro de carte</label>
             <input
               type="text"
               required
-              placeholder="501"
-              value={cvc}
-              onChange={(e) => setCvc(e.target.value)}
+              placeholder="4242 •••• •••• 4242"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(e.target.value)}
               className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
             />
           </div>
-        </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full mt-4 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3.5 rounded-xl text-xs transition shadow-lg cursor-pointer disabled:opacity-50"
-        >
-          {isSubmitting ? 'Traitement en cours...' : `Payer ${finalTotal.toFixed(2)} €`}
-        </button>
-      </form>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-neutral-400 uppercase">Expiration</label>
+              <input
+                type="text"
+                required
+                placeholder="MM / AA"
+                value={expiry}
+                onChange={(e) => setExpiry(e.target.value)}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-neutral-400 uppercase">Code de sécurité (CVC)</label>
+              <input
+                type="text"
+                required
+                placeholder="501"
+                value={cvc}
+                onChange={(e) => setCvc(e.target.value)}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-amber-400"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full mt-4 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3.5 rounded-xl text-xs transition shadow-lg cursor-pointer disabled:opacity-50"
+          >
+            {isSubmitting ? 'Traitement en cours...' : `Payer ${finalTotal.toFixed(2)} €`}
+          </button>
+        </form>
+      )}
+
     </div>
   );
 }
