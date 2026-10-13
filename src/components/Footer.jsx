@@ -67,8 +67,14 @@ export default function Footer() {
 
         </div>
 
-        {/* Liens Juridiques */}
+        {/* Liens Juridiques et Informations */}
         <div className="flex items-center gap-6 font-medium">
+          <Link
+            to="/about"
+            className="hover:text-amber-400 transition cursor-pointer underline-offset-4 hover:underline"
+          >
+            {isEn ? "About Us" : "À propos"}
+          </Link>
           <Link
             to="/cgu"
             className="hover:text-amber-400 transition cursor-pointer underline-offset-4 hover:underline"
