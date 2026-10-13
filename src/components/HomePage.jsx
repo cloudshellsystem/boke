@@ -95,6 +95,29 @@ const SEARCH_SUGGESTIONS = {
   en: ["Portrait", "Editorial", "Wedding", "Corporate", "Product", "Architecture", "Fashion", "Drone", "#1001"],
 };
 
+/* ------------------------------------------------------------------
+    PALETTE BOKEH (RGB) pour l'en-tête (Hero)
+------------------------------------------------------------------- */
+const AMBER = "251,191,36";
+const GOLD = "245,158,11";
+const CHAMPAGNE = "253,230,138";
+const QUARTZ = "147,170,255";
+
+const halo = (rgb, a) =>
+  `radial-gradient(circle at 50% 50%, rgba(${rgb},${a}) 0%, rgba(${rgb},${a * 0.45}) 40%, transparent 70%)`;
+
+const disc = (rgb, a) =>
+  `radial-gradient(circle at 50% 50%, rgba(${rgb},${a * 0.45}) 0%, rgba(${rgb},${a * 0.7}) 62%, rgba(${rgb},${a * 1.2}) 80%, rgba(${rgb},0) 83%)`;
+
+const HERO_ORBS = [
+  { s: "clamp(280px,45vw,520px)", x: "-10%", y: "-15%", bg: halo(AMBER, 0.25),   b: "blur-3xl", d: 20, dl: 0 },
+  { s: "clamp(240px,38vw,450px)", x: "65%",  y: "10%",  bg: halo(QUARTZ, 0.18),  b: "blur-3xl", d: 24, dl: -5 },
+  { s: "clamp(60px,10vw,130px)",  x: "12%",  y: "25%",  bg: disc(AMBER, 0.28),   b: "blur-[2px]", d: 13, dl: -2 },
+  { s: "clamp(80px,12vw,160px)",  x: "80%",  y: "18%",  bg: disc(GOLD, 0.22),    b: "blur-sm",    d: 16, dl: -6 },
+  { s: "clamp(45px,6vw,90px)",    x: "72%",  y: "55%",  bg: disc(QUARTZ, 0.20),  b: "blur-[2px]", d: 12, dl: -1 },
+  { s: "clamp(70px,9vw,140px)",   x: "25%",  y: "65%",  bg: disc(CHAMPAGNE, 0.22), b: "blur-sm",  d: 18, dl: -8 },
+];
+
 export default function HomePage({ onRequireLogin }) {
   const { lang } = useLanguage();
   const { isLoggedIn } = useAuth();
@@ -164,172 +187,216 @@ export default function HomePage({ onRequireLogin }) {
 
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20">
-      <div className="w-full border-b border-neutral-800/80 mb-6" />
-      <div className="max-w-5xl mx-auto px-4 space-y-8">
+      
+      {/* Animation GPU fluide pour les orbs bokeh */}
+      <style>{`
+        @keyframes hero-bokeh-drift {
+          0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .85; }
+          50%  { transform: translate3d(12px, -18px, 0) scale(1.05); opacity: 1; }
+          100% { transform: translate3d(0, 0, 0) scale(1); opacity: .85; }
+        }
+        .hero-bokeh-orb { animation: hero-bokeh-drift var(--d) ease-in-out var(--dl) infinite; will-change: transform, opacity; }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-bokeh-orb { animation: none; }
+        }
+      `}</style>
+
+      {/* ========================================================= */}
+      {/* 1. PREMIÈRE BANNIÈRE (HERO) AVEC LE BOKEH PHOTOGRAPHIQUE   */}
+      {/* ========================================================= */}
+      <section className="relative overflow-hidden pt-8 pb-12 px-4 border-b border-neutral-900">
         
-        <h1 className="sr-only">
-          {isEn
-            ? "Boké One – Professional photographers network and national image bank in France"
-            : "Boké One – Réseau de photographes professionnels et banque d'images nationale en France"}
-        </h1>
+        {/* Couche Bokeh confinée à la première bannière */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          {HERO_ORBS.map((o, i) => (
+            <div
+              key={i}
+              className={`hero-bokeh-orb absolute rounded-full ${o.b}`}
+              style={{
+                width: o.s,
+                height: o.s,
+                left: o.x,
+                top: o.y,
+                background: o.bg,
+                "--d": `${o.d}s`,
+                "--dl": `${o.dl}s`,
+              }}
+            />
+          ))}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(10,10,10,0.5)_0%,rgba(10,10,10,0.2)_50%,rgba(10,10,10,0.9)_100%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/30 via-transparent to-neutral-950" />
+        </div>
 
-        {/* MOTEUR DE RECHERCHE */}
-        <section aria-label={isEn ? "Search a photographer or creator" : "Rechercher un photographe ou un créateur"}>
-          <div className="bg-neutral-900/60 border border-neutral-800/80 p-3.5 rounded-2xl shadow-xl backdrop-blur-md">
-            <form onSubmit={handleSearchSubmit} role="search" className="flex flex-col sm:flex-row gap-3 items-center">
-              <div className="relative flex-1 w-full">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm" aria-hidden="true">
-                  🔍
-                </span>
-                <input
-                  type="search"
-                  aria-label={isEn ? "Search" : "Recherche"}
-                  placeholder={
-                    isEn
-                      ? "Search photographer, pseudo, #ID (e.g. #1001), specialty, city..."
-                      : "Rechercher par nom, pseudo, N° CRM (ex: #1001), spécialité, ville..."
-                  }
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-11 pr-4 py-2.5 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
-                />
-              </div>
+        <div className="max-w-5xl mx-auto space-y-8 relative z-10">
+          
+          <h1 className="sr-only">
+            {isEn
+              ? "Boké One – Professional photographers network and national image bank in France"
+              : "Boké One – Réseau de photographes professionnels et banque d'images nationale en France"}
+          </h1>
+
+          {/* MOTEUR DE RECHERCHE */}
+          <section aria-label={isEn ? "Search a photographer or creator" : "Rechercher un photographe ou un créateur"}>
+            <div className="bg-neutral-900/70 border border-neutral-800/80 p-3.5 rounded-2xl shadow-2xl backdrop-blur-md">
+              <form onSubmit={handleSearchSubmit} role="search" className="flex flex-col sm:flex-row gap-3 items-center">
+                <div className="relative flex-1 w-full">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm" aria-hidden="true">
+                    🔍
+                  </span>
+                  <input
+                    type="search"
+                    aria-label={isEn ? "Search" : "Recherche"}
+                    placeholder={
+                      isEn
+                        ? "Search photographer, pseudo, #ID (e.g. #1001), specialty, city..."
+                        : "Rechercher par nom, pseudo, N° CRM (ex: #1001), spécialité, ville..."
+                    }
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-neutral-950/80 border border-neutral-800 rounded-xl pl-11 pr-4 py-2.5 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-7 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer shrink-0"
+                >
+                  {isEn ? "Search" : "Rechercher"}
+                </button>
+              </form>
+            </div>
+            <nav
+              aria-label={isEn ? "Popular specialties" : "Spécialités populaires"}
+              className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-neutral-400"
+            >
+              <span className="uppercase tracking-wider text-neutral-500 font-medium">
+                {isEn ? "Popular" : "Populaires"}
+              </span>
+              {suggestions.map((s) => (
+                <Link
+                  key={s}
+                  to={`/creators?search=${encodeURIComponent(s)}`}
+                  className="hover:text-amber-400 transition"
+                >
+                  {s}
+                </Link>
+              ))}
+            </nav>
+          </section>
+
+          {/* CARROUSEL ACTUALITÉS */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-2.5" role="tablist">
               <button
-                type="submit"
-                className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-7 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer shrink-0"
+                type="button"
+                role="tab"
+                aria-selected={activeSubTab === "actualites"}
+                onClick={() => setActiveSubTab("actualites")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                  activeSubTab === "actualites"
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                    : "text-neutral-400 hover:text-white border border-transparent"
+                }`}
               >
-                {isEn ? "Search" : "Rechercher"}
+                <span aria-hidden="true">⚡</span> {isEn ? "News" : "Actualités"}
               </button>
-            </form>
-          </div>
-          <nav
-            aria-label={isEn ? "Popular specialties" : "Spécialités populaires"}
-            className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-neutral-500"
-          >
-            <span className="uppercase tracking-wider text-neutral-600">
-              {isEn ? "Popular" : "Populaires"}
-            </span>
-            {suggestions.map((s) => (
-              <Link
-                key={s}
-                to={`/creators?search=${encodeURIComponent(s)}`}
-                className="hover:text-amber-400 transition"
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeSubTab === "annonces"}
+                onClick={() => setActiveSubTab("annonces")}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                  activeSubTab === "annonces"
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                    : "text-neutral-400 hover:text-white border border-transparent"
+                }`}
               >
-                {s}
-              </Link>
-            ))}
-          </nav>
-        </section>
+                <span aria-hidden="true">📢</span> {isEn ? "Ads (Job Offers)" : "Annonces (Offres d'emploi)"}
+              </button>
+            </div>
 
-        {/* CARROUSEL ACTUALITÉS */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-2.5" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeSubTab === "actualites"}
-              onClick={() => setActiveSubTab("actualites")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
-                activeSubTab === "actualites"
-                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                  : "text-neutral-400 hover:text-white border border-transparent"
-              }`}
+            <article
+              onClick={() => setSelectedNews(item)}
+              className="bg-neutral-900/70 backdrop-blur-md border border-neutral-800/80 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer group"
             >
-              <span aria-hidden="true">⚡</span> {isEn ? "News" : "Actualités"}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeSubTab === "annonces"}
-              onClick={() => setActiveSubTab("annonces")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
-                activeSubTab === "annonces"
-                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                  : "text-neutral-400 hover:text-white border border-transparent"
-              }`}
-            >
-              <span aria-hidden="true">📢</span> {isEn ? "Ads (Job Offers)" : "Annonces (Offres d'emploi)"}
-            </button>
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                <div className="md:col-span-4 relative overflow-hidden rounded-xl border border-neutral-800 h-36 sm:h-44 bg-neutral-950">
+                  <img
+                    src={item.image}
+                    alt={item.alt || item.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <span className="absolute top-2 left-2 bg-neutral-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30 text-[9px] font-bold px-2 py-0.5 rounded-md">
+                    {item.date}
+                  </span>
+                </div>
+                <div className="md:col-span-8 space-y-2.5">
+                  <span className="inline-block text-[9px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
+                    {activeSubTab === "actualites"
+                      ? isEn ? "Network Information" : "Information Réseau"
+                      : isEn ? "Members Only" : "Réservé Adhérents"}
+                  </span>
+                  <h2 className="text-lg md:text-xl font-black text-white group-hover:text-amber-400 transition leading-snug">
+                    {item.title}
+                  </h2>
+                  <p className="text-xs text-neutral-300 leading-relaxed line-clamp-2">{item.summary}</p>
+                  
+                  <div className="pt-1 flex items-center gap-4">
+                    {!isLoggedIn && item.restricted ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRequireLogin?.();
+                        }}
+                        className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-lg cursor-pointer"
+                      >
+                        {isEn ? "🔒 Log in to apply" : "🔒 Se connecter pour postuler à cette offre"}
+                      </button>
+                    ) : (
+                      <span className="text-xs font-bold text-amber-400 underline">
+                        {isEn ? "Read full details →" : "Lire le détail complet →"}
+                      </span>
+                    )}
 
-          <article
-            onClick={() => setSelectedNews(item)}
-            className="bg-neutral-900/60 border border-neutral-800/80 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-xl transition-all duration-300 cursor-pointer group"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-              <div className="md:col-span-4 relative overflow-hidden rounded-xl border border-neutral-800 h-36 sm:h-44 bg-neutral-950">
-                <img
-                  src={item.image}
-                  alt={item.alt || item.title}
-                  loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <span className="absolute top-2 left-2 bg-neutral-950/80 backdrop-blur-md text-amber-400 border border-amber-500/30 text-[9px] font-bold px-2 py-0.5 rounded-md">
-                  {item.date}
-                </span>
-              </div>
-              <div className="md:col-span-8 space-y-2.5">
-                <span className="inline-block text-[9px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
-                  {activeSubTab === "actualites"
-                    ? isEn ? "Network Information" : "Information Réseau"
-                    : isEn ? "Members Only" : "Réservé Adhérents"}
-                </span>
-                <h2 className="text-lg md:text-xl font-black text-white group-hover:text-amber-400 transition leading-snug">
-                  {item.title}
-                </h2>
-                <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">{item.summary}</p>
-                
-                <div className="pt-1 flex items-center gap-4">
-                  {!isLoggedIn && item.restricted ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRequireLogin?.();
-                      }}
-                      className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-lg cursor-pointer"
-                    >
-                      {isEn ? "🔒 Log in to apply" : "🔒 Se connecter pour postuler à cette offre"}
-                    </button>
-                  ) : (
-                    <span className="text-xs font-bold text-amber-400 underline">
-                      {isEn ? "Read full details →" : "Lire le détail complet →"}
-                    </span>
-                  )}
-
-                  {item.externalUrl && (
-                    <a
-                      href={item.externalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-xs font-bold text-neutral-300 hover:text-white bg-neutral-950 border border-neutral-800 hover:border-amber-500/40 px-3 py-1.5 rounded-lg transition"
-                    >
-                      {item.externalLabel}
-                    </a>
-                  )}
+                    {item.externalUrl && (
+                      <a
+                        href={item.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs font-bold text-neutral-300 hover:text-white bg-neutral-950 border border-neutral-800 hover:border-amber-500/40 px-3 py-1.5 rounded-lg transition"
+                      >
+                        {item.externalLabel}
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-end gap-1.5 mt-2">
-              {currentList.map((_, idx) => (
-                <span
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentIndex(idx);
-                  }}
-                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    currentIndex === idx ? "w-5 bg-amber-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
-                  }`}
-                />
-              ))}
-            </div>
-          </article>
-        </section>
+              <div className="flex justify-end gap-1.5 mt-2">
+                {currentList.map((_, idx) => (
+                  <span
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentIndex(idx);
+                    }}
+                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                      currentIndex === idx ? "w-5 bg-amber-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                    }`}
+                  />
+                ))}
+              </div>
+            </article>
+          </section>
 
-        {/* FILET DE SÉPARATION */}
-        <div className="w-full border-b border-neutral-900 my-6" />
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 2. RESTE DE LA PAGE (FOND SOMBRE NEUTRE POUR LA GALERIE)   */}
+      {/* ========================================================= */}
+      <div className="max-w-5xl mx-auto px-4 space-y-12 pt-8">
 
         {/* GALERIE PLANCHE CONTACT SUR 3 ÉTAGES */}
         <section className="space-y-5">
@@ -359,7 +426,7 @@ export default function HomePage({ onRequireLogin }) {
                 <div
                   key={c.id}
                   onClick={() => navigate(`/creators?id=${c.creatorId}`)}
-                  className="group relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 transition cursor-pointer aspect-square"
+                  className="group relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800/80 hover:border-amber-500/40 transition cursor-pointer aspect-square shadow-xl"
                 >
                   <img
                     src={c.image}
