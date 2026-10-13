@@ -41,7 +41,6 @@ export default function AuthModal({ isOpen, onClose }) {
 
     try {
       if (mode === "forgot") {
-        // ✉️ Utilisation de la méthode native de réinitialisation du contexte
         await resetPassword(email);
         setSuccessMsg(
           isEn
@@ -50,7 +49,6 @@ export default function AuthModal({ isOpen, onClose }) {
         );
       } 
       else if (mode === "signup") {
-        // 📝 Inscription standard par le contexte
         const { needsEmailConfirmation } = await signup(email, password);
         
         if (needsEmailConfirmation) {
@@ -65,12 +63,10 @@ export default function AuthModal({ isOpen, onClose }) {
         }
       } 
       else {
-        // 🔑 Connexion standard via votre méthode de contexte (Met à jour le profil et l'état global)
         await login(email, password);
-        onClose(); // Ferme proprement la modale, le contexte s'occupe de propager l'état connecté au site
+        onClose(); 
       }
     } catch (err) {
-      // 🔄 Traduction de l'erreur Supabase via votre dictionnaire français du contexte
       const rawMessage = err?.message || err;
       setError(isEn ? rawMessage : translateAuthError(rawMessage));
     } finally {
@@ -200,7 +196,7 @@ export default function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* Bouton de Soumission principal */}
+          {/* Bouton de validation principal */}
           <button
             type="submit"
             disabled={loading}
