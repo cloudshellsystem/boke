@@ -1,5 +1,4 @@
-﻿// src/components/EspaceMembrePro.jsx
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatPrice } from "../lib/formatPrice";
 import { supabase } from "../lib/supabaseClient";
@@ -28,6 +27,35 @@ function issueErrorMessage(err, isEn) {
   if (/fetch|network|load failed/i.test(raw)) return isEn ? "Server connection failed. Try again." : "Connexion au serveur impossible : le document n'a pas été numéroté. Réessayez.";
   return isEn ? "Unable to issue document right now." : "Impossible d'émettre le document pour le moment. Réessayez.";
 }
+
+/* ------------------------------------------------------------------
+    PALETTE BOKEH (RGB) : ambre, champagne, or profond, reflet quartz
+------------------------------------------------------------------- */
+const AMBER = "251,191,36";
+const GOLD = "245,158,11";
+const CHAMPAGNE = "253,230,138";
+const QUARTZ = "147,170,255";
+
+const halo = (rgb, a) =>
+  `radial-gradient(circle at 50% 50%, rgba(${rgb},${a}) 0%, rgba(${rgb},${a * 0.45}) 40%, transparent 70%)`;
+
+const disc = (rgb, a) =>
+  `radial-gradient(circle at 50% 50%, rgba(${rgb},${a * 0.45}) 0%, rgba(${rgb},${a * 0.7}) 62%, rgba(${rgb},${a * 1.2}) 80%, rgba(${rgb},0) 83%)`;
+
+const ORBS = [
+  { s: "clamp(320px,55vw,640px)", x: "-12%", y: "-8%",  bg: halo(AMBER, 0.28),   b: "blur-3xl", d: 22, dl: 0 },
+  { s: "clamp(280px,48vw,560px)", x: "62%",  y: "18%",  bg: halo(QUARTZ, 0.2),   b: "blur-3xl", d: 26, dl: -6 },
+  { s: "clamp(300px,52vw,600px)", x: "18%",  y: "68%",  bg: halo(GOLD, 0.22),    b: "blur-3xl", d: 24, dl: -3 },
+  { s: "clamp(220px,36vw,420px)", x: "78%",  y: "76%",  bg: halo(QUARTZ, 0.16),  b: "blur-3xl", d: 28, dl: -10 },
+  { s: "clamp(70px,11vw,150px)",  x: "8%",   y: "22%",  bg: disc(AMBER, 0.3),    b: "blur-[2px]", d: 14, dl: -2 },
+  { s: "clamp(40px,6vw,80px)",    x: "24%",  y: "8%",   bg: disc(CHAMPAGNE, 0.28), b: "blur-[1px]", d: 11, dl: -5 },
+  { s: "clamp(90px,14vw,190px)",  x: "82%",  y: "6%",   bg: disc(GOLD, 0.24),    b: "blur-sm",    d: 17, dl: -7 },
+  { s: "clamp(50px,7vw,100px)",   x: "70%",  y: "42%",  bg: disc(QUARTZ, 0.22),  b: "blur-[2px]", d: 13, dl: -1 },
+  { s: "clamp(60px,9vw,120px)",   x: "4%",   y: "52%",  bg: disc(CHAMPAGNE, 0.24), b: "blur-sm",    d: 16, dl: -9 },
+  { s: "clamp(34px,5vw,64px)",    x: "90%",  y: "62%",  bg: disc(AMBER, 0.3),    b: "blur-[1px]", d: 10, dl: -4 },
+  { s: "clamp(80px,12vw,170px)",  x: "46%",  y: "86%",  bg: disc(GOLD, 0.22),    b: "blur-sm",    d: 19, dl: -8 },
+  { s: "clamp(44px,6vw,90px)",    x: "14%",  y: "88%",  bg: disc(QUARTZ, 0.2),   b: "blur-[2px]", d: 12, dl: -6 },
+];
 
 export default function EspaceMembrePro({ onRequireLogin }) {
   const { isLoggedIn, loading: authLoading, user } = useAuth();
@@ -90,15 +118,11 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     }
   }, [isLoggedIn, user]);
 
-  // text-generation
-  // 🔑 RECOUVREMENT DES DROITS : Lecture de la colonne role_abonnement et validation Admin
   const userPlan = userProfile?.role_abonnement || 'none';
   const isSuperAdmin = userProfile?.role === 'admin';
 
-  // L'accès est accordé si l'utilisateur possède le bon plan OU s'il est SuperAdmin
   const hasProTier = ['pro', 'elite'].includes(userPlan) || isSuperAdmin;
   const hasEliteTier = ['elite'].includes(userPlan) || isSuperAdmin;
-
 
   const montantHT = round2(parseFloat(itemPrice) || 0);
   const montantTVA = hasTva ? round2(montantHT * (tvaRate / 100)) : 0;
@@ -122,18 +146,45 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     );
   }
 
-  // 🔒 VÉRIFICATION INITIALE : Connexion obligatoire
   if (!isLoggedIn) {
     return (
-      <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-[70vh] font-sans flex flex-col items-center justify-center">
-        <div className="max-w-md bg-neutral-900 border border-neutral-800 p-8 rounded-3xl shadow-2xl text-center space-y-4">
+      <div className="relative isolate overflow-hidden mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-[70vh] font-sans flex flex-col items-center justify-center">
+        <style>{`
+          @keyframes bokeh-drift {
+            0%   { transform: translate3d(0, 0, 0) scale(1);   opacity: .85; }
+            50%  { transform: translate3d(10px, -22px, 0) scale(1.06); opacity: 1; }
+            100% { transform: translate3d(0, 0, 0) scale(1);   opacity: .85; }
+          }
+          .bokeh-orb { animation: bokeh-drift var(--d) ease-in-out var(--dl) infinite; will-change: transform, opacity; }
+        `}</style>
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          {ORBS.map((o, i) => (
+            <div
+              key={i}
+              className={`bokeh-orb absolute rounded-full ${o.b}`}
+              style={{
+                width: o.s,
+                height: o.s,
+                left: o.x,
+                top: o.y,
+                background: o.bg,
+                "--d": `${o.d}s`,
+                "--dl": `${o.dl}s`,
+              }}
+            />
+          ))}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(10,10,10,0.55)_0%,rgba(10,10,10,0.25)_55%,rgba(10,10,10,0.7)_100%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/40 via-transparent to-neutral-950/60" />
+        </div>
+
+        <div className="relative z-10 max-w-md bg-neutral-900/70 border border-neutral-800 p-8 rounded-3xl shadow-2xl text-center space-y-4 backdrop-blur-md">
           <span className="text-5xl block animate-pulse">🔒</span>
           <h2 className="text-xl font-black text-amber-400">{isEn ? "Private Space" : "Espace Privé Boké One"}</h2>
           <p className="text-xs text-neutral-400">{isEn ? "Please sign in to access your professional tools and services." : "Veuillez vous connecter pour accéder à vos outils et services professionnels."}</p>
           <button
             type="button"
             onClick={() => onRequireLogin?.()}
-            className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3 rounded-xl transition text-sm uppercase tracking-wider cursor-pointer"
+            className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-3 rounded-xl transition text-sm uppercase tracking-wider cursor-pointer shadow-lg"
           >
             {isEn ? "Sign In ➔" : "Se connecter ➔"}
           </button>
@@ -142,7 +193,6 @@ export default function EspaceMembrePro({ onRequireLogin }) {
     );
   }
 
-  // Définition des 5 fiches/vignettes avec leurs conditions d'accès MVP
   const VIGNETTES_PRO = [
     {
       id: "tarifs",
@@ -354,335 +404,372 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-screen font-sans space-y-8">
-      
-      {/* En-tête de la page */}
-      <div className="space-y-2 border-b border-neutral-800 pb-5">
-        <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-          ESPACE PRO & FACTURATION OFFICIELLE
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-white">
-          Espace Vente, Compta & Conformité Pro
-        </h1>
-        <p className="text-xs sm:text-sm text-neutral-400">
-          Gérez vos abonnements et générez vos factures et devis en temps réel.
-        </p>
+    <div className="relative isolate overflow-hidden mx-auto w-full max-w-7xl bg-neutral-950 p-4 sm:p-8 text-neutral-200 min-h-screen font-sans space-y-8">
+      {/* Animation légère du bokeh (transform/opacity uniquement = GPU) */}
+      <style>{`
+        @keyframes bokeh-drift {
+          0%   { transform: translate3d(0, 0, 0) scale(1);   opacity: .85; }
+          50%  { transform: translate3d(10px, -22px, 0) scale(1.06); opacity: 1; }
+          100% { transform: translate3d(0, 0, 0) scale(1);   opacity: .85; }
+        }
+        .bokeh-orb { animation: bokeh-drift var(--d) ease-in-out var(--dl) infinite; will-change: transform, opacity; }
+        @media (prefers-reduced-motion: reduce) {
+          .bokeh-orb { animation: none; }
+        }
+      `}</style>
+
+      {/* ============ COUCHE BOKEH (arrière-plan) ============ */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        {ORBS.map((o, i) => (
+          <div
+            key={i}
+            className={`bokeh-orb absolute rounded-full ${o.b}`}
+            style={{
+              width: o.s,
+              height: o.s,
+              left: o.x,
+              top: o.y,
+              background: o.bg,
+              "--d": `${o.d}s`,
+              "--dl": `${o.dl}s`,
+            }}
+          />
+        ))}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(10,10,10,0.55)_0%,rgba(10,10,10,0.25)_55%,rgba(10,10,10,0.7)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/40 via-transparent to-neutral-950/60" />
       </div>
 
-      {/* Tableau de bord des statistiques */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl text-left">
-          <span className="text-[10px] text-neutral-500 font-bold block uppercase tracking-wider">👥 Vues</span>
-          <span className="text-2xl font-black text-white">14 250</span>
+      {/* ============ CONTENU (premier plan) ============ */}
+      <div className="relative z-10 space-y-8">
+        
+        {/* En-tête de la page */}
+        <div className="space-y-2 border-b border-neutral-800 pb-5">
+          <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">
+            ESPACE PRO & FACTURATION OFFICIELLE
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-black text-white">
+            Espace Vente, Compta & Conformité Pro
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-400">
+            Gérez vos abonnements et générez vos factures et devis en temps réel.
+          </p>
         </div>
-        <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl text-left">
-          <span className="text-[10px] text-neutral-500 font-bold block uppercase tracking-wider">💖 Likes</span>
-          <span className="text-2xl font-black text-rose-500">3 840</span>
-        </div>
-        <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl text-left">
-          <span className="text-[10px] text-neutral-500 font-bold block uppercase tracking-wider">💰 Total Gagné</span>
-          <span className="text-2xl font-black text-emerald-400">1 850,00 €</span>
-        </div>
-      </div>
 
-      {/* Bouton de retour au tableau de bord si on est dans un module */}
-      {activeTab !== "dashboard" && (
-        <div>
-          <button
-            type="button"
-            onClick={() => setActiveTab("dashboard")}
-            className="text-xs font-bold bg-neutral-900 border border-neutral-800 text-amber-400 px-4 py-2 rounded-xl hover:border-amber-500/40 transition cursor-pointer"
-          >
-            ← {isEn ? "Back to Dashboard" : "← Retour aux modules Pro"}
-          </button>
-        </div>
-      )}
-
-      {/* VUE TABLEAU DE BORD : Grille des 5 fiches interactives */}
-      {activeTab === "dashboard" && (
-        <div className="space-y-4">
-          <h3 className="text-sm font-black text-amber-400 uppercase tracking-wider">🗂️ Modules et Fonctionnalités</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {VIGNETTES_PRO.map((vignette) => {
-              const isAllowed = vignette.allowed.includes(userPlan);
-              return (
-                <div 
-                  key={vignette.id}
-                  onClick={vignette.action}
-                  className={`p-6 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between h-44 ${
-                    isAllowed 
-                      ? "bg-neutral-900 border-neutral-800 hover:border-amber-500/40 hover:shadow-lg" 
-                      : "bg-neutral-900/40 border-neutral-900 text-neutral-500 opacity-70"
-                  }`}
-                >
-                  <div>
-                    <h4 className={`text-sm font-bold ${isAllowed ? "text-white" : "text-neutral-400"}`}>
-                      {vignette.title}
-                    </h4>
-                    <p className="text-[11px] text-neutral-400 mt-2 leading-relaxed line-clamp-2">
-                      {vignette.desc}
-                    </p>
-                  </div>
-                  
-                  <span className={`text-[10px] font-bold underline pt-2 block ${isAllowed ? "text-amber-400" : "text-neutral-500"}`}>
-                    {isAllowed ? "Ouvrir le module →" : "🔒 Contenu Verrouillé"}
-                  </span>
-                </div>
-              );
-            })}
+        {/* Tableau de bord des statistiques */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-neutral-900/70 backdrop-blur-md border border-neutral-800 p-5 rounded-2xl text-left shadow-xl">
+            <span className="text-[10px] text-neutral-500 font-bold block uppercase tracking-wider">👥 Vues</span>
+            <span className="text-2xl font-black text-white">14 250</span>
+          </div>
+          <div className="bg-neutral-900/70 backdrop-blur-md border border-neutral-800 p-5 rounded-2xl text-left shadow-xl">
+            <span className="text-[10px] text-neutral-500 font-bold block uppercase tracking-wider">💖 Likes</span>
+            <span className="text-2xl font-black text-rose-500">3 840</span>
+          </div>
+          <div className="bg-neutral-900/70 backdrop-blur-md border border-neutral-800 p-5 rounded-2xl text-left shadow-xl">
+            <span className="text-[10px] text-neutral-500 font-bold block uppercase tracking-wider">💰 Total Gagné</span>
+            <span className="text-2xl font-black text-emerald-400">1 850,00 €</span>
           </div>
         </div>
-      )}
 
-      {/* VUE MODULE : Configuration Entreprise */}
-      {activeTab === "companyConfig" && hasProTier && (
-        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl max-w-2xl mx-auto space-y-5">
-          <h3 className="text-base font-bold text-amber-400">{isEn ? "Company Settings & Logo" : "Paramètres de votre Entreprise & Logo"}</h3>
+        {/* Bouton de retour au tableau de bord si on est dans un module */}
+        {activeTab !== "dashboard" && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setActiveTab("dashboard")}
+              className="text-xs font-bold bg-neutral-900/80 backdrop-blur-md border border-neutral-800 text-amber-400 px-4 py-2 rounded-xl hover:border-amber-500/40 transition cursor-pointer shadow-lg"
+            >
+              ← {isEn ? "Back to Dashboard" : "← Retour aux modules Pro"}
+            </button>
+          </div>
+        )}
+
+        {/* VUE TABLEAU DE BORD : Grille des 5 fiches interactives */}
+        {activeTab === "dashboard" && (
           <div className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Company Logo (PNG / JPG):" : "Logo de l'entreprise (PNG / JPG) :"}</label>
-              <div className="flex items-center gap-4">
-                {companyInfo.logoBase64 && (
-                  <img src={companyInfo.logoBase64} alt="Logo" className="h-14 w-14 object-contain rounded-xl bg-neutral-950 border border-neutral-800 p-1" />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={logoInputRef}
-                  onChange={handleLogoUpload}
-                  className="text-xs text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-neutral-950 cursor-pointer"
-                />
-              </div>
-              {logoError && <p className="text-xs text-red-400 mt-1">{logoError}</p>}
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Company Name:" : "Nom de l'entreprise :"}</label>
-              <input
-                type="text"
-                value={companyInfo.name}
-                placeholder="Ex : Studio Lumière"
-                onChange={(e) => setCompanyInfo({ ...companyInfo, name: e.target.value })}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-xs outline-none focus:border-amber-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold text-neutral-300 block mb-1">SIRET :</label>
-                <input
-                  type="text"
-                  value={companyInfo.siret}
-                  placeholder="14 chiffres"
-                  onChange={(e) => setCompanyInfo({ ...companyInfo, siret: e.target.value })}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-xs outline-none focus:border-amber-500"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Pro Email:" : "E-mail Pro :"}</label>
-                <input
-                  type="text"
-                  value={companyInfo.email}
-                  placeholder="contact@domaine.fr"
-                  onChange={(e) => setCompanyInfo({ ...companyInfo, email: e.target.value })}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-xs outline-none focus:border-amber-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Postal Address:" : "Adresse postale :"}</label>
-              <input
-                type="text"
-                value={companyInfo.address}
-                placeholder="Adresse complète"
-                onChange={(e) => setCompanyInfo({ ...companyInfo, address: e.target.value })}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-xs outline-none focus:border-amber-500"
-              />
+            <h3 className="text-sm font-black text-amber-400 uppercase tracking-wider">🗂️ Modules et Fonctionnalités</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {VIGNETTES_PRO.map((vignette) => {
+                const isAllowed = vignette.allowed.includes(userPlan);
+                return (
+                  <div 
+                    key={vignette.id}
+                    onClick={vignette.action}
+                    className={`p-6 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between h-44 backdrop-blur-md shadow-xl ${
+                      isAllowed 
+                        ? "bg-neutral-900/70 border-neutral-800 hover:border-amber-500/40 hover:shadow-amber-500/5" 
+                        : "bg-neutral-900/30 border-neutral-900 text-neutral-500 opacity-70"
+                    }`}
+                  >
+                    <div>
+                      <h4 className={`text-sm font-bold ${isAllowed ? "text-white" : "text-neutral-400"}`}>
+                        {vignette.title}
+                      </h4>
+                      <p className="text-[11px] text-neutral-400 mt-2 leading-relaxed line-clamp-2">
+                        {vignette.desc}
+                      </p>
+                    </div>
+                    
+                    <span className={`text-[10px] font-bold underline pt-2 block ${isAllowed ? "text-amber-400" : "text-neutral-500"}`}>
+                      {isAllowed ? "Ouvrir le module →" : "🔒 Contenu Verrouillé"}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* VUE MODULE : Factures PDF */}
-      {activeTab === "invoices" && hasProTier && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4 h-fit">
-            <div className="border-b border-neutral-800 pb-3 flex justify-between items-center">
-              <h3 className="text-base font-bold text-amber-400">{isEn ? "Real-Time Editor" : "Saisie en Temps Réel"}</h3>
-              <select
-                value={docType}
-                onChange={(e) => setDocType(e.target.value)}
-                className="bg-neutral-950 border border-amber-500 text-amber-400 font-bold px-3 py-1.5 rounded-xl text-xs outline-none cursor-pointer"
-              >
-                <option value="FACTURE">{isEn ? "INVOICE" : "FACTURE"}</option>
-                <option value="DEVIS">{isEn ? "QUOTE" : "DEVIS"}</option>
-              </select>
-            </div>
-
-            <div className="space-y-3">
+        {/* VUE MODULE : Configuration Entreprise */}
+        {activeTab === "companyConfig" && hasProTier && (
+          <div className="bg-neutral-900/80 backdrop-blur-md border border-neutral-800 p-6 rounded-2xl max-w-2xl mx-auto space-y-5 shadow-2xl">
+            <h3 className="text-base font-bold text-amber-400">{isEn ? "Company Settings & Logo" : "Paramètres de votre Entreprise & Logo"}</h3>
+            <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Client:" : "Client :"}</label>
-                <input
-                  type="text"
-                  value={clientName}
-                  placeholder="Nom du client"
-                  onChange={(e) => setClientName(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-amber-500"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Client Address:" : "Adresse du client :"}</label>
-                <input
-                  type="text"
-                  value={clientAddress}
-                  placeholder="Adresse du client"
-                  onChange={(e) => setClientAddress(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-amber-500"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Service Description:" : "Intitulé de la prestation :"}</label>
-                <input
-                  type="text"
-                  value={itemTitle}
-                  placeholder="Ex : Reportage photo"
-                  onChange={(e) => setItemTitle(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-amber-500"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Amount Excl. Tax (€):" : "Montant HT (€) :"}</label>
-                <input
-                  type="number"
-                  value={itemPrice}
-                  onChange={(e) => setItemPrice(Number(e.target.value) || 0)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-white font-bold text-sm outline-none focus:border-amber-500"
-                />
-              </div>
-
-              <div className="pt-2 border-t border-neutral-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-neutral-300">{isEn ? "Apply VAT:" : "Appliquer la TVA :"}</label>
+                <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Company Logo (PNG / JPG):" : "Logo de l'entreprise (PNG / JPG) :"}</label>
+                <div className="flex items-center gap-4">
+                  {companyInfo.logoBase64 && (
+                    <img src={companyInfo.logoBase64} alt="Logo" className="h-14 w-14 object-contain rounded-xl bg-neutral-950 border border-neutral-800 p-1" />
+                  )}
                   <input
-                    type="checkbox"
-                    checked={hasTva}
-                    onChange={(e) => setHasTva(e.target.checked)}
-                    className="w-4 h-4 accent-amber-500 cursor-pointer"
+                    type="file"
+                    accept="image/*"
+                    ref={logoInputRef}
+                    onChange={handleLogoUpload}
+                    className="text-xs text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-neutral-950 cursor-pointer"
                   />
                 </div>
-                {hasTva && (
-                  <div>
-                    <label className="text-xs font-bold text-neutral-400 block mb-1">{isEn ? "VAT Rate (%):" : "Taux de TVA (%) :"}</label>
+                {logoError && <p className="text-xs text-red-400 mt-1">{logoError}</p>}
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Company Name:" : "Nom de l'entreprise :"}</label>
+                <input
+                  type="text"
+                  value={companyInfo.name}
+                  placeholder="Ex : Studio Lumière"
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, name: e.target.value })}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-xs outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-neutral-300 block mb-1">SIRET :</label>
+                  <input
+                    type="text"
+                    value={companyInfo.siret}
+                    placeholder="14 chiffres"
+                    onChange={(e) => setCompanyInfo({ ...companyInfo, siret: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-xs outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Pro Email:" : "E-mail Pro :"}</label>
+                  <input
+                    type="text"
+                    value={companyInfo.email}
+                    placeholder="contact@domaine.fr"
+                    onChange={(e) => setCompanyInfo({ ...companyInfo, email: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-xs outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Postal Address:" : "Adresse postale :"}</label>
+                <input
+                  type="text"
+                  value={companyInfo.address}
+                  placeholder="Adresse complète"
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, address: e.target.value })}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-neutral-100 text-xs outline-none focus:border-amber-500"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VUE MODULE : Factures PDF */}
+        {activeTab === "invoices" && hasProTier && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-neutral-900/80 backdrop-blur-md border border-neutral-800 p-6 rounded-2xl space-y-4 h-fit shadow-2xl">
+              <div className="border-b border-neutral-800 pb-3 flex justify-between items-center">
+                <h3 className="text-base font-bold text-amber-400">{isEn ? "Real-Time Editor" : "Saisie en Temps Réel"}</h3>
+                <select
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value)}
+                  className="bg-neutral-950 border border-amber-500 text-amber-400 font-bold px-3 py-1.5 rounded-xl text-xs outline-none cursor-pointer"
+                >
+                  <option value="FACTURE">{isEn ? "INVOICE" : "FACTURE"}</option>
+                  <option value="DEVIS">{isEn ? "QUOTE" : "DEVIS"}</option>
+                </select>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Client:" : "Client :"}</label>
+                  <input
+                    type="text"
+                    value={clientName}
+                    placeholder="Nom du client"
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Client Address:" : "Adresse du client :"}</label>
+                  <input
+                    type="text"
+                    value={clientAddress}
+                    placeholder="Adresse du client"
+                    onChange={(e) => setClientAddress(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Service Description:" : "Intitulé de la prestation :"}</label>
+                  <input
+                    type="text"
+                    value={itemTitle}
+                    placeholder="Ex : Reportage photo"
+                    onChange={(e) => setItemTitle(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-neutral-300 block mb-1">{isEn ? "Amount Excl. Tax (€):" : "Montant HT (€) :"}</label>
+                  <input
+                    type="number"
+                    value={itemPrice}
+                    onChange={(e) => setItemPrice(Number(e.target.value) || 0)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-white font-bold text-sm outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-neutral-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-neutral-300">{isEn ? "Apply VAT:" : "Appliquer la TVA :"}</label>
                     <input
-                      type="number"
-                      value={tvaRate}
-                      onChange={(e) => setTvaRate(Number(e.target.value) || 0)}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-white text-xs outline-none focus:border-amber-500"
+                      type="checkbox"
+                      checked={hasTva}
+                      onChange={(e) => setHasTva(e.target.checked)}
+                      className="w-4 h-4 accent-amber-500 cursor-pointer"
                     />
                   </div>
-                )}
+                  {hasTva && (
+                    <div>
+                      <label className="text-xs font-bold text-neutral-400 block mb-1">{isEn ? "VAT Rate (%):" : "Taux de TVA (%) :"}</label>
+                      <input
+                        type="number"
+                        value={tvaRate}
+                        onChange={(e) => setTvaRate(Number(e.target.value) || 0)}
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2 text-white text-xs outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <button
-              onClick={handlePrintPDF}
-              disabled={printing}
-              className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-neutral-950 font-black rounded-xl text-xs uppercase tracking-wider transition shadow-lg cursor-pointer mt-4"
-            >
-              {printing ? (isEn ? "⏳ Issuing..." : "⏳ Numérotation en cours…") : (isEn ? "🖨️ Download / Print Official PDF" : "🖨️ Télécharger / Imprimer en PDF officiel")}
-            </button>
-
-            {printMessage && (
-              <p className={`text-xs font-bold text-center ${printMessage.type === "error" ? "text-red-400" : "text-emerald-400"}`}>
-                {printMessage.text}
-              </p>
-            )}
-          </div>
-
-          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center justify-center text-center space-y-3">
-            <span className="text-3xl">📄</span>
-            <h4 className="text-sm font-bold text-white">{isEn ? "Live PDF Preview" : "Aperçu instantané du PDF"}</h4>
-            <p className="text-xs text-neutral-400 max-w-sm">
-              {isEn ? "Your document is formatted according to legal standards with automatic sequential numbering." : "Votre document est mis en forme selon les normes légales avec numérotation séquentielle automatique."}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* VUE MODULE : CRM */}
-      {activeTab === "crm" && hasEliteTier && (
-        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4 max-w-2xl mx-auto">
-          <h3 className="text-base font-bold text-amber-400">📊 {isEn ? "CRM & Lead Pipeline" : "CRM & Suivi des Prospects"}</h3>
-          <p className="text-xs text-neutral-400">{isEn ? "Track client leads, ongoing quotes, and pipeline status." : "Gérez vos opportunités, relances clients et le suivi des devis."}</p>
-          <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-xl flex items-center justify-between">
-            <div>
-              <h4 className="text-sm font-bold text-white">{currentActiveLead.clientName}</h4>
-              <p className="text-xs text-neutral-400">Budget : {currentActiveLead.budget}</p>
-            </div>
-            <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold">
-              {currentActiveLead.status}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* VUE MODULE : Scripts de vente */}
-      {activeTab === "notionLive" && hasEliteTier && (
-        <div className="bg-gradient-to-br from-neutral-950 via-neutral-900 to-amber-950/20 border-2 border-amber-500/40 p-6 rounded-3xl shadow-2xl space-y-5 max-w-2xl mx-auto">
-          <h2 className="text-xl font-black text-white">{isEn ? "Sales Funnel & Pro Script" : "Tunnel de Vente & Script Pro"}</h2>
-          <p className="text-sm text-neutral-300 italic">{currentActiveLead.scriptSteps[scriptStep]}</p>
-          <button
-            onClick={() => setScriptStep((prev) => (prev < 3 ? prev + 1 : 1))}
-            className="px-4 py-2 bg-amber-500 text-neutral-950 rounded-xl font-bold text-xs cursor-pointer"
-          >
-            {isEn ? "Next line ➔" : "Réplique suivante ➔"}
-          </button>
-        </div>
-      )}
-
-      {/* MODAL DE RESTRICTION */}
-      {restrictionModal.open && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-amber-500/50 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
-            <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">🔒</span>
-                <h3 className="text-lg font-bold text-amber-400">{restrictionModal.title}</h3>
-              </div>
-              <button 
-                onClick={() => setRestrictionModal({ open: false, title: "", text: "" })}
-                className="text-neutral-400 hover:text-white font-bold cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-              {restrictionModal.text}
-            </p>
-
-            <div className="space-y-2 pt-2">
               <button
+                onClick={handlePrintPDF}
+                disabled={printing}
+                className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-neutral-950 font-black rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-amber-500/20 cursor-pointer mt-4"
+              >
+                {printing ? (isEn ? "⏳ Issuing..." : "⏳ Numérotation en cours…") : (isEn ? "🖨️ Download / Print Official PDF" : "🖨️ Télécharger / Imprimer en PDF officiel")}
+              </button>
+
+              {printMessage && (
+                <p className={`text-xs font-bold text-center ${printMessage.type === "error" ? "text-red-400" : "text-emerald-400"}`}>
+                  {printMessage.text}
+                </p>
+              )}
+            </div>
+
+            <div className="bg-neutral-900/80 backdrop-blur-md border border-neutral-800 p-6 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 shadow-2xl">
+              <span className="text-3xl">📄</span>
+              <h4 className="text-sm font-bold text-white">{isEn ? "Live PDF Preview" : "Aperçu instantané du PDF"}</h4>
+              <p className="text-xs text-neutral-400 max-w-sm">
+                {isEn ? "Your document is formatted according to legal standards with automatic sequential numbering." : "Votre document est mis en forme selon les normes légales avec numérotation séquentielle automatique."}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* VUE MODULE : CRM */}
+        {activeTab === "crm" && hasEliteTier && (
+          <div className="bg-neutral-900/80 backdrop-blur-md border border-neutral-800 p-6 rounded-2xl space-y-4 max-w-2xl mx-auto shadow-2xl">
+            <h3 className="text-base font-bold text-amber-400">📊 {isEn ? "CRM & Lead Pipeline" : "CRM & Suivi des Prospects"}</h3>
+            <p className="text-xs text-neutral-400">{isEn ? "Track client leads, ongoing quotes, and pipeline status." : "Gérez vos opportunités, relances clients et le suivi des devis."}</p>
+            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-white">{currentActiveLead.clientName}</h4>
+                <p className="text-xs text-neutral-400">Budget : {currentActiveLead.budget}</p>
+              </div>
+              <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold">
+                {currentActiveLead.status}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* VUE MODULE : Scripts de vente */}
+        {activeTab === "notionLive" && hasEliteTier && (
+          <div className="bg-neutral-900/80 backdrop-blur-md border border-neutral-800 p-6 rounded-2xl space-y-4 max-w-2xl mx-auto shadow-2xl">
+            <h3 className="text-base font-bold text-amber-400">💬 {isEn ? "Direct Sales Scripts" : "Scripts de Vente en Direct"}</h3>
+            <p className="text-xs text-neutral-400">{isEn ? "Follow the negotiation steps to convert your clients." : "Suivez les étapes de négociation pour convertir vos clients."}</p>
+            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-xl space-y-3">
+              <div className="flex gap-2">
+                {[1, 2, 3].map((step) => (
+                  <button
+                    key={step}
+                    onClick={() => setScriptStep(step)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer transition ${
+                      scriptStep === step ? "bg-amber-500 text-neutral-950" : "bg-neutral-900 text-neutral-400"
+                    }`}
+                  >
+                    Étape {step}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-neutral-200 italic p-3 bg-neutral-900 rounded-lg border border-neutral-800">
+                {currentActiveLead.scriptSteps[scriptStep]}
+              </p>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* MODAL DE RESTRICTION D'ABONNEMENT */}
+      {restrictionModal.open && (
+        <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-3xl max-w-md w-full space-y-4 text-center shadow-2xl">
+            <span className="text-4xl">⭐</span>
+            <h3 className="text-lg font-black text-amber-400">{restrictionModal.title}</h3>
+            <p className="text-xs text-neutral-300 leading-relaxed">{restrictionModal.text}</p>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setRestrictionModal({ open: false, title: "", text: "" })}
+                className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer"
+              >
+                {isEn ? "Close" : "Fermer"}
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   setRestrictionModal({ open: false, title: "", text: "" });
                   navigate("/tarifs");
                 }}
-                className="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-neutral-950 font-bold rounded-xl text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer"
+                className="flex-1 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer shadow-lg"
               >
-                {isEn ? "View Pricing & Subscribe ⚡" : "Voir les offres & S'abonner ⚡"}
-              </button>
-              <button
-                onClick={() => setRestrictionModal({ open: false, title: "", text: "" })}
-                className="w-full py-2 text-xs text-neutral-400 hover:text-white cursor-pointer"
-              >
-                {isEn ? "Close" : "Fermer"}
+                {isEn ? "Upgrade Plan ➔" : "Voir les offres ➔"}
               </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
