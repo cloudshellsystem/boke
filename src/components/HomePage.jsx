@@ -96,7 +96,7 @@ const SEARCH_SUGGESTIONS = {
 };
 
 /* ------------------------------------------------------------------
-    PALETTE BOKEH (RGB) pour l'en-tête (Hero)
+    CONFIGURATION DU BOKEH PHOTOGRAPHIQUE HAUT DE GAMME
 ------------------------------------------------------------------- */
 const AMBER = "251,191,36";
 const GOLD = "245,158,11";
@@ -110,12 +110,12 @@ const disc = (rgb, a) =>
   `radial-gradient(circle at 50% 50%, rgba(${rgb},${a * 0.45}) 0%, rgba(${rgb},${a * 0.7}) 62%, rgba(${rgb},${a * 1.2}) 80%, rgba(${rgb},0) 83%)`;
 
 const HERO_ORBS = [
-  { s: "clamp(280px,45vw,520px)", x: "-10%", y: "-15%", bg: halo(AMBER, 0.25),   b: "blur-3xl", d: 20, dl: 0 },
-  { s: "clamp(240px,38vw,450px)", x: "65%",  y: "10%",  bg: halo(QUARTZ, 0.18),  b: "blur-3xl", d: 24, dl: -5 },
-  { s: "clamp(60px,10vw,130px)",  x: "12%",  y: "25%",  bg: disc(AMBER, 0.28),   b: "blur-[2px]", d: 13, dl: -2 },
-  { s: "clamp(80px,12vw,160px)",  x: "80%",  y: "18%",  bg: disc(GOLD, 0.22),    b: "blur-sm",    d: 16, dl: -6 },
-  { s: "clamp(45px,6vw,90px)",    x: "72%",  y: "55%",  bg: disc(QUARTZ, 0.20),  b: "blur-[2px]", d: 12, dl: -1 },
-  { s: "clamp(70px,9vw,140px)",   x: "25%",  y: "65%",  bg: disc(CHAMPAGNE, 0.22), b: "blur-sm",  d: 18, dl: -8 },
+  { s: "clamp(320px,50vw,600px)", x: "-5%",  y: "-10%", bg: halo(AMBER, 0.38),     b: "blur-3xl", d: 22, dl: 0 },
+  { s: "clamp(280px,42vw,500px)", x: "58%",  y: "5%",   bg: halo(QUARTZ, 0.28),    b: "blur-3xl", d: 26, dl: -4 },
+  { s: "clamp(80px,12vw,160px)",  x: "15%",  y: "20%",  bg: disc(AMBER, 0.45),     b: "blur-[2px]", d: 14, dl: -2 },
+  { s: "clamp(100px,15vw,200px)", x: "75%",  y: "15%",  bg: disc(GOLD, 0.4),       b: "blur-sm",    d: 18, dl: -6 },
+  { s: "clamp(55px,8vw,110px)",   x: "65%",  y: "65%",  bg: disc(QUARTZ, 0.35),    b: "blur-[2px]", d: 13, dl: -1 },
+  { s: "clamp(75px,10vw,150px)",  x: "22%",  y: "70%",  bg: disc(CHAMPAGNE, 0.4),  b: "blur-sm",    d: 16, dl: -8 },
 ];
 
 export default function HomePage({ onRequireLogin }) {
@@ -188,12 +188,12 @@ export default function HomePage({ onRequireLogin }) {
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20">
       
-      {/* Animation GPU fluide pour les orbs bokeh */}
+      {/* Animation GPU fluide */}
       <style>{`
         @keyframes hero-bokeh-drift {
-          0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .85; }
-          50%  { transform: translate3d(12px, -18px, 0) scale(1.05); opacity: 1; }
-          100% { transform: translate3d(0, 0, 0) scale(1); opacity: .85; }
+          0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .9; }
+          50%  { transform: translate3d(12px, -20px, 0) scale(1.06); opacity: 1; }
+          100% { transform: translate3d(0, 0, 0) scale(1); opacity: .9; }
         }
         .hero-bokeh-orb { animation: hero-bokeh-drift var(--d) ease-in-out var(--dl) infinite; will-change: transform, opacity; }
         @media (prefers-reduced-motion: reduce) {
@@ -202,11 +202,11 @@ export default function HomePage({ onRequireLogin }) {
       `}</style>
 
       {/* ========================================================= */}
-      {/* 1. PREMIÈRE BANNIÈRE (HERO) AVEC LE BOKEH PHOTOGRAPHIQUE   */}
+      {/* 1. PREMIÈRE BANNIÈRE (HERO) AVEC LE VRAI BOKEH HAUT DE GAMME */}
       {/* ========================================================= */}
-      <section className="relative overflow-hidden pt-8 pb-12 px-4 border-b border-neutral-900">
+      <section className="relative isolate overflow-hidden pt-10 pb-14 px-4 border-b border-neutral-900">
         
-        {/* Couche Bokeh confinée à la première bannière */}
+        {/* Couche Bokeh intégrée en arrière-plan absolu de la bannière */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           {HERO_ORBS.map((o, i) => (
             <div
@@ -223,8 +223,8 @@ export default function HomePage({ onRequireLogin }) {
               }}
             />
           ))}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(10,10,10,0.5)_0%,rgba(10,10,10,0.2)_50%,rgba(10,10,10,0.9)_100%)]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/30 via-transparent to-neutral-950" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(5,5,5,0.3)_0%,rgba(5,5,5,0.15)_50%,rgba(5,5,5,0.75)_100%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/20 via-transparent to-neutral-950" />
         </div>
 
         <div className="max-w-5xl mx-auto space-y-8 relative z-10">
@@ -237,7 +237,7 @@ export default function HomePage({ onRequireLogin }) {
 
           {/* MOTEUR DE RECHERCHE */}
           <section aria-label={isEn ? "Search a photographer or creator" : "Rechercher un photographe ou un créateur"}>
-            <div className="bg-neutral-900/70 border border-neutral-800/80 p-3.5 rounded-2xl shadow-2xl backdrop-blur-md">
+            <div className="bg-neutral-900/75 border border-neutral-800/80 p-3.5 rounded-2xl shadow-2xl backdrop-blur-md">
               <form onSubmit={handleSearchSubmit} role="search" className="flex flex-col sm:flex-row gap-3 items-center">
                 <div className="relative flex-1 w-full">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm" aria-hidden="true">
@@ -253,7 +253,7 @@ export default function HomePage({ onRequireLogin }) {
                     }
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-neutral-950/80 border border-neutral-800 rounded-xl pl-11 pr-4 py-2.5 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
+                    className="w-full bg-neutral-950/85 border border-neutral-800 rounded-xl pl-11 pr-4 py-2.5 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
                   />
                 </div>
                 <button
@@ -283,7 +283,7 @@ export default function HomePage({ onRequireLogin }) {
             </nav>
           </section>
 
-          {/* CARROUSEL ACTUALITÉS */}
+          {/* CARROUSEL ACTUALITÉS & OFFRES D'EMPLOI */}
           <section className="space-y-3">
             <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-2.5" role="tablist">
               <button
@@ -315,8 +315,14 @@ export default function HomePage({ onRequireLogin }) {
             </div>
 
             <article
-              onClick={() => setSelectedNews(item)}
-              className="bg-neutral-900/70 backdrop-blur-md border border-neutral-800/80 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer group"
+              onClick={() => {
+                if (activeSubTab === "annonces") {
+                  navigate("/opportunites");
+                } else {
+                  setSelectedNews(item);
+                }
+              }}
+              className="bg-neutral-900/75 backdrop-blur-md border border-neutral-800/90 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer group"
             >
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                 <div className="md:col-span-4 relative overflow-hidden rounded-xl border border-neutral-800 h-36 sm:h-44 bg-neutral-950">
@@ -342,17 +348,10 @@ export default function HomePage({ onRequireLogin }) {
                   <p className="text-xs text-neutral-300 leading-relaxed line-clamp-2">{item.summary}</p>
                   
                   <div className="pt-1 flex items-center gap-4">
-                    {!isLoggedIn && item.restricted ? (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRequireLogin?.();
-                        }}
-                        className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-lg cursor-pointer"
-                      >
-                        {isEn ? "🔒 Log in to apply" : "🔒 Se connecter pour postuler à cette offre"}
-                      </button>
+                    {activeSubTab === "annonces" ? (
+                      <span className="bg-amber-500 group-hover:bg-amber-400 text-neutral-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-lg cursor-pointer">
+                        Voir l'opportunité complète ➔
+                      </span>
                     ) : (
                       <span className="text-xs font-bold text-amber-400 underline">
                         {isEn ? "Read full details →" : "Lire le détail complet →"}
