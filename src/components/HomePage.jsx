@@ -95,17 +95,6 @@ const SEARCH_SUGGESTIONS = {
   en: ["Portrait", "Editorial", "Wedding", "Corporate", "Product", "Architecture", "Fashion", "Drone", "#1001"],
 };
 
-const AMBER = "251,191,36";
-const QUARTZ = "147,170,255";
-
-const halo = (rgb, a) =>
-  `radial-gradient(circle at 50% 50%, rgba(${rgb},${a}) 0%, rgba(${rgb},${a * 0.4}) 45%, transparent 70%)`;
-
-const HERO_ORBS = [
-  { s: "clamp(260px,38vw,450px)", x: "-10%", y: "-15%", bg: halo(AMBER, 0.3),  b: "blur-3xl", d: 25, dl: 0 },
-  { s: "clamp(220px,32vw,380px)", x: "75%",  y: "-10%", bg: halo(QUARTZ, 0.2), b: "blur-3xl", d: 30, dl: -5 },
-];
-
 export default function HomePage({ onRequireLogin }) {
   const { lang } = useLanguage();
   const { isLoggedIn } = useAuth();
@@ -175,47 +164,19 @@ export default function HomePage({ onRequireLogin }) {
 
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20">
-      <style>{`
-        @keyframes hero-bokeh-drift {
-          0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .8; }
-          50%  { transform: translate3d(8px, -12px, 0) scale(1.03); opacity: .95; }
-          100% { transform: translate3d(0, 0, 0) scale(1); opacity: .8; }
-        }
-        .hero-bokeh-orb { animation: hero-bokeh-drift var(--d) ease-in-out var(--dl) infinite; will-change: transform; }
-        @media (prefers-reduced-motion: reduce) {
-          .hero-bokeh-orb { animation: none; }
-        }
-      `}</style>
-
-      <section className="relative isolate overflow-hidden pt-8 pb-12 px-4 border-b border-neutral-900">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          {HERO_ORBS.map((o, i) => (
-            <div
-              key={i}
-              className={`hero-bokeh-orb absolute rounded-full ${o.b}`}
-              style={{
-                width: o.s,
-                height: o.s,
-                left: o.x,
-                top: o.y,
-                background: o.bg,
-                "--d": `${o.d}s`,
-                "--dl": `${o.dl}s`,
-              }}
-            />
-          ))}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,transparent_30%,rgba(10,10,10,0.8)_85%,rgba(10,10,10,1)_100%)]" />
-        </div>
-
-        <div className="max-w-5xl mx-auto space-y-8 relative z-10">
+      
+      {/* SECTION HAUTE SANS BOKEH (Propre et sobre sur fond sombre pur) */}
+      <section className="pt-8 pb-12 px-4 border-b border-neutral-900 bg-neutral-950">
+        <div className="max-w-5xl mx-auto space-y-8">
           <h1 className="sr-only">
             {isEn
               ? "Boké One – Professional photographers network and national image bank in France"
               : "Boké One – Réseau de photographes professionnels et banque d'images nationale en France"}
           </h1>
 
+          {/* MOTEUR DE RECHERCHE */}
           <section aria-label={isEn ? "Search a photographer or creator" : "Rechercher un photographe ou un créateur"}>
-            <div className="bg-neutral-900/85 border border-neutral-800/80 p-3.5 rounded-2xl shadow-2xl backdrop-blur-md">
+            <div className="bg-neutral-900/90 border border-neutral-800 p-3.5 rounded-2xl shadow-2xl backdrop-blur-md">
               <form onSubmit={handleSearchSubmit} role="search" className="flex flex-col sm:flex-row gap-3 items-center">
                 <div className="relative flex-1 w-full">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm" aria-hidden="true">
@@ -231,7 +192,7 @@ export default function HomePage({ onRequireLogin }) {
                     }
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-neutral-950/90 border border-neutral-800 rounded-xl pl-11 pr-4 py-2.5 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-11 pr-4 py-2.5 text-xs md:text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition"
                   />
                 </div>
                 <button
@@ -261,8 +222,9 @@ export default function HomePage({ onRequireLogin }) {
             </nav>
           </section>
 
+          {/* CARROUSEL ACTUALITÉS & OFFRES D'EMPLOI */}
           <section className="space-y-3">
-            <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-2.5" role="tablist">
+            <div className="flex items-center gap-3 border-b border-neutral-800 pb-2.5" role="tablist">
               <button
                 type="button"
                 role="tab"
@@ -299,7 +261,7 @@ export default function HomePage({ onRequireLogin }) {
                   setSelectedNews(item);
                 }
               }}
-              className="bg-neutral-900/85 backdrop-blur-md border border-neutral-800/90 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer group"
+              className="bg-neutral-900 border border-neutral-800 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer group"
             >
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                 <div className="md:col-span-4 relative overflow-hidden rounded-xl border border-neutral-800 h-36 sm:h-44 bg-neutral-950">
@@ -368,6 +330,7 @@ export default function HomePage({ onRequireLogin }) {
         </div>
       </section>
 
+      {/* RESTE DE LA PAGE */}
       <div className="max-w-5xl mx-auto px-4 space-y-12 pt-8">
         <section className="space-y-5">
           <div className="flex items-center justify-between">
@@ -432,7 +395,7 @@ export default function HomePage({ onRequireLogin }) {
           </div>
         </section>
 
-        <section className="border-t border-neutral-800/80 pt-8 text-center space-y-4">
+        <section className="border-t border-neutral-800 pt-8 text-center space-y-4">
           <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
             {isEn
               ? "Photographers & videographers: showcase your portfolio"
