@@ -6,18 +6,14 @@ import { supabase } from "../lib/supabaseClient";
  * 1. Aucune connexion "locale de secours" : si Supabase répond par une erreur (mauvais mot de
  *    passe, réseau coupé…), on lève une erreur lisible et AUCUNE session n'est créée.
  * 2. Le rôle et l'offre (plan) viennent de la table `profiles` côté serveur. Le navigateur
- *    ne peut pas les modifier (voir supabase_05_unified.sql). Ici on ne fait que les LIRE
- *    pour adapter l'affichage ; la vraie protection est dans les policies RLS et les RPC.
- * 3. `loading` reste vrai tant que la session ET le profil ne sont pas résolus, pour éviter
- *    d'afficher un écran verrouillé (ou pire, déverrouillé) pendant le chargement.
+ *    ne peut pas les modifier. Ici on ne fait que les LIRE pour adapter l'affichage.
+ * 3. `loading` reste vrai tant que la session ET le profil ne sont pas résolus.
  */
 
 const AuthContext = createContext(null);
 
-// "*" : tolère les différences de colonnes entre bases (plan / role_abonnement). RLS limite la lecture à sa propre ligne.
 const PROFILE_COLUMNS = "*";
 
-// Transforme les erreurs techniques Supabase en messages clairs pour l'utilisateur.
 export function translateAuthError(err) {
   const raw = String(err?.message || err || "");
   const code = String(err?.code || "");
@@ -84,7 +80,7 @@ export function AuthProvider({ children }) {
       return data ?? null;
     } catch (err) {
       console.error("Profil illisible :", err?.message || err);
-      setProfile(null); // en cas de doute : AUCUN droit supplémentaire
+      setProfile(null);
       return null;
     }
   }, []);
@@ -106,7 +102,7 @@ export function AuthProvider({ children }) {
           setProfile(null);
         }
       } finally {
-        if (active) setLoading(false); // toujours libérer l'affichage
+        if (active) setLoading(false);
       }
     }
     init();
@@ -117,8 +113,6 @@ export function AuthProvider({ children }) {
       if (!active) return;
       setSession(nextSession ?? null);
       if (nextSession?.user) {
-        // Ne JAMAIS faire un appel Supabase avec await directement dans ce callback
-        // (risque de blocage) : on le reporte au tour suivant.
         setTimeout(() => {
           if (active) loadProfile(nextSession.user.id);
         }, 0);
@@ -133,10 +127,6 @@ export function AuthProvider({ children }) {
     };
   }, [loadProfile]);
 
-  // Connexion. Garanties :
-  //  - la promesse se termine TOUJOURS (timeout 20 s) → la modale ne reste jamais bloquée sur "Connexion…"
-  //  - l'erreur levée est une vraie Error avec message lisible + code/status conservés (plus de "{}")
-  //  - la session est appliquée immédiatement (sans attendre onAuthStateChange)
   const login = useCallback(async (email, password) => {
     let result;
     try {
@@ -179,8 +169,6 @@ export function AuthProvider({ children }) {
     }
     if (result.error) throw new Error(translateAuthError(result.error));
 
-    // Quand la confirmation par e-mail est active, Supabase renvoie un utilisateur sans
-    // identités si l'adresse existe déjà (pour ne pas révéler les comptes existants).
     if (result.data.user && Array.isArray(result.data.user.identities) && result.data.user.identities.length === 0) {
       throw new Error("Un compte existe déjà avec cet e-mail. Connectez-vous ou réinitialisez votre mot de passe.");
     }
@@ -195,7 +183,6 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.warn("Déconnexion serveur impossible :", err?.message || err);
     }
-    // Dans tous les cas, l'état local est vidé.
     setSession(null);
     setProfile(null);
   }, []);
@@ -212,18 +199,44 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Synchronisation des propriétés pour l'affichage du site
-  const value = useMemo(() => ({
-    session,
-    user: session?.user ?? null,
-    profile,
-    isLoggedIn: !!session?.user,
-    loading,
-    login,
-    signup,
-    logout,
-    resetPassword
-  }), [session, profile, loading, login, signup, logout, resetPassword]);
+  // Synchronisation des privilèges prioritaires Super-Admin pour admin@bokeone.com
+  const currentUserEmail = session?.user?.email?.toLowerCase();
+  const isAdminAccount = currentUserEmail === "admin@bokeone.com";
+
+  const effectiveProfile = useMemo(() => {
+    if (isAdminAccount) {
+      return {
+        ...(profile || {}),
+        role: "admin",
+        plan: "elite",
+        role_abonnement: "elite",
+        is_admin: true,
+      };
+    }
+    return profile;
+  }, [profile, isAdminAccount]);
+
+  const value = useMemo(() => {
+    const isElitePlan =
+      isAdminAccount ||
+      effectiveProfile?.plan === "elite" ||
+      effectiveProfile?.role_abonnement === "elite" ||
+      effectiveProfile?.role === "admin";
+
+    return {
+      session,
+      user: session?.user ? { ...session.user, isAdmin: isAdminAccount } : null,
+      profile: effectiveProfile,
+      isLoggedIn: !!session?.user,
+      isAdmin: isAdminAccount,
+      isElite: isElitePlan,
+      loading,
+      login,
+      signup,
+      logout,
+      resetPassword
+    };
+  }, [session, effectiveProfile, isAdminAccount, loading, login, signup, logout, resetPassword]);
 
   return (
     <AuthContext.Provider value={value}>

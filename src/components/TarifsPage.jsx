@@ -1,8 +1,14 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function TarifsPage() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+
+  // Si c'est l'administrateur, on le redirige vers le Back-Office
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
 
   const plans = [
     {
@@ -36,7 +42,7 @@ export default function TarifsPage() {
         "🔒 Module CRM & Factures verrouillé"
       ],
       buttonText: "Souscrire au plan Essentiel",
-      actionUrl: "https://stripe.com", // REMPLACER par votre vrai lien Stripe Checkout
+      actionUrl: "https://stripe.com",
       color: "border-amber-500/30 bg-neutral-900 shadow-amber-500/5 shadow-2xl relative"
     },
     {
@@ -53,7 +59,7 @@ export default function TarifsPage() {
         "Générateur de Devis & Factures PDF (Liasse/SIRET)"
       ],
       buttonText: "Passer à la vitesse supérieure",
-      actionUrl: "https://stripe.com", // REMPLACER par votre vrai lien Stripe Checkout
+      actionUrl: "https://stripe.com",
       color: "border-neutral-800 bg-neutral-900/50"
     }
   ];
@@ -64,14 +70,14 @@ export default function TarifsPage() {
       return;
     }
     if (url) {
-      window.location.href = url; // Redirection automatique vers la passerelle sécurisée Stripe
+      window.location.href = url;
     }
   };
 
   return (
     <div className="mx-auto w-full max-w-7xl bg-neutral-950 px-4 py-12 sm:px-8 text-neutral-200 min-h-screen font-sans">
       
-      {/* En-tête de la page */}
+      {/* En-tête */}
       <div className="text-center max-w-3xl mx-auto mb-16">
         <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
           Abonnements Boké One
@@ -80,7 +86,7 @@ export default function TarifsPage() {
           Choisissez la formule adaptée à votre activité
         </h1>
         <p className="text-sm text-neutral-400 mt-2 max-w-xl mx-auto">
-          Débloquez vos outils de gestion de liasse fiscale ou accédez instantanément aux appels d'offres exclusifs de nos clients.
+          Débloquez vos outils de gestion de liasse fiscale ou accédez instantanément aux appels d'offres exclusifs.
         </p>
       </div>
 
@@ -119,7 +125,7 @@ export default function TarifsPage() {
               </ul>
             </div>
 
-            {/* Bouton d'action Stripe */}
+            {/* Bouton d'action */}
             <div className="mt-8">
               {plan.id === "free" ? (
                 <div className="w-full bg-neutral-950 border border-neutral-800 text-neutral-500 text-center py-3 rounded-xl text-xs font-bold font-mono">
