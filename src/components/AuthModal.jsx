@@ -67,8 +67,18 @@ export default function AuthModal({ isOpen, onClose }) {
         onClose(); 
       }
     } catch (err) {
-      const rawMessage = err?.message || err;
-      setError(isEn ? rawMessage : translateAuthError(rawMessage));
+      const rawMessage = err?.message || String(err);
+      
+      // 🚨 INTERCEPTION GIRO / ALARME : Compte introuvable dans Supabase
+      if (rawMessage.includes("Invalid login credentials")) {
+        setError(
+          isEn 
+            ? "🚨 ALARM: You are not registered in our database! Please click on the 'Sign Up' tab above to create your account." 
+            : "🚨 ALERTE : Vous n'êtes pas inscrit dans nos bases ! Veuillez cliquer sur l'onglet 'S'inscrire' juste au-dessus pour créer votre compte."
+        );
+      } else {
+        setError(isEn ? rawMessage : translateAuthError(rawMessage));
+      }
     } finally {
       setLoading(false);
     }
@@ -83,6 +93,7 @@ export default function AuthModal({ isOpen, onClose }) {
         className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-md w-full p-6 sm:p-8 relative shadow-2xl space-y-6 text-neutral-200 font-sans"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Bouton de fermeture */}
         <button
           type="button"
           onClick={onClose}
@@ -92,6 +103,7 @@ export default function AuthModal({ isOpen, onClose }) {
           ✕
         </button>
 
+        {/* Onglets d'action */}
         {mode !== "forgot" && (
           <div className="flex bg-neutral-950 p-1 rounded-xl border border-neutral-800">
             <button
@@ -130,8 +142,9 @@ export default function AuthModal({ isOpen, onClose }) {
           </p>
         </div>
 
+        {/* Encadré d'erreur Look Gyrophare d'alarme clignotant */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-xl text-center font-medium">
+          <div className="bg-red-950/40 border-2 border-red-500 text-red-400 text-xs p-3.5 rounded-xl text-center font-bold animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.2)]">
             {error}
           </div>
         )}
@@ -143,7 +156,7 @@ export default function AuthModal({ isOpen, onClose }) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Champ Email */}
+          {/* Champ Adresse Email */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-neutral-300 block">
               {isEn ? "Email Address" : "Adresse email"}
