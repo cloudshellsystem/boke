@@ -1,89 +1,167 @@
-﻿import React, { createContext, useContext, useState, useEffect } from "react";
+﻿import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 const AuthContext = createContext(null);
+const PROFILE_COLUMNS = "*";
 
-// 🔄 Dictionnaire de traduction officiel des erreurs Supabase
-export function translateAuthError(message) {
-  if (!message) return "Une erreur est survenue.";
-  const msgStr = String(message);
-  if (msgStr.includes("Invalid login credentials")) return "Email ou mot de passe incorrect.";
-  if (msgStr.includes("User already registered")) return "Cet e-mail est déjà utilisé.";
-  if (msgStr.includes("Email not confirmed")) return "Veuillez confirmer votre e-mail avant de vous connecter.";
-  if (msgStr.includes("Password should be at least")) return "Le mot de passe doit contenir au moins 6 caractères.";
-  return msgStr;
+export function translateAuthError(err) {
+  const raw = String(err?.message || err || "");
+  const code = String(err?.code || "");
+  const status = err?.status;
+  const name = String(err?.name || "");
+
+  if (code === "auth_timeout") return "Le serveur d'authentification ne répond pas. Réessayez dans un instant.";
+  if ((typeof status === "number" && status >= 500) || /database error|querying schema|internal server error/i.test(raw)) {
+    return "Erreur côté serveur d'authentification (500). Le compte est probablement mal initialisé dans Supabase : voir les Auth Logs.";
+  }
+  if (code === "invalid_credentials" || /invalid login credentials/i.test(raw)) return "E-mail ou mot de passe incorrect.";
+  if (code === "email_not_confirmed" || /email not confirmed/i.test(raw)) return "E-mail non confirmé. Cliquez sur le lien reçu par e-mail, puis reconnectez-vous.";
+  if (code === "user_already_exists" || /already registered|already been registered/i.test(raw)) return "Un compte existe déjà avec cet e-mail. Connectez-vous ou réinitialisez votre mot de passe.";
+  if (code === "weak_password" || /password should be at least|weak password/i.test(raw)) return "Mot de passe trop faible (6 caractères minimum).";
+  if (/valid email|invalid email|email address .* invalid/i.test(raw)) return "Adresse e-mail invalide.";
+  if (status === 429 || /rate limit|too many/i.test(raw) || code.includes("rate_limit")) return "Trop de tentatives. Patientez quelques minutes avant de réessayer.";
+  if (name === "AuthRetryableFetchError" || /failed to fetch|networkerror|network request failed|load failed|fetch failed/i.test(raw)) {
+    return "Impossible de joindre le serveur. Vérifiez votre connexion internet (ou désactivez un bloqueur de publicités) puis réessayez.";
+  }
+  if (/signups? not allowed|signup is disabled/i.test(raw)) return "Les inscriptions sont momentanément fermées.";
+  return "Une erreur est survenue. Réessayez dans un instant.";
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // 🔍 1. Vérifier la session initiale réelle de Supabase
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        // Définir les privilèges SuperAdmin si c'est l'adresse officielle
-        const isAdmin = session.user.email?.toLowerCase() === "admin@bokeone.com";
-        setUser({ ...session.user, isAdmin });
-        setIsLoggedIn(true);
-      }
-      setLoading(false);
-    });
-
-    // 📡 2. Écouter les changements de connexion/déconnexion en direct
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const isAdmin = session.user.email?.toLowerCase() === "admin@bokeone.com";
-        setUser({ ...session.user, isAdmin });
-        setIsLoggedIn(true);
-      } else {
-        setUser(null);
-        setIsLoggedIn(false);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+  const loadProfile = useCallback(async (userId) => {
+    if (!userId) {
+      setProfile(null);
+      return null;
+    }
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(PROFILE_COLUMNS)
+        .eq("id", userId)
+        .maybeSingle();
+      if (error) throw error;
+      setProfile(data ?? null);
+      return data ?? null;
+    } catch (err) {
+      console.error("Profil illisible :", err?.message || err);
+      setProfile(null);
+      return null;
+    }
   }, []);
 
-  // 🔑 MÉTHODE DE CONNEXION RÉELLE
-  const login = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    return data;
-  };
+  useEffect(() => {
+    let active = true;
 
-  // 📝 MÉTHODE D'INSCRIPTION RÉELLE
-  const signup = async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/espace-pro`,
+    async function init() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!active) return;
+        setSession(data.session ?? null);
+        if (data.session?.user) await loadProfile(data.session.user.id);
+      } catch (err) {
+        console.error("Session illisible :", err?.message || err);
+        if (active) {
+          setSession(null);
+          setProfile(null);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
+      setSession(nextSession ?? null);
+      if (nextSession?.user) {
+        setTimeout(() => {
+          if (active) loadProfile(nextSession.user.id);
+        }, 0);
+      } else {
+        setProfile(null);
       }
     });
-    if (error) throw error;
-    const needsEmailConfirmation = data?.user && !data?.session;
-    return { needsEmailConfirmation };
-  };
 
-  // ✉️ MÉTHODE DE RÉINITIALISATION RÉELLE
-  const resetPassword = async (email) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/espace-pro`,
-    });
-    if (error) throw error;
-  };
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [loadProfile]);
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsLoggedIn(false);
-  };
+  const login = useCallback(async (email, password) => {
+    let result;
+    try {
+      result = await Promise.race([
+        supabase.auth.signInWithPassword({ email: email.trim(), password }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(Object.assign(new Error("timeout"), { code: "auth_timeout" })), 20000)
+        ),
+      ]);
+    } catch (err) {
+      throw Object.assign(new Error(translateAuthError(err)), { code: err?.code, status: err?.status });
+    }
+    if (result?.error) {
+      const e = result.error;
+      throw Object.assign(new Error(translateAuthError(e)), { code: e.code, status: e.status });
+    }
+    const s = result?.data?.session ?? null;
+    if (s) {
+      setSession(s);
+      setTimeout(() => loadProfile(s.user.id), 0);
+    }
+    return result?.data;
+  }, [loadProfile]);
+
+  const signup = useCallback(async (email, password, fullName) => {
+    let result;
+    try {
+      result = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: fullName ? { full_name: fullName } : {},
+          emailRedirectTo: `${window.location.origin}/espace-pro`,
+        },
+      });
+    } catch (err) {
+      throw new Error(translateAuthError(err));
+    }
+    if (result.error) throw new Error(translateAuthError(result.error));
+
+    if (result.data.user && Array.isArray(result.data.user.identities) && result.data.user.identities.length === 0) {
+      throw new Error("Un compte existe déjà avec cet e-mail. Connectez-vous ou réinitialisez votre mot de passe.");
+    }
+    return { needsEmailConfirmation: !result.data.session };
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("Déconnexion serveur impossible :", err?.message || err);
+    }
+    setSession(null);
+    setProfile(null);
+  }, []);
+
+  const value = useMemo(() => ({
+    session,
+    user: session?.user ?? null,
+    profile,
+    isLoggedIn: !!session?.user,
+    loading,
+    login,
+    signup,
+    logout
+  }), [session, profile, loading, login, signup, logout]);
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, loading, login, signup, logout, resetPassword }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
