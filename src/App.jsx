@@ -81,7 +81,6 @@ function GlobalNavbar({ onOpenAuth }) {
 
   return (
     <header className="sticky top-0 z-40">
-      {/* Animation GPU du Bokeh du dessus */}
       <style>{`
         @keyframes header-bokeh-drift {
           0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .85; }
@@ -91,10 +90,8 @@ function GlobalNavbar({ onOpenAuth }) {
         .header-bokeh-orb { animation: header-bokeh-drift var(--d) ease-in-out var(--dl) infinite; will-change: transform; }
       `}</style>
 
-      {/* Barre de navigation avec effet Bokeh intégré à l'arrière-plan absolu */}
       <nav className="relative isolate overflow-hidden bg-neutral-950/90 border-b border-neutral-900 px-4 py-3.5 text-neutral-200 backdrop-blur-md">
         
-        {/* Orbes Bokeh positionnés strictement dans le bandeau du haut */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           {HEADER_ORBS.map((o, i) => (
             <div
@@ -205,7 +202,7 @@ function AppShell() {
           <Route path="/creators" element={<CreatorDirectory onRequireLogin={openAuth} />} />
           <Route path="/opportunites" element={<Opportunities />} />
           <Route path="/about" element={<About />} />
-          <Route path="/espace-pro" element-[<EspaceMembrePro onRequireLogin={openAuth} />] element={<EspaceMembrePro onRequireLogin={openAuth} />} />
+          <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
           <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
