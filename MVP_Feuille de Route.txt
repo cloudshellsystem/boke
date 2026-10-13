@@ -1,0 +1,147 @@
+MVP SaaS  
+BOKE ONE
+________
+
+Pour garantir un chargement rapide de votre page d'accueil (essentiel pour ne pas perdre de visiteurs), il est conseillé de limiter l'affichage initial à 20 ou 24 images maximum (un multiple de 2, 3 et 4 pour s'adapter parfaitement aux écrans d'ordinateurs, tablettes et smartphones).
+• Comment l'aménager ? Ne cherchez pas à tout montrer. Affichez une sélection "Coup de cœur", "Nouveautés" ou "Tendances par région".
+• La solution technique pour le reste : En bas de ces 24 images, ajoutez simplement un bouton "Voir plus d'images" (chargement infini ou pagination). Si l'utilisateur utilise les filtres ou la recherche par référence, la page se rafraîchira pour n'afficher que les résultats correspondants, sans alourdir le site.
+
+
+*****************
+
+
+donc  pour résumé 
+A > Banque d'images 
+B > Annuaire  Créatif 
+
+C > Espace Pro (s'y trouve Mon Compte / Tableau de bord) 
+il y a combien de sous onglets ? 
+1/Mon compte (il y entre c'est privé), donc double accès ? il met encore un nouveau mot de passe ? pas facile cet UX. 
+Dans cet onglet ya son Tableau de bord / Facturation & CRM / outil pour faire des DEvis Facture / Profil & Portfolio
+Il est le seul à voir ses "Ventes du mois"
+
+D > Tarifs / Nos Offres 
+
++ CGU/Mentions Légales / Picto des réseaux sociaux en bas de page / Contact WhatsApp / Group Whatapp échange entres eux
++Décharge juridique : Comme vous l'avez mentionné, blindez vos CGU (Conditions Générales d'Utilisation) et vos CGV (Conditions Générales de Vente). Spécifiez clairement que vous fournissez les moyens techniques de protection standard (filigrane) mais que vous déclinez toute responsabilité en cas de piratage ou d'utilisation frauduleuse par un tiers après affichage sur le web.
+
+à l'inscription on doit affichage du mot de passe si jamais il se trompe, 3 essais max, et retrouver le mot de pass en cas de perte. Mais il doit d'abord confimer son mail avant d'être accepter. 
+Le problème que vous observez sur vos captures vient de deux éléments majeurs :
+
+    La pop-up native alert(...) du navigateur : Elle est déclenchée lors de la connexion (alert("Connexion réussie !...")), ce qui bloque l'expérience utilisateur et fait très amateur.
+
+    La synchronisation de l'état de connexion (isLoggedIn) & des droits (plan) : Si la page continue de vous afficher "Se connecter" alors que vous venez de vous connecter, c'est que l'état d'authentification de Supabase/AuthContext ne s'est pas mis à jour dynamiquement ou que votre profil d'utilisateur n'a pas un plan payant attribué (pro ou elite).
+
+*******************************
+
+
+1. L'Arborescence & Navigation du site
+
+L'application web est divisée en deux parties : la vitrine publique et l'Espace Pro sécurisé.
+
+🌐 Espace Public & Navigation Principale
+
+• A > Banque d'images (/) : La page d’accueil. Elle contient une barre de recherche, les filtres géographiques (Région, Ville, Monument) et une galerie limitée à 24 images maximum (chargement de la suite au clic). Images affichées en basse résolution avec un filigane central.
+• B > Annuaire Créatif (/annuaire) : Liste des photographes, vidéastes et régisseurs qualifiés. Chaque fiche ouvre le profil du créatif avec son portfolio intégré et un bouton "Déposer une mission" pour les clients.
+• C > Tarifs & Offres (/tarifs) : Grille des abonnements (Gratuit, Pro 49€, Élite 129€).
+• D > Connexion / Inscription (/login, /register) : Formulaire unique (Option œil pour afficher le mot de passe, lien de récupération, blocage après 3 essais manqués pendant 15 min).
+• 🦶 Bas de page (Footer) : Liens CGU/CGV (Décharge piratage), Mentions Légales, bouton Contact WhatsApp et lien d’accès au Groupe WhatsApp Communautaire.
+
+🔐 Sous-onglets de l'Espace Pro (Menu latéral gauche après connexion)
+
+• 📊 1. Tableau de bord & Ventes : Privé et confidentiel. Affiche les ventes personnelles du mois et le chiffre d'affaires. (Publicement, seules les images "Tendances" basées sur les clics sont visibles).
+• 💼 2. Missions disponibles : Liste anonymisée des appels d'offres des clients (Lieu, Date, Budget, Descriptif) avec bouton "Postuler".
+• 🧾 3. Facturation & CRM (Verrouillé si plan Gratuit) : Outil de liasse fiscale, saisie du SIRET, génération de Devis et Factures PDF.
+• ⚙️ 4. Mon Profil & Portfolio : Gestion des informations et téléversement des photos (limité à 3 pour le plan Gratuit, modifiables à volonté).
+
+2. La Pile Technique (Tech Stack)
+
+Pour un MVP rapide, ultra-sécurisé et 100% automatisé, la stack standard recommandée est :
+• Frontend : Next.js (React) ou Vue.js, hébergé sur Vercel ou Netlify (rapide à charger).
+• Backend & Base de données : Supabase (gère la base de données Postgres, l’authentification et le stockage des images).
+• Paiements & Abonnements : Stripe (gère les transactions, la sécurité bancaire et la facturation récurrente).
+
+
+***************
+
+on distingue 4 types de profils d'accès bien précis :
+
+1. Le Visiteur (Public / Non connecté)
+
+• Qui il est : N'importe quel internaute qui arrive sur bokeone-zeta.vercel.app.
+• Ses droits :
+	• Il voit la page d'accueil avec la galerie (limitée aux 24 premières images en basse résolution avec filigrane).
+	• Il peut utiliser la barre de recherche et les filtres géographiques (Régions, Villes, Monuments) pour tester l'outil.
+	• Il voit l'annuaire public et la page des tarifs.
+• Ses limites : Dès qu'il veut acheter une image, voir le profil détaillé d'un créatif, ou accéder à l'Espace Pro, l'application ouvre la modale AuthForm pour lui demander de se connecter.
+
+2. Le Membre Gratuit (Inscrit / Plan Découverte)
+
+• Qui il est : Un créatif qui vient de créer son compte (comme votre test réussi avec gacoy90967@comzx.com qui affichait "MEMBRE GRATUIT").
+• Ses droits :
+	• Il peut téléverser 3 photos maximum dans la banque d'images (qu'il peut modifier ou remplacer à volonté).
+	• Il a son profil de base dans l'annuaire.
+• Ses limites (Effet Cadenas / FOMO) : L'onglet Missions disponibles (offres d'emploi) et l'onglet Facturation & CRM sont verrouillés par un cadenas. S'il clique dessus, un message lui propose de passer à l'abonnement supérieur.
+
+3. Le Membre Essentiel (Abonnement à 19€/mois)
+
+• Qui il est : Le créatif qui cherche activement des contrats de terrain et des shootings en France.
+• Ses droits :
+	• Son quota de photos dans la banque d'images augmente (jusqu'à 20 photos en ligne).
+	• Le cadenas de l'onglet "Missions disponibles" saute : Il a un accès complet pour voir les appels d'offres des clients (mariages, châteaux, dronistes) et peut postuler directement pour monter des équipes.
+• Ses limites : L'onglet Facturation & CRM (création de devis, factures PDF, gestion de la liasse avec le SIRET) reste verrouillé par un cadenas.
+
+4. Le Membre Pro / Élite (Abonnement à 49€ ou 129€/mois)
+
+• Qui il est : Le créatif qui utilise Boké One comme son outil de travail principal au quotidien.
+• Ses droits :
+	• Téléversement de photos illimité dans la photothèque.
+	• Accès complet aux missions et appels d'offres.
+	• Le cadenas du module CRM saute : Il débloque l'outil complet de gestion de ventes, le répertoire client, et le générateur automatique de devis et factures PDF professionnelles avec intégration du SIRET.
+
+
+
+----------
+
+
+creer une sauvegarde du site sous zip, mais pas dans le meme zip, en cas de rollback.
+Pas d'hallucination ou de faux code.
+Creer nom du site et l'heure de façon à creer un rollback afin de l'exploiter à Jou 
+limite l'uipload, et nombre d'upload, et poids des fichiers (nombre appels iA ? et tenant ?)
+
+
+Le sous domaine est référencé car le site a référence natuelleemnt en 2 mois, le jour où tu bascules vers un domain
+le referencement, donc une redirection, les gens ne voient pas; 
+
+Faut que ça parle aux gens, faut parler de la photo c'est lui qui parle, c'est plus attractif. 
+Personne ne peut s'identifier; 
+
+Headless CMS gratuit (ex: Decap CMS ou Sanity) pour que vous puissiez publier, modifier et gérer facilement toutes vos actualités et vos annonces en quelques clics via un espace d'administration simple, sans avoir à toucher au code source ni repasser par VS Code/PowerShell
+
+creation Stripe
+
+compte Resend
+
+matrice claire des adresses e-mail : 
+admin@bokeone.com (ou contact@bokeone.com)
+
+    Rôle : L'adresse centrale pour toutes les notifications système de Supabase (réinitialisations de mot de passe, alertes de sécurité) et les communications officielles de la plateforme.
+
+support@bokeone.com (ou conciergerie@bokeone.com)
+
+    Rôle : L'adresse dédiée au SAV, aux questions des utilisateurs, à la modération et au traitement des demandes de conciliation amiable (comme vu dans vos CGU).
+
+facturation@bokeone.com (ou billing@bokeone.com)
+
+    Rôle : Réservée aux reçus, abonnements Stripe, factures automatiques et problèmes liés aux paiements des forfaits (Essentiel, Pro, Élite).
+
+
+news@bokeone.com (ou comm@bokeone.com)
+
+    Rôle : L'adresse expéditrice pour vos newsletters régulières, les annonces d'événements, et les mises en avant des superbes photos ajoutées par les créatifs sur la plateforme.
+
+partenariats@bokeone.com
+
+    Rôle : Pour gérer les contacts avec les marques, les offices de tourisme ou les grands comptes pour de futures missions de terrain.
+
+

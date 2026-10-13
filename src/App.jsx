@@ -13,6 +13,7 @@ import About from "./components/About";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import CGUPage from "./components/CGUPage";
+import Opportunities from "./pages/Opportunities"; // <-- IMPORT DE LA NOUVELLE PAGE
 import WhatsAppWidget from "./components/WhatsAppWidget";
 import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
@@ -23,6 +24,7 @@ const NAV_LINKS_DATA = {
   fr: [
     { to: "/", label: "Home" },
     { to: "/creators", label: "Annuaire" },
+    { to: "/opportunites", label: "Opportunités" }, // <-- LIEN AJOUTÉ
     { to: "/espace-pro", label: "Espace Pro" },
     { to: "/abonnes", label: "Tarifs" },
     { to: "/about", label: "À propos" },
@@ -30,6 +32,7 @@ const NAV_LINKS_DATA = {
   en: [
     { to: "/", label: "Home" },
     { to: "/creators", label: "Directory" },
+    { to: "/opportunites", label: "Opportunities" }, // <-- LIEN AJOUTÉ
     { to: "/espace-pro", label: "Pro Space" },
     { to: "/abonnes", label: "Pricing" },
     { to: "/about", label: "About" },
@@ -152,6 +155,7 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
           <Route path="/creators" element={<CreatorDirectory onRequireLogin={openAuth} />} />
+          <Route path="/opportunites" element={<Opportunities />} /> {/* <-- ROUTE AJOUTÉE */}
           <Route path="/about" element={<About />} />
           <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
           <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
