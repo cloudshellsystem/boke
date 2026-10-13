@@ -18,7 +18,7 @@ import WhatsAppWidget from "./components/WhatsAppWidget";
 import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
 
-// IMPORTS DES NOUVEAUX MODULES
+// IMPORTS DES NOUVEAUX MODULES (Galerie & Dashboard Admin)
 import Gallery from "./components/Gallery";
 import AdminDashboard from "./components/AdminDashboard";
 
@@ -65,11 +65,11 @@ const halo = (rgb, a) =>
   `radial-gradient(circle at 50% 50%, rgba(${rgb},${a}) 0%, rgba(${rgb},${a * 0.4}) 50%, transparent 70%)`;
 
 const DISC_ORBS = [
-  { s: "180px", x: "2%",  y: "-40%", bg: halo(AMBER, 0.35),      b: "blur-xl", d: 18, dl: 0 },
-  { s: "140px", x: "22%", y: "-50%", bg: halo(QUARTZ, 0.25),     b: "blur-xl", d: 22, dl: -3 },
-  { s: "200px", x: "45%", y: "-45%", bg: halo(GOLD, 0.3),        b: "blur-2xl", d: 25, dl: -6 },
+  { s: "180px", x: "2%",  y: "-40%", bg: halo(AMBER, 0.35),       b: "blur-xl", d: 18, dl: 0 },
+  { s: "140px", x: "22%", y: "-50%", bg: halo(QUARTZ, 0.25),      b: "blur-xl", d: 22, dl: -3 },
+  { s: "200px", x: "45%", y: "-45%", bg: halo(GOLD, 0.3),         b: "blur-2xl", d: 25, dl: -6 },
   { s: "160px", x: "70%", y: "-50%", bg: halo(CHAMPAGNE, 0.32), b: "blur-xl", d: 20, dl: -2 },
-  { s: "190px", x: "90%", y: "-40%", bg: halo(AMBER, 0.3),       b: "blur-2xl", d: 24, dl: -5 },
+  { s: "190px", x: "90%", y: "-40%", bg: halo(AMBER, 0.3),        b: "blur-2xl", d: 24, dl: -5 },
 ];
 
 function GlobalNavbar({ onOpenAuth }) {
