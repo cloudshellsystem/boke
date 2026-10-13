@@ -27,21 +27,17 @@ ReactGA.initialize("G-FVFKNP75BZ");
 const NAV_LINKS_DATA = {
   fr: [
     { to: "/", label: "Home" },
-    { to: "/galerie", label: "🖼️ Galerie" },
+    { to: "/galerie", label: "Galerie" },
     { to: "/creators", label: "Annuaire" },
     { to: "/opportunites", label: "Opportunités" },
     { to: "/espace-pro", label: "Espace Pro" },
-    { to: "/abonnes", label: "Tableau de Bord" },
-    { to: "/about", label: "À propos" },
   ],
   en: [
     { to: "/", label: "Home" },
-    { to: "/galerie", label: "🖼️ Gallery" },
+    { to: "/galerie", label: "Gallery" },
     { to: "/creators", label: "Directory" },
     { to: "/opportunites", label: "Opportunities" },
     { to: "/espace-pro", label: "Pro Space" },
-    { to: "/abonnes", label: "Dashboard" },
-    { to: "/about", label: "About" },
   ],
 };
 
