@@ -48,17 +48,22 @@ const isActivePath = (pathname, to) =>
   to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
 
 /* ------------------------------------------------------------------
-    CONFIGURATION DU BOKEH HAUT DE GAMME POUR LE HEADER DU DESSUS
+    PLUSIEURS BOKEHS QUI LONGENT TOUTE LA LONGUEUR DU HEADER DU HAUT
 ------------------------------------------------------------------- */
 const AMBER = "251,191,36";
+const GOLD = "245,158,11";
+const CHAMPAGNE = "253,230,138";
 const QUARTZ = "147,170,255";
 
 const halo = (rgb, a) =>
   `radial-gradient(circle at 50% 50%, rgba(${rgb},${a}) 0%, rgba(${rgb},${a * 0.4}) 50%, transparent 70%)`;
 
-const HEADER_ORBS = [
-  { s: "320px", x: "5%",  y: "-50%", bg: halo(AMBER, 0.35),  b: "blur-2xl", d: 24, dl: 0 },
-  { s: "280px", x: "75%", y: "-40%", bg: halo(QUARTZ, 0.25), b: "blur-2xl", d: 28, dl: -4 },
+const DISC_ORBS = [
+  { s: "180px", x: "2%",  y: "-40%", bg: halo(AMBER, 0.35),     b: "blur-xl", d: 18, dl: 0 },
+  { s: "140px", x: "22%", y: "-50%", bg: halo(QUARTZ, 0.25),    b: "blur-xl", d: 22, dl: -3 },
+  { s: "200px", x: "45%", y: "-45%", bg: halo(GOLD, 0.3),       b: "blur-2xl", d: 25, dl: -6 },
+  { s: "160px", x: "70%", y: "-50%", bg: halo(CHAMPAGNE, 0.32), b: "blur-xl", d: 20, dl: -2 },
+  { s: "190px", x: "90%", y: "-40%", bg: halo(AMBER, 0.3),      b: "blur-2xl", d: 24, dl: -5 },
 ];
 
 function GlobalNavbar({ onOpenAuth }) {
@@ -82,21 +87,22 @@ function GlobalNavbar({ onOpenAuth }) {
   return (
     <header className="sticky top-0 z-40">
       <style>{`
-        @keyframes header-bokeh-drift {
-          0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .85; }
-          50%  { transform: translate3d(6px, -8px, 0) scale(1.04); opacity: 1; }
-          100% { transform: translate3d(0, 0, 0) scale(1); opacity: .85; }
+        @keyframes line-bokeh-drift {
+          0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .8; }
+          50%  { transform: translate3d(4px, -6px, 0) scale(1.06); opacity: 1; }
+          100% { transform: translate3d(0, 0, 0) scale(1); opacity: .8; }
         }
-        .header-bokeh-orb { animation: header-bokeh-drift var(--d) ease-in-out var(--dl) infinite; will-change: transform; }
+        .line-bokeh-orb { animation: line-bokeh-drift var(--d) ease-in-out var(--dl) infinite; will-change: transform; }
       `}</style>
 
       <nav className="relative isolate overflow-hidden bg-neutral-950/90 border-b border-neutral-900 px-4 py-3.5 text-neutral-200 backdrop-blur-md">
         
+        {/* Les multiples bokehs qui longent la bannière du haut */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          {HEADER_ORBS.map((o, i) => (
+          {DISC_ORBS.map((o, i) => (
             <div
               key={i}
-              className={`header-bokeh-orb absolute rounded-full ${o.b}`}
+              className={`line-bokeh-orb absolute rounded-full ${o.b}`}
               style={{
                 width: o.s,
                 height: o.s,
@@ -108,7 +114,7 @@ function GlobalNavbar({ onOpenAuth }) {
               }}
             />
           ))}
-          <div className="absolute inset-0 bg-neutral-950/40" />
+          <div className="absolute inset-0 bg-neutral-950/35" />
         </div>
 
         <div className="mx-auto max-w-7xl flex items-center justify-between gap-4 relative z-10">
