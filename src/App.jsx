@@ -18,23 +18,29 @@ import WhatsAppWidget from "./components/WhatsAppWidget";
 import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
 
+// IMPORTS DES NOUVEAUX MODULES
+import Gallery from "./components/Gallery";
+import AdminDashboard from "./components/AdminDashboard";
+
 ReactGA.initialize("G-FVFKNP75BZ");
 
 const NAV_LINKS_DATA = {
   fr: [
     { to: "/", label: "Home" },
+    { to: "/galerie", label: "🖼️ Galerie" },
     { to: "/creators", label: "Annuaire" },
     { to: "/opportunites", label: "Opportunités" },
     { to: "/espace-pro", label: "Espace Pro" },
-    { to: "/abonnes", label: "Tarifs" },
+    { to: "/abonnes", label: "Tableau de Bord" },
     { to: "/about", label: "À propos" },
   ],
   en: [
     { to: "/", label: "Home" },
+    { to: "/galerie", label: "🖼️ Gallery" },
     { to: "/creators", label: "Directory" },
     { to: "/opportunites", label: "Opportunities" },
     { to: "/espace-pro", label: "Pro Space" },
-    { to: "/abonnes", label: "Pricing" },
+    { to: "/abonnes", label: "Dashboard" },
     { to: "/about", label: "About" },
   ],
 };
@@ -59,16 +65,16 @@ const halo = (rgb, a) =>
   `radial-gradient(circle at 50% 50%, rgba(${rgb},${a}) 0%, rgba(${rgb},${a * 0.4}) 50%, transparent 70%)`;
 
 const DISC_ORBS = [
-  { s: "180px", x: "2%",  y: "-40%", bg: halo(AMBER, 0.35),     b: "blur-xl", d: 18, dl: 0 },
-  { s: "140px", x: "22%", y: "-50%", bg: halo(QUARTZ, 0.25),    b: "blur-xl", d: 22, dl: -3 },
-  { s: "200px", x: "45%", y: "-45%", bg: halo(GOLD, 0.3),       b: "blur-2xl", d: 25, dl: -6 },
+  { s: "180px", x: "2%",  y: "-40%", bg: halo(AMBER, 0.35),      b: "blur-xl", d: 18, dl: 0 },
+  { s: "140px", x: "22%", y: "-50%", bg: halo(QUARTZ, 0.25),     b: "blur-xl", d: 22, dl: -3 },
+  { s: "200px", x: "45%", y: "-45%", bg: halo(GOLD, 0.3),        b: "blur-2xl", d: 25, dl: -6 },
   { s: "160px", x: "70%", y: "-50%", bg: halo(CHAMPAGNE, 0.32), b: "blur-xl", d: 20, dl: -2 },
-  { s: "190px", x: "90%", y: "-40%", bg: halo(AMBER, 0.3),      b: "blur-2xl", d: 24, dl: -5 },
+  { s: "190px", x: "90%", y: "-40%", bg: halo(AMBER, 0.3),       b: "blur-2xl", d: 24, dl: -5 },
 ];
 
 function GlobalNavbar({ onOpenAuth }) {
   const { cart } = useCart();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
   const { pathname } = useLocation();
   const { lang, toggleLanguage } = useLanguage();
 
@@ -156,6 +162,14 @@ function GlobalNavbar({ onOpenAuth }) {
 
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
+                {user?.isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="border border-amber-500/40 bg-amber-500/10 text-amber-400 px-3 py-2 rounded-xl text-xs font-bold hover:bg-amber-500 hover:text-neutral-950 transition"
+                  >
+                    ⚙️ Back-Office
+                  </Link>
+                )}
                 <Link to="/abonnes" className="border-2 border-emerald-500 bg-emerald-500/10 text-emerald-400 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   {ui.connected}
@@ -205,11 +219,13 @@ function AppShell() {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
+          <Route path="/galerie" element={<Gallery />} />
           <Route path="/creators" element={<CreatorDirectory onRequireLogin={openAuth} />} />
           <Route path="/opportunites" element={<Opportunities />} />
           <Route path="/about" element={<About />} />
           <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
           <Route path="/abonnes" element={<Abonnes onRequireLogin={openAuth} />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/cgu" element={<CGUPage />} />
