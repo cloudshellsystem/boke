@@ -95,9 +95,6 @@ const SEARCH_SUGGESTIONS = {
   en: ["Portrait", "Editorial", "Wedding", "Corporate", "Product", "Architecture", "Fashion", "Drone", "#1001"],
 };
 
-/* ------------------------------------------------------------------
-    CONFIGURATION BOKEH LÉGÈRE & OPTIMISÉE (4 éléments max)
-------------------------------------------------------------------- */
 const AMBER = "251,191,36";
 const QUARTZ = "147,170,255";
 
@@ -178,8 +175,6 @@ export default function HomePage({ onRequireLogin }) {
 
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20">
-      
-      {/* Animation GPU ultra-légère */}
       <style>{`
         @keyframes hero-bokeh-drift {
           0%   { transform: translate3d(0, 0, 0) scale(1); opacity: .8; }
@@ -192,12 +187,7 @@ export default function HomePage({ onRequireLogin }) {
         }
       `}</style>
 
-      {/* ========================================================= */}
-      {/* 1. PREMIÈRE BANNIÈRE (HERO) AVEC LE BOKEH STRICTEMENT CONFINÉ */}
-      {/* ========================================================= */}
       <section className="relative isolate overflow-hidden pt-8 pb-12 px-4 border-b border-neutral-900">
-        
-        {/* Conteneur absolu confiné dans la section */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           {HERO_ORBS.map((o, i) => (
             <div
@@ -214,19 +204,16 @@ export default function HomePage({ onRequireLogin }) {
               }}
             />
           ))}
-          {/* Fondu garantissant que l'effet s'arrête proprement en bas de la bannière */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,transparent_30%,rgba(10,10,10,0.8)_85%,rgba(10,10,10,1)_100%)]" />
         </div>
 
         <div className="max-w-5xl mx-auto space-y-8 relative z-10">
-          
           <h1 className="sr-only">
             {isEn
               ? "Boké One – Professional photographers network and national image bank in France"
               : "Boké One – Réseau de photographes professionnels et banque d'images nationale en France"}
           </h1>
 
-          {/* MOTEUR DE RECHERCHE */}
           <section aria-label={isEn ? "Search a photographer or creator" : "Rechercher un photographe ou un créateur"}>
             <div className="bg-neutral-900/85 border border-neutral-800/80 p-3.5 rounded-2xl shadow-2xl backdrop-blur-md">
               <form onSubmit={handleSearchSubmit} role="search" className="flex flex-col sm:flex-row gap-3 items-center">
@@ -274,7 +261,6 @@ export default function HomePage({ onRequireLogin }) {
             </nav>
           </section>
 
-          {/* CARROUSEL ACTUALITÉS & OFFRES D'EMPLOI */}
           <section className="space-y-3">
             <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-2.5" role="tablist">
               <button
@@ -379,16 +365,10 @@ export default function HomePage({ onRequireLogin }) {
               </div>
             </article>
           </section>
-
         </div>
       </section>
 
-      {/* ========================================================= */}
-      {/* 2. RESTE DE LA PAGE (FOND SOMBRE PUR ET RAPIDE)           */}
-      {/* ========================================================= */}
       <div className="max-w-5xl mx-auto px-4 space-y-12 pt-8">
-
-        {/* GALERIE PLANCHE CONTACT SUR 3 ÉTAGES */}
         <section className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
@@ -452,7 +432,6 @@ export default function HomePage({ onRequireLogin }) {
           </div>
         </section>
 
-        {/* INVITATION CONTACT */}
         <section className="border-t border-neutral-800/80 pt-8 text-center space-y-4">
           <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
             {isEn
@@ -479,10 +458,8 @@ export default function HomePage({ onRequireLogin }) {
             </Link>
           </div>
         </section>
-
       </div>
 
-      {/* MODALE ACTU */}
       {selectedNews && (
         <div
           role="dialog"
@@ -504,7 +481,7 @@ export default function HomePage({ onRequireLogin }) {
               ✕
             </button>
             
-            <div *ngIf="selectedNews" className="space-y-1 pr-6">
+            <div className="space-y-1 pr-6">
               <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">{selectedNews.date}</span>
               <h2 className="text-lg sm:text-xl font-black text-white leading-snug">{selectedNews.title}</h2>
             </div>
