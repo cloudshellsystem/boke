@@ -1,29 +1,65 @@
 ﻿import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+/**
+ * AUTHENTIFICATION — règles de ce fichier
+ * 1. Aucune connexion "locale de secours" : si Supabase répond par une erreur (mauvais mot de
+ *    passe, réseau coupé…), on lève une erreur lisible et AUCUNE session n'est créée.
+ * 2. Le rôle et l'offre (plan) viennent de la table `profiles` côté serveur. Le navigateur
+ *    ne peut pas les modifier (voir supabase_05_unified.sql). Ici on ne fait que les LIRE
+ *    pour adapter l'affichage ; la vraie protection est dans les policies RLS et les RPC.
+ * 3. `loading` reste vrai tant que la session ET le profil ne sont pas résolus, pour éviter
+ *    d'afficher un écran verrouillé (ou pire, déverrouillé) pendant le chargement.
+ */
+
 const AuthContext = createContext(null);
+
+// "*" : tolère les différences de colonnes entre bases (plan / role_abonnement). RLS limite la lecture à sa propre ligne.
 const PROFILE_COLUMNS = "*";
 
+// Transforme les erreurs techniques Supabase en messages clairs pour l'utilisateur.
 export function translateAuthError(err) {
   const raw = String(err?.message || err || "");
   const code = String(err?.code || "");
   const status = err?.status;
   const name = String(err?.name || "");
 
-  if (code === "auth_timeout") return "Le serveur d'authentification ne répond pas. Réessayez dans un instant.";
-  if ((typeof status === "number" && status >= 500) || /database error|querying schema|internal server error/i.test(raw)) {
+  if (code === "auth_timeout") {
+    return "Le serveur d'authentification ne répond pas. Réessayez dans un instant.";
+  }
+  if (
+    (typeof status === "number" && status >= 500) ||
+    /database error|querying schema|internal server error/i.test(raw)
+  ) {
     return "Erreur côté serveur d'authentification (500). Le compte est probablement mal initialisé dans Supabase : voir les Auth Logs.";
   }
-  if (code === "invalid_credentials" || /invalid login credentials/i.test(raw)) return "E-mail ou mot de passe incorrect.";
-  if (code === "email_not_confirmed" || /email not confirmed/i.test(raw)) return "E-mail non confirmé. Cliquez sur le lien reçu par e-mail, puis reconnectez-vous.";
-  if (code === "user_already_exists" || /already registered|already been registered/i.test(raw)) return "Un compte existe déjà avec cet e-mail. Connectez-vous ou réinitialisez votre mot de passe.";
-  if (code === "weak_password" || /password should be at least|weak password/i.test(raw)) return "Mot de passe trop faible (6 caractères minimum).";
-  if (/valid email|invalid email|email address .* invalid/i.test(raw)) return "Adresse e-mail invalide.";
-  if (status === 429 || /rate limit|too many/i.test(raw) || code.includes("rate_limit")) return "Trop de tentatives. Patientez quelques minutes avant de réessayer.";
-  if (name === "AuthRetryableFetchError" || /failed to fetch|networkerror|network request failed|load failed|fetch failed/i.test(raw)) {
+  if (code === "invalid_credentials" || /invalid login credentials/i.test(raw)) {
+    return "E-mail ou mot de passe incorrect.";
+  }
+  if (code === "email_not_confirmed" || /email not confirmed/i.test(raw)) {
+    return "E-mail non confirmé. Cliquez sur le lien reçu par e-mail, puis reconnectez-vous.";
+  }
+  if (code === "user_already_exists" || /already registered|already been registered/i.test(raw)) {
+    return "Un compte existe déjà avec cet e-mail. Connectez-vous ou réinitialisez votre mot de passe.";
+  }
+  if (code === "weak_password" || /password should be at least|weak password/i.test(raw)) {
+    return "Mot de passe trop faible (6 caractères minimum).";
+  }
+  if (/valid email|invalid email|email address .* invalid/i.test(raw)) {
+    return "Adresse e-mail invalide.";
+  }
+  if (status === 429 || /rate limit|too many/i.test(raw) || code.includes("rate_limit")) {
+    return "Trop de tentatives. Patientez quelques minutes avant de réessayer.";
+  }
+  if (
+    name === "AuthRetryableFetchError" ||
+    /failed to fetch|networkerror|network request failed|load failed|fetch failed/i.test(raw)
+  ) {
     return "Impossible de joindre le serveur. Vérifiez votre connexion internet (ou désactivez un bloqueur de publicités) puis réessayez.";
   }
-  if (/signups? not allowed|signup is disabled/i.test(raw)) return "Les inscriptions sont momentanément fermées.";
+  if (/signups? not allowed|signup is disabled/i.test(raw)) {
+    return "Les inscriptions sont momentanément fermées.";
+  }
   return "Une erreur est survenue. Réessayez dans un instant.";
 }
 
@@ -48,7 +84,7 @@ export function AuthProvider({ children }) {
       return data ?? null;
     } catch (err) {
       console.error("Profil illisible :", err?.message || err);
-      setProfile(null);
+      setProfile(null); // en cas de doute : AUCUN droit supplémentaire
       return null;
     }
   }, []);
@@ -70,15 +106,19 @@ export function AuthProvider({ children }) {
           setProfile(null);
         }
       } finally {
-        if (active) setLoading(false);
+        if (active) setLoading(false); // toujours libérer l'affichage
       }
     }
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!active) return;
       setSession(nextSession ?? null);
       if (nextSession?.user) {
+        // Ne JAMAIS faire un appel Supabase avec await directement dans ce callback
+        // (risque de blocage) : on le reporte au tour suivant.
         setTimeout(() => {
           if (active) loadProfile(nextSession.user.id);
         }, 0);
@@ -93,6 +133,10 @@ export function AuthProvider({ children }) {
     };
   }, [loadProfile]);
 
+  // Connexion. Garanties :
+  //  - la promesse se termine TOUJOURS (timeout 20 s) → la modale ne reste jamais bloquée sur "Connexion…"
+  //  - l'erreur levée est une vraie Error avec message lisible + code/status conservés (plus de "{}")
+  //  - la session est appliquée immédiatement (sans attendre onAuthStateChange)
   const login = useCallback(async (email, password) => {
     let result;
     try {
@@ -103,10 +147,12 @@ export function AuthProvider({ children }) {
         ),
       ]);
     } catch (err) {
+      console.error("[auth] login (exception) :", { name: err?.name, code: err?.code, status: err?.status, message: err?.message });
       throw Object.assign(new Error(translateAuthError(err)), { code: err?.code, status: err?.status });
     }
     if (result?.error) {
       const e = result.error;
+      console.error("[auth] login (refusé) :", { name: e.name, code: e.code, status: e.status, message: e.message });
       throw Object.assign(new Error(translateAuthError(e)), { code: e.code, status: e.status });
     }
     const s = result?.data?.session ?? null;
@@ -133,10 +179,14 @@ export function AuthProvider({ children }) {
     }
     if (result.error) throw new Error(translateAuthError(result.error));
 
+    // Quand la confirmation par e-mail est active, Supabase renvoie un utilisateur sans
+    // identités si l'adresse existe déjà (pour ne pas révéler les comptes existants).
     if (result.data.user && Array.isArray(result.data.user.identities) && result.data.user.identities.length === 0) {
       throw new Error("Un compte existe déjà avec cet e-mail. Connectez-vous ou réinitialisez votre mot de passe.");
     }
-    return { needsEmailConfirmation: !result.data.session };
+    return {
+      needsEmailConfirmation: !result.data.session,
+    };
   }, []);
 
   const logout = useCallback(async () => {
@@ -145,10 +195,24 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.warn("Déconnexion serveur impossible :", err?.message || err);
     }
+    // Dans tous les cas, l'état local est vidé.
     setSession(null);
     setProfile(null);
   }, []);
 
+  const resetPassword = useCallback(async (email) => {
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/espace-pro`,
+      });
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      throw new Error(translateAuthError(err));
+    }
+  }, []);
+
+  // Synchronisation des propriétés pour l'affichage du site
   const value = useMemo(() => ({
     session,
     user: session?.user ?? null,
@@ -157,8 +221,9 @@ export function AuthProvider({ children }) {
     loading,
     login,
     signup,
-    logout
-  }), [session, profile, loading, login, signup, logout]);
+    logout,
+    resetPassword
+  }), [session, profile, loading, login, signup, logout, resetPassword]);
 
   return (
     <AuthContext.Provider value={value}>
@@ -169,6 +234,8 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth doit être utilisé dans un AuthProvider");
+  if (!context) {
+    throw new Error("useAuth doit être utilisé à l'intérieur d'un AuthProvider");
+  }
   return context;
 }
