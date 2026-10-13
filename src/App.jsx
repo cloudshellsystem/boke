@@ -13,7 +13,7 @@ import About from "./components/About";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
 import CGUPage from "./components/CGUPage";
-import Opportunities from "./pages/Opportunities"; // <-- IMPORT DE LA NOUVELLE PAGE
+import Opportunities from "./components/Opportunities";
 import WhatsAppWidget from "./components/WhatsAppWidget";
 import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
