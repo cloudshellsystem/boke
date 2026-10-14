@@ -1,17 +1,16 @@
 // src/components/Gallery.jsx
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useSelectionCart } from "../hooks/useSelectionCart";
+import { useCart } from "../context/CartContext";
 
 export default function Gallery() {
   const { isLoggedIn, user } = useAuth();
-  const cart = useSelectionCart();
+  const { cart, addToCart, removeFromCart } = useCart();
 
   const [filtreCategorie, setFiltreCategorie] = useState("TOUS");
   const [panierOuvert, setPanierOuvert] = useState(false);
   const [likedIds, setLikedIds] = useState(() => new Set());
   
-  // Catalogue avec des photos à 0 € (gratuites) et 3 photos à 1 € pour tester le paiement Stripe
   const [photos, setPhotos] = useState([
     { id: 1, titre: "Publicité Luxe & Or", categorie: "COMMERCIAL", auteur: "Agence One", likes: 142, prix: 1.00, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" },
     { id: 2, titre: "Portrait Naturel HD", categorie: "PORTRAIT", auteur: "Studio Boke", likes: 89, prix: 0, image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" },
@@ -33,8 +32,7 @@ export default function Gallery() {
   function toggleLike(id) {
     setLikedIds((prev) => {
       const next = new Set(prev);
-      const isLiked = next.has(id);
-      if (isLiked) next.delete(id);
+      if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
@@ -48,10 +46,10 @@ export default function Gallery() {
     }));
   }
 
-  function ajouterAuPanier(item) {
-    cart.add({ 
+  function gererAjoutPanier(item) {
+    addToCart({ 
       id: item.id, 
-      titre: item.titre, 
+      title: item.titre, 
       image_url: item.image, 
       price: item.prix,
       starting_price: item.prix 
@@ -84,8 +82,8 @@ export default function Gallery() {
       {/* En-tête de filtre */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-2">
         <div>
-          <h2 className="text-xl font-black text-white">Banque d'Images &amp; Tarifs (Testez le 1 € ou Gratuit)</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Ajoutez des photos à 1 € pour tester le paiement Stripe ou des photos à 0 € pour le téléchargement direct.</p>
+          <h2 className="text-xl font-black text-white">Banque d'Images &amp; Tarifs</h2>
+          <p className="text-xs text-slate-400 mt-0.5">Testez le paiement à 1 € ou téléchargez directement les images gratuites.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -110,8 +108,8 @@ export default function Gallery() {
             className="relative px-3.5 py-2 bg-[#0e1424] hover:bg-slate-800 border border-slate-700 text-amber-400 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-lg"
           >
             <span>🛒 Panier</span>
-            {cart.count > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white font-black px-1.5 py-0.5 rounded-full text-[10px] shadow-md">{cart.count}</span>
+            {cart.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white font-black px-1.5 py-0.5 rounded-full text-[10px] shadow-md">{cart.length}</span>
             )}
           </button>
         </div>
@@ -121,7 +119,7 @@ export default function Gallery() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5">
         {elementsFiltres.map((item) => {
           const liked = likedIds.has(item.id);
-          const inCart = cart.items.some((p) => p.id === item.id);
+          const inCart = cart.some((p) => p.id === item.id);
 
           return (
             <div key={item.id} className="bg-[#0e1424] border border-slate-800 rounded-xl overflow-hidden shadow-xl flex flex-col group hover:border-slate-700 transition">
@@ -155,12 +153,12 @@ export default function Gallery() {
                   <button
                     type="button"
                     disabled={inCart}
-                    onClick={() => ajouterAuPanier(item)}
+                    onClick={() => gererAjoutPanier(item)}
                     className={`px-3 py-1 text-[10px] font-black rounded-lg transition shadow-md ${
                       inCart ? "bg-slate-800 text-slate-500 cursor-default" : "bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer"
                     }`}
                   >
-                    {inCart ? "✓ Ajouté" : (item.prix === 0 ? "Télécharger" : "Acheter 1 €")}
+                    {inCart ? "✓ Ajouté" : (item.prix === 0 ? "Télécharger" : "Acheter")}
                   </button>
                 </div>
               </div>
@@ -170,7 +168,7 @@ export default function Gallery() {
         })}
       </div>
 
-      {/* Drawer Panier */}
+      {/* Drawer Panier (Z-Index élevé pour passer au-dessus du widget WhatsApp) */}
       {panierOuvert && (
         <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-[#0e1424] border-l border-slate-800 shadow-2xl p-6 flex flex-col justify-between">
           <div className="space-y-6 flex-1 flex flex-col min-h-0">
@@ -181,30 +179,30 @@ export default function Gallery() {
               <button type="button" onClick={() => setPanierOuvert(false)} className="text-slate-400 hover:text-white text-base font-bold p-1 cursor-pointer">✕</button>
             </div>
 
-            {cart.items.length === 0 ? (
+            {cart.length === 0 ? (
               <div className="text-center py-12 space-y-2">
                 <p className="text-2xl">📭</p>
                 <p className="text-xs text-slate-400">Votre panier est vide.</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 flex-1">
-                {cart.items.map((p) => (
+                {cart.map((p) => (
                   <div key={p.id} className="bg-[#070b12] border border-slate-800 p-2.5 rounded-xl flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       {p.image_url && <img src={p.image_url} alt="" className="w-9 h-9 object-cover rounded-lg shrink-0" />}
                       <div className="truncate">
-                        <span className="text-xs text-white truncate block">{p.titre}</span>
+                        <span className="text-xs text-white truncate block">{p.title || p.titre}</span>
                         <span className="text-[10px] text-amber-400 font-bold">{(p.price || p.starting_price || 0) === 0 ? "Gratuit" : `${p.price || p.starting_price} €`}</span>
                       </div>
                     </div>
-                    <button type="button" onClick={() => cart.remove?.(p.id)} className="text-slate-500 hover:text-rose-400 text-xs font-bold px-2 py-1 cursor-pointer">Retirer</button>
+                    <button type="button" onClick={() => removeFromCart(p.id)} className="text-slate-500 hover:text-rose-400 text-xs font-bold px-2 py-1 cursor-pointer">Retirer</button>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {cart.items.length > 0 && (
+          {cart.length > 0 && (
             <div className="border-t border-slate-800 pt-4 space-y-3 shrink-0">
               <button
                 type="button"
