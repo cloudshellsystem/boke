@@ -6,6 +6,12 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   const { isLoggedIn, user } = useAuth();
   const [activeModuleModal, setActiveModuleModal] = useState(null);
 
+  // États pour le générateur de factures / devis interactif
+  const [docType, setDocType] = useState("facture");
+  const [clientName, setClientName] = useState("Agence Luxe Paris");
+  const [itemDescription, setItemDescription] = useState("Licence exclusive & Droits - Collection Boké One");
+  const [amountHT, setAmountHT] = useState(250);
+
   if (!isLoggedIn) {
     return (
       <div className="bg-neutral-950 min-h-[70vh] flex flex-col items-center justify-center p-6 text-center font-sans text-neutral-200">
@@ -29,6 +35,11 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   }
 
   const closeModal = () => setActiveModuleModal(null);
+
+  // Calculs financiers pour le devis / facture
+  const tvaAmount = Number(amountHT) * 0.20;
+  const totalTTC = Number(amountHT) + tvaAmount;
+  const docNumber = docType === "facture" ? "FAC-2026-089" : "DEV-2026-042";
 
   return (
     <div className="bg-neutral-950 min-h-screen py-8 px-4 text-neutral-200 font-sans max-w-7xl mx-auto space-y-8">
@@ -209,7 +220,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
                     <input type="text" defaultValue="892 341 000 00012" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-mono text-white outline-none focus:border-amber-400" />
                   </div>
                 </div>
-                <button onClick={() => { alert("Données d'entreprise enregistrées !"); closeModal(); }} className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-2.5 rounded-xl text-xs">
+                <button onClick={() => { alert("Données d'entreprise enregistrées !"); closeModal(); }} className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-2.5 rounded-xl text-xs cursor-pointer">
                   Enregistrer les modifications
                 </button>
               </div>
@@ -217,13 +228,44 @@ export default function EspaceMembrePro({ onRequireLogin }) {
 
             {activeModuleModal === "factures" && (
               <div className="space-y-4">
-                <h3 className="text-base font-black text-amber-400 flex items-center gap-2">📄 Générateur Devis &amp; Facture PDF</h3>
-                <div className="space-y-3 text-xs">
-                  <input type="text" placeholder="Nom du client / Agence" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-white" />
-                  <input type="number" placeholder="Montant Prestation HT (€)" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-white" />
+                <h3 className="text-base font-black text-amber-400 flex items-center gap-2">📄 Éditeur de Devis &amp; Facture PDF</h3>
+                <p className="text-xs text-neutral-400">Renseignez les détails pour générer immédiatement votre document officiel.</p>
+                
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="text-neutral-400 block mb-1">Type de document</label>
+                    <select value={docType} onChange={(e) => setDocType(e.target.value)} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-white outline-none">
+                      <option value="facture">Facture officielle</option>
+                      <option value="devis">Devis commercial</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-neutral-400 block mb-1">Nom du client / Agence</label>
+                    <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-white outline-none" />
+                  </div>
                 </div>
-                <button onClick={() => { alert("Facture PDF générée et envoyée au client !"); closeModal(); }} className="w-full bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold py-2.5 rounded-xl text-xs">
-                  Générer le PDF
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="text-neutral-400 block mb-1">Description</label>
+                    <input type="text" value={itemDescription} onChange={(e) => setItemDescription(e.target.value)} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-white outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-neutral-400 block mb-1">Montant HT (€)</label>
+                    <input type="number" value={amountHT} onChange={(e) => setAmountHT(e.target.value)} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-white outline-none font-mono" />
+                  </div>
+                </div>
+
+                {/* Aperçu financier */}
+                <div className="bg-neutral-950 p-3 rounded-xl border border-neutral-800 space-y-1 text-xs font-mono">
+                  <div className="flex justify-between text-neutral-400"><span>N° : {docNumber}</span></div>
+                  <div className="flex justify-between text-neutral-400"><span>Sous-total HT :</span><span>{Number(amountHT || 0).toFixed(2)} €</span></div>
+                  <div className="flex justify-between text-neutral-400"><span>TVA (20%) :</span><span>{tvaAmount.toFixed(2)} €</span></div>
+                  <div className="flex justify-between text-sm font-bold text-amber-400 border-t border-neutral-800 pt-2 mt-1"><span>Total TTC :</span><span>{totalTTC.toFixed(2)} €</span></div>
+                </div>
+
+                <button onClick={() => { alert(`📄 Votre ${docType} (${docNumber}) a été généré avec succès pour ${clientName} (${totalTTC.toFixed(2)} € TTC) !`); closeModal(); }} className="w-full bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition cursor-pointer shadow-lg">
+                  Télécharger le {docType === "facture" ? "Facture PDF" : "Devis PDF"}
                 </button>
               </div>
             )}
