@@ -18,8 +18,9 @@ import WhatsAppWidget from "./components/WhatsAppWidget";
 import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
 
-// IMPORTS DES NOUVEAUX MODULES (Galerie & Dashboard Admin)
+// IMPORTS DES MODULES (Galerie, Forum & Dashboard Admin)
 import Gallery from "./components/Gallery";
+import ForumPage from "./components/ForumPage";
 import AdminDashboard from "./components/AdminDashboard";
 
 ReactGA.initialize("G-FVFKNP75BZ");
@@ -29,6 +30,7 @@ const NAV_LINKS_DATA = {
     { to: "/", label: "Home" },
     { to: "/galerie", label: "Galerie" },
     { to: "/creators", label: "Annuaire" },
+    { to: "/forum", label: "Forum" },
     { to: "/opportunites", label: "Opportunités" },
     { to: "/espace-pro", label: "Espace Pro" },
   ],
@@ -36,6 +38,7 @@ const NAV_LINKS_DATA = {
     { to: "/", label: "Home" },
     { to: "/galerie", label: "Gallery" },
     { to: "/creators", label: "Directory" },
+    { to: "/forum", label: "Forum" },
     { to: "/opportunites", label: "Opportunities" },
     { to: "/espace-pro", label: "Pro Space" },
   ],
@@ -217,6 +220,7 @@ function AppShell() {
           <Route path="/" element={<HomePage onRequireLogin={openAuth} />} />
           <Route path="/galerie" element={<Gallery />} />
           <Route path="/creators" element={<CreatorDirectory onRequireLogin={openAuth} />} />
+          <Route path="/forum" element={<ForumPage onRequireLogin={openAuth} />} />
           <Route path="/opportunites" element={<Opportunities />} />
           <Route path="/about" element={<About />} />
           <Route path="/espace-pro" element={<EspaceMembrePro onRequireLogin={openAuth} />} />
