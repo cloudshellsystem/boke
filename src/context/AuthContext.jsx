@@ -161,7 +161,7 @@ export function AuthProvider({ children }) {
         password,
         options: {
           data: fullName ? { full_name: fullName } : {},
-          emailRedirectTo: `${window.location.origin}/espace-pro`,
+          emailRedirectTo: window.location.origin, // Redirige proprement vers la racine actuelle
         },
       });
     } catch (err) {
@@ -190,7 +190,7 @@ export function AuthProvider({ children }) {
   const resetPassword = useCallback(async (email) => {
     try {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/espace-pro`,
+        redirectTo: window.location.origin,
       });
       if (error) throw error;
       return data;
