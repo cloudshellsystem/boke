@@ -161,7 +161,7 @@ export function AuthProvider({ children }) {
         password,
         options: {
           data: fullName ? { full_name: fullName } : {},
-          emailRedirectTo: window.location.origin, // Redirige proprement vers la racine actuelle
+          emailRedirectTo: window.location.origin,
         },
       });
     } catch (err) {
@@ -199,11 +199,13 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Synchronisation des privilèges prioritaires Super-Admin pour admin@bokeone.com
-  const currentUserEmail = session?.user?.email?.toLowerCase();
+  // Détermination stricte du compte Administrateur
+  const currentUserEmail = session?.user?.email?.trim().toLowerCase();
   const isAdminAccount = currentUserEmail === "admin@bokeone.com";
 
+  // Profil effectif sécurisé : par défaut, tout utilisateur non admin est Membre Gratuit (free)
   const effectiveProfile = useMemo(() => {
+    if (!session?.user) return null;
     if (isAdminAccount) {
       return {
         ...(profile || {}),
@@ -213,8 +215,18 @@ export function AuthProvider({ children }) {
         is_admin: true,
       };
     }
-    return profile;
-  }, [profile, isAdminAccount]);
+    // Utilisateur standard : forcé à free sauf si la base de données indique un plan payant valide
+    return {
+      role: "user",
+      plan: "free",
+      role_abonnement: "free",
+      is_admin: false,
+      ...(profile || {}),
+      // Sécurité : empêche qu'un profil vide devienne élite par erreur
+      plan: profile?.plan === "elite" || profile?.plan === "essentiel" ? profile.plan : "free",
+      role_abonnement: profile?.role_abonnement === "elite" || profile?.role_abonnement === "essentiel" ? profile.role_abonnement : "free",
+    };
+  }, [profile, isAdminAccount, session]);
 
   const value = useMemo(() => {
     const isElitePlan =
