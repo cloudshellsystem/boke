@@ -44,8 +44,14 @@ export function translateAuthError(err) {
   if (/valid email|invalid email|email address .* invalid/i.test(raw)) {
     return "Adresse e-mail invalide.";
   }
-  if (status === 429 || /rate limit|too many/i.test(raw) || code.includes("rate_limit")) {
-    return "Trop de tentatives. Patientez quelques minutes avant de réessayer.";
+  if (status === 429 || /rate limit|too many/i.test(raw) || code.includes("rate_limit") || /email rate limit exceeded/i.test(raw)) {
+    return "Trop de demandes d'e-mails envoyées. Veuillez patienter quelques minutes.";
+  }
+  if (/email provider not enabled|smtp/i.test(raw)) {
+    return "Le service d'envoi d'e-mails n'est pas configuré correctement sur le serveur.";
+  }
+  if (/not found|user not found|email address not found/i.test(raw)) {
+    return "Aucun compte associé à cette adresse e-mail.";
   }
   if (
     name === "AuthRetryableFetchError" ||
@@ -189,12 +195,22 @@ export function AuthProvider({ children }) {
 
   const resetPassword = useCallback(async (email) => {
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const trimmedEmail = email.trim();
+      console.log("[auth] Tentative de réinitialisation pour :", trimmedEmail);
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
         redirectTo: window.location.origin,
       });
-      if (error) throw error;
+
+      if (error) {
+        console.error("[auth] Erreur détaillée resetPassword Supabase :", error);
+        throw error;
+      }
+
+      console.log("[auth] E-mail de réinitialisation envoyé avec succès", data);
       return data;
     } catch (err) {
+      console.error("[auth] Exception attrapée dans resetPassword :", err);
       throw new Error(translateAuthError(err));
     }
   }, []);
