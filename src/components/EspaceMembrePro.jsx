@@ -6,11 +6,28 @@ export default function EspaceMembrePro({ onRequireLogin }) {
   const { isLoggedIn, user } = useAuth();
   const [activeModuleModal, setActiveModuleModal] = useState(null);
 
+  // États pour le profil entreprise et logo
+  const [companyName, setCompanyName] = useState("Boké Studio SARL");
+  const [siret, setSiret] = useState("892 341 000 00012");
+  const [companyLogo, setCompanyLogo] = useState(null);
+
   // États pour le générateur de factures / devis interactif
   const [docType, setDocType] = useState("facture");
   const [clientName, setClientName] = useState("Agence Luxe Paris");
   const [itemDescription, setItemDescription] = useState("Licence exclusive & Droits - Collection Boké One");
   const [amountHT, setAmountHT] = useState(250);
+
+  // Gestion de l'upload du logo personnel
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCompanyLogo(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   if (!isLoggedIn) {
     return (
@@ -48,7 +65,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
       <div className="border-b border-neutral-900 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-            ESPACE CLIENT & SAAS PRO
+            ESPACE CLIENT &amp; SAAS PRO
           </span>
           <h1 className="text-2xl font-black text-white mt-2">Centre d'Outillage Produit &amp; Gestion</h1>
           <p className="text-xs text-neutral-400 mt-1">
@@ -68,7 +85,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
           <p className="text-2xl font-black text-white mt-1">3 840</p>
         </div>
         <div className="bg-neutral-900/40 border border-neutral-800 p-5 rounded-2xl">
-          <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider">Revenu Estimé Muel</p>
+          <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider">Revenu Estimé Mensuel</p>
           <p className="text-2xl font-black text-emerald-400 mt-1">1 850,00 €</p>
         </div>
       </div>
@@ -132,7 +149,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
               📊 Mon Entreprise (SIRET &amp; Logo)
             </h4>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Configurez l'identité légale de votre structure et gérez vos documents.
+              Configurez l'identité légale de votre structure et importez votre logo personnel.
             </p>
           </div>
           <button
@@ -151,7 +168,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
               📄 Éditeur Temps Réel &amp; Factures PDF
             </h4>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Générez et téléchargez vos devis et factures conformes en quelques clics.
+              Générez et téléchargez vos devis et factures conformes intégrant votre logo.
             </p>
           </div>
           <button
@@ -187,7 +204,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
       {/* MODAL UNIFIÉE D'OUVERTURE DES MODULES */}
       {activeModuleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/80 backdrop-blur-md">
-          <div className="bg-neutral-900 border border-neutral-800 w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5 relative">
+          <div className="bg-neutral-900 border border-neutral-800 w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={closeModal}
               className="absolute top-4 right-4 text-neutral-400 hover:text-white font-bold text-sm cursor-pointer"
@@ -198,7 +215,7 @@ export default function EspaceMembrePro({ onRequireLogin }) {
             {activeModuleModal === "script" && (
               <div className="space-y-4">
                 <h3 className="text-base font-black text-amber-400 flex items-center gap-2">💬 Script &amp; Tunnel de Négociation Directe</h3>
-                <p className="text-xs text-neutral-300">Utilisez ce trame guidée lors de vos échanges clients en direct :</p>
+                <p className="text-xs text-neutral-300">Utilisez cette trame guidée lors de vos échanges clients en direct :</p>
                 <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-xl text-xs space-y-2 font-mono text-neutral-300">
                   <p>1. Phase d'écoute : « Quel est le concept recherché pour votre projet média ? »</p>
                   <p>2. Proposition : « Nous mettons à disposition la licence d'utilisation Boké One avec droits exclusifs. »</p>
@@ -213,14 +230,39 @@ export default function EspaceMembrePro({ onRequireLogin }) {
                 <div className="space-y-3 text-xs">
                   <div>
                     <label className="text-neutral-400 block mb-1">Raison Sociale / Nom commercial</label>
-                    <input type="text" defaultValue="Boké Studio SARL" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400" />
+                    <input 
+                      type="text" 
+                      value={companyName} 
+                      onChange={(e) => setCompanyName(e.target.value)} 
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400" 
+                    />
                   </div>
                   <div>
                     <label className="text-neutral-400 block mb-1">Numéro SIRET</label>
-                    <input type="text" defaultValue="892 341 000 00012" className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-mono text-white outline-none focus:border-amber-400" />
+                    <input 
+                      type="text" 
+                      value={siret} 
+                      onChange={(e) => setSiret(e.target.value)} 
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 font-mono text-white outline-none focus:border-amber-400" 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-neutral-400 block mb-1">Votre Logo d'Entreprise (Format image)</label>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleLogoUpload} 
+                      className="w-full text-xs text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-neutral-950 hover:file:bg-amber-400 cursor-pointer"
+                    />
+                    {companyLogo && (
+                      <div className="mt-3 p-3 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center gap-4">
+                        <img src={companyLogo} alt="Aperçu logo" className="h-10 w-auto object-contain" />
+                        <span className="text-[11px] text-emerald-400 font-bold">Logo chargé avec succès !</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <button onClick={() => { alert("Données d'entreprise enregistrées !"); closeModal(); }} className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-2.5 rounded-xl text-xs cursor-pointer">
+                <button onClick={() => { alert("Données d'entreprise et logo enregistrés avec succès !"); closeModal(); }} className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold py-2.5 rounded-xl text-xs cursor-pointer">
                   Enregistrer les modifications
                 </button>
               </div>
@@ -228,8 +270,11 @@ export default function EspaceMembrePro({ onRequireLogin }) {
 
             {activeModuleModal === "factures" && (
               <div className="space-y-4">
-                <h3 className="text-base font-black text-amber-400 flex items-center gap-2">📄 Éditeur de Devis &amp; Facture PDF</h3>
-                <p className="text-xs text-neutral-400">Renseignez les détails pour générer immédiatement votre document officiel.</p>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-base font-black text-amber-400 flex items-center gap-2">📄 Éditeur de Devis &amp; Facture PDF</h3>
+                  {companyLogo && <img src={companyLogo} alt="Logo" className="h-8 w-auto object-contain" />}
+                </div>
+                <p className="text-xs text-neutral-400">Renseignez les détails pour générer immédiatement votre document officiel avec votre entête.</p>
                 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
@@ -258,13 +303,14 @@ export default function EspaceMembrePro({ onRequireLogin }) {
 
                 {/* Aperçu financier */}
                 <div className="bg-neutral-950 p-3 rounded-xl border border-neutral-800 space-y-1 text-xs font-mono">
+                  <div className="flex justify-between text-neutral-400"><span>Émetteur : {companyName} (SIRET: {siret})</span></div>
                   <div className="flex justify-between text-neutral-400"><span>N° : {docNumber}</span></div>
                   <div className="flex justify-between text-neutral-400"><span>Sous-total HT :</span><span>{Number(amountHT || 0).toFixed(2)} €</span></div>
                   <div className="flex justify-between text-neutral-400"><span>TVA (20%) :</span><span>{tvaAmount.toFixed(2)} €</span></div>
                   <div className="flex justify-between text-sm font-bold text-amber-400 border-t border-neutral-800 pt-2 mt-1"><span>Total TTC :</span><span>{totalTTC.toFixed(2)} €</span></div>
                 </div>
 
-                <button onClick={() => { alert(`📄 Votre ${docType} (${docNumber}) a été généré avec succès pour ${clientName} (${totalTTC.toFixed(2)} € TTC) !`); closeModal(); }} className="w-full bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition cursor-pointer shadow-lg">
+                <button onClick={() => { alert(`📄 Votre ${docType} (${docNumber}) avec l'entête ${companyName} a été généré avec succès pour ${clientName} (${totalTTC.toFixed(2)} € TTC) !`); closeModal(); }} className="w-full bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition cursor-pointer shadow-lg">
                   Télécharger le {docType === "facture" ? "Facture PDF" : "Devis PDF"}
                 </button>
               </div>

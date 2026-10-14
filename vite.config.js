@@ -2,11 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig({
-  base: './', // Nécessaire pour les chemins relatifs sur Vercel
+export default defineConfig(({ command }) => ({
+  // 'serve' correspond au mode dev local (npm run dev), '/' fonctionne parfaitement
+  // 'build' correspond à la production (Vercel), './' reste en place pour les chemins relatifs
+  base: command === 'serve' ? '/' : './',
   plugins: [
     react(),
-    tailwindcss(), // <--- Le plugin officiel Tailwind v4 pour Vite
+    tailwindcss(),
   ],
   build: {
     chunkSizeWarningLimit: 800,
@@ -23,4 +25,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

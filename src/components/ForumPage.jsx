@@ -4,7 +4,6 @@ import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 
 const MAX_CHARS = 1000;
-const PENDING_TTL_MS = 10 * 60 * 1000;
 
 const ROLE_LABELS = {
   admin: { fr: "Administrateur", en: "Administrator" },
@@ -16,27 +15,6 @@ const ROLE_LABELS = {
   none: { fr: "Membre Gratuit", en: "Free Member" },
 };
 const roleLabel = (code, isEn) => (ROLE_LABELS[code] || ROLE_LABELS.none)[isEn ? "en" : "fr"];
-
-export function parseYoutubeId(url) {
-  if (!url) return null;
-  try {
-    const u = new URL(url.trim());
-    if (u.protocol !== "https:") return null;
-    const host = u.hostname.replace(/^www\./, "").replace(/^m\./, "");
-    let id = null;
-    if (host === "youtu.be") id = u.pathname.slice(1).split("/")[0];
-    else if (host === "youtube.com") {
-      if (u.pathname === "/watch") id = u.searchParams.get("v");
-      else {
-        const m = u.pathname.match(/^\/(embed|shorts)\/([^/]+)/);
-        id = m ? m[2] : null;
-      }
-    }
-    return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
-  } catch {
-    return null;
-  }
-}
 
 export default function ForumPage({ onRequireLogin }) {
   const { lang } = useLanguage();
@@ -160,6 +138,33 @@ export default function ForumPage({ onRequireLogin }) {
     }
   };
 
+  // Suppression d'un sujet (Réservé Admin ou Auteur)
+  const handleDeleteTopic = async (topicId) => {
+    if (!window.confirm(isEn ? "Delete this topic?" : "Voulez-vous vraiment supprimer ce sujet ?")) return;
+    try {
+      const { error } = await supabase.from("forum_topics").delete().eq("id", topicId);
+      if (error) throw error;
+      setTopics(topics.filter(t => t.id !== topicId));
+      if (selectedTopicId === topicId) setSelectedTopicId(null);
+      setFeedback({ type: "ok", text: isEn ? "Topic deleted." : "Sujet supprimé avec succès." });
+    } catch (err) {
+      setFeedback({ type: "error", text: err.message });
+    }
+  };
+
+  // Suppression d'une réponse (Réservé Admin ou Auteur)
+  const handleDeleteReply = async (replyId) => {
+    if (!window.confirm(isEn ? "Delete this reply?" : "Voulez-vous vraiment supprimer cette réponse ?")) return;
+    try {
+      const { error } = await supabase.from("forum_replies").delete().eq("id", replyId);
+      if (error) throw error;
+      setReplies(replies.filter(r => r.id !== replyId));
+      setFeedback({ type: "ok", text: isEn ? "Reply deleted." : "Réponse supprimée." });
+    } catch (err) {
+      setFeedback({ type: "error", text: err.message });
+    }
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto p-4 md:p-6 text-neutral-200 font-sans space-y-6">
       
@@ -181,8 +186,9 @@ export default function ForumPage({ onRequireLogin }) {
       </div>
 
       {feedback && (
-        <div className={`p-4 rounded-xl text-xs font-bold text-center ${feedback.type === "ok" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
-          {feedback.text}
+        <div className={`p-4 rounded-xl text-xs font-bold flex justify-between items-center ${feedback.type === "ok" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+          <span>{feedback.text}</span>
+          <button onClick={() => setFeedback(null)} className="text-sm font-bold hover:opacity-75 cursor-pointer px-2">✕</button>
         </div>
       )}
 
@@ -225,9 +231,17 @@ export default function ForumPage({ onRequireLogin }) {
         <p className="text-xs text-neutral-500 font-mono animate-pulse text-center py-12">Chargement du forum...</p>
       ) : selectedTopic ? (
         <div className="space-y-6">
-          <button onClick={() => setSelectedTopicId(null)} className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1 cursor-pointer">
-            ← Retour aux sujets
-          </button>
+          <div className="flex justify-between items-center">
+            <button onClick={() => setSelectedTopicId(null)} className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1 cursor-pointer">
+              ← Retour aux sujets
+            </button>
+            
+            {isAdmin && (
+              <button onClick={() => handleDeleteTopic(selectedTopic.id)} className="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition cursor-pointer">
+                🗑️ Supprimer ce sujet (Admin)
+              </button>
+            )}
+          </div>
 
           <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl space-y-4 shadow-xl">
             <div className="flex justify-between items-start">
@@ -269,12 +283,20 @@ export default function ForumPage({ onRequireLogin }) {
               <p className="text-xs text-neutral-500 italic">Aucune réponse pour le moment.</p>
             ) : (
               replies.map((r) => (
-                <div key={r.id} className="bg-neutral-900/40 border border-neutral-800 p-4 rounded-xl space-y-2">
-                  <div className="flex justify-between text-[11px] text-neutral-400 font-mono">
-                    <span className="text-amber-400">{r.author_email || 'Membre'}</span>
-                    <span>{new Date(r.created_at).toLocaleDateString()}</span>
+                <div key={r.id} className="bg-neutral-900/40 border border-neutral-800 p-4 rounded-xl flex justify-between items-start">
+                  <div className="space-y-2">
+                    <div className="flex gap-3 text-[11px] text-neutral-400 font-mono">
+                      <span className="text-amber-400">{r.author_email || 'Membre'}</span>
+                      <span>{new Date(r.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-xs text-neutral-300">{r.content}</p>
                   </div>
-                  <p className="text-xs text-neutral-300">{r.content}</p>
+                  
+                  {isAdmin && (
+                    <button onClick={() => handleDeleteReply(r.id)} className="text-[10px] bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-lg hover:bg-rose-500/20 transition cursor-pointer font-bold">
+                      🗑️ Supprimer
+                    </button>
+                  )}
                 </div>
               ))
             )}
@@ -289,18 +311,26 @@ export default function ForumPage({ onRequireLogin }) {
             </div>
           ) : (
             topics.map((t) => (
-              <div key={t.id} onClick={() => setSelectedTopicId(t.id)} className="bg-neutral-900/60 border border-neutral-800 p-5 rounded-2xl cursor-pointer hover:border-neutral-700 transition space-y-2">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-sm font-bold text-white hover:text-amber-400 transition">{t.title}</h3>
-                  <span className="text-[10px] bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-amber-400 font-mono uppercase">
-                    {roleLabel(t.author_plan, isEn)}
-                  </span>
+              <div key={t.id} className="bg-neutral-900/60 border border-neutral-800 p-5 rounded-2xl hover:border-neutral-700 transition flex justify-between items-start">
+                <div onClick={() => setSelectedTopicId(t.id)} className="cursor-pointer space-y-2 flex-1 pr-4">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-sm font-bold text-white hover:text-amber-400 transition">{t.title}</h3>
+                    <span className="text-[10px] bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-amber-400 font-mono uppercase">
+                      {roleLabel(t.author_plan, isEn)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">{t.content}</p>
+                  <div className="flex justify-between items-center pt-2 text-[11px] text-neutral-500 font-mono">
+                    <span>Par {t.author_email || 'Membre'}</span>
+                    <span>{new Date(t.last_activity_at || t.created_at).toLocaleDateString()}</span>
+                  </div>
                 </div>
-                <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">{t.content}</p>
-                <div className="flex justify-between items-center pt-2 text-[11px] text-neutral-500 font-mono">
-                  <span>Par {t.author_email || 'Membre'}</span>
-                  <span>{new Date(t.last_activity_at || t.created_at).toLocaleDateString()}</span>
-                </div>
+
+                {isAdmin && (
+                  <button onClick={() => handleDeleteTopic(t.id)} className="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl transition cursor-pointer font-bold shrink-0">
+                    🗑️ Supprimer
+                  </button>
+                )}
               </div>
             ))
           )}
