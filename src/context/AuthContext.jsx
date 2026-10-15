@@ -171,9 +171,14 @@ export function AuthProvider({ children }) {
         },
       });
     } catch (err) {
-      throw new Error(translateAuthError(err));
+      console.error("[auth] signup (exception) :", { name: err?.name, code: err?.code, status: err?.status, message: err?.message });
+      throw Object.assign(new Error(translateAuthError(err)), { code: err?.code, status: err?.status });
     }
-    if (result.error) throw new Error(translateAuthError(result.error));
+    if (result.error) {
+      const e = result.error;
+      console.error("[auth] signup (refusé) :", { name: e.name, code: e.code, status: e.status, message: e.message });
+      throw Object.assign(new Error(translateAuthError(e)), { code: e.code, status: e.status });
+    }
 
     if (result.data.user && Array.isArray(result.data.user.identities) && result.data.user.identities.length === 0) {
       throw new Error("Un compte existe déjà avec cet e-mail. Connectez-vous ou réinitialisez votre mot de passe.");
@@ -234,8 +239,6 @@ export function AuthProvider({ children }) {
     // Utilisateur standard : forcé à free sauf si la base de données indique un plan payant valide
     return {
       role: "user",
-      plan: "free",
-      role_abonnement: "free",
       is_admin: false,
       ...(profile || {}),
       // Sécurité : empêche qu'un profil vide devienne élite par erreur
