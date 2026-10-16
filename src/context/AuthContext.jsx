@@ -176,6 +176,28 @@ export function AuthProvider({ children }) {
     }
     if (result.error) {
       const e = result.error;
+      const rawMsg = String(e?.message || "");
+
+      // Cas particulier : le compte a (très probablement) été créé côté Supabase,
+      // mais l'envoi de l'e-mail de confirmation a échoué (SMTP mal configuré → 500).
+      // On ne bloque pas l'utilisateur avec une erreur : le compte existe, il devra
+      // simplement confirmer son adresse plus tard. On exclut explicitement les vraies
+      // erreurs (base de données, identifiants invalides, doublon, quota…).
+      const isEmailDeliveryFailure =
+        !/database|querying schema|invalid|already|weak|rate limit|too many/i.test(rawMsg) &&
+        /error sending|unable to send|sending (a )?(confirmation|recovery)|confirmation (e-?mail|email)|\bsmtp\b/i.test(rawMsg);
+
+      if (isEmailDeliveryFailure) {
+        console.warn(
+          "[auth] signup : compte probablement créé mais e-mail de confirmation non envoyé :",
+          { name: e.name, code: e.code, status: e.status, message: e.message }
+        );
+        return {
+          needsEmailConfirmation: true,
+          emailDeliveryFailed: true,
+        };
+      }
+
       console.error("[auth] signup (refusé) :", { name: e.name, code: e.code, status: e.status, message: e.message });
       throw Object.assign(new Error(translateAuthError(e)), { code: e.code, status: e.status });
     }
@@ -185,6 +207,7 @@ export function AuthProvider({ children }) {
     }
     return {
       needsEmailConfirmation: !result.data.session,
+      emailDeliveryFailed: false,
     };
   }, []);
 
