@@ -1,28 +1,15 @@
 import React, { useState } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../supabaseClient"; // ⚠️ ASSOMPTION structure - vérifie ce chemin si ton arbo diffère
+import { useAuth } from "../context/AuthContext"; // idem : adaptez le chemin si UploadForm n'est pas dans src/components
 
-export default function UploadForm({ onUploaded }) {
+export default function UploadForm({ onUploaded, onQuotaReached }) {
+  const { user, isLoggedIn, photoQuota } = useAuth();
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [price, setPrice] = useState("");
-  const [specialty, setSpecialty] = useState("Photographe corporate / Portrait");
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
-
-  // Liste des spécialités professionnelles
-  const specialtyOptions = [
-    "Photographe corporate / Portrait",
-    "Photographe immobilier",
-    "Droniste / Pilote de drone",
-    "Assistant photographe",
-    "Régisseur photo",
-    "Graphiste",
-    "Opérateur prise de vue",
-    "Technicien laboratoire photo",
-    "Reporter / Événementiel",
-    "Réalisation de contenu"
-  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,14 +22,33 @@ export default function UploadForm({ onUploaded }) {
       return;
     }
 
+    if (!isLoggedIn) {
+      alert("Connectez-vous pour publier une œuvre.");
+      return;
+    }
+
     if (!title || !file) {
       alert("Veuillez renseigner un titre et sélectionner une image.");
       return;
     }
 
     setLoading(true);
+    let uploadedName = null;
 
     try {
+      // Vérification de confort (le vrai verrou est le trigger SQL de supabase_10 : photo_quota_exceeded)
+      if (Number.isFinite(photoQuota)) {
+        const { count, error: countError } = await supabase
+          .from("photos")
+          .select("id", { count: "exact", head: true })
+          .eq("owner_id", user.id);
+        if (!countError && (count ?? 0) >= photoQuota) {
+          alert(`🔒 Quota atteint : ${photoQuota} photos maximum avec votre offre. Passez à l'offre supérieure pour publier davantage.`);
+          onQuotaReached?.();
+          return;
+        }
+      }
+
       const fileExt = file.name.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
 
@@ -53,6 +59,7 @@ export default function UploadForm({ onUploaded }) {
       if (uploadError) {
         throw uploadError;
       }
+      uploadedName = fileName;
 
       const { data: publicUrlData } = supabase.storage
         .from("photos")
@@ -65,21 +72,19 @@ export default function UploadForm({ onUploaded }) {
         title: title,
         author: author || "Créateur Boke One",
         price: price ? `${price} €` : "Sur demande",
-        specialty: specialty,
         image_url: imageUrl,
         likes: 0
       };
 
-      await supabase
+      const { error: insertError } = await supabase
         .from("photos")
-        .insert([{ 
-          title: title,
-          author: author || "Créateur Boke One",
-          price: price ? `${price} €` : "Sur demande",
-          specialty: specialty,
-          image_url: imageUrl 
-        }])
+        .insert([{ image_url: imageUrl }])
         .select();
+      if (insertError) {
+        // Refus serveur (quota, droits) : on supprime le fichier téléversé pour ne pas laisser d'orphelin
+        await supabase.storage.from("photos").remove([uploadedName]);
+        throw insertError;
+      }
 
       onUploaded(newPhoto);
       setLastSubmitTime(Date.now()); // Enregistre le timestamp pour l'anti-flood
@@ -88,12 +93,16 @@ export default function UploadForm({ onUploaded }) {
       setTitle("");
       setAuthor("");
       setPrice("");
-      setSpecialty("Photographe corporate / Portrait");
       setFile(null);
       alert("✨ Œuvre publiée et sécurisée avec succès sur Boke One !");
     } catch (error) {
       console.error("Erreur détaillée:", error);
-      alert("Erreur lors de la publication : " + (error.message || "Erreur inconnue"));
+      if (/photo_quota_exceeded/.test(error?.message || "")) {
+        alert("🔒 Quota de photos atteint pour votre offre. Passez à l'offre supérieure pour publier davantage.");
+        onQuotaReached?.();
+      } else {
+        alert("Erreur lors de la publication : " + (error.message || "Erreur inconnue"));
+      }
     } finally {
       setLoading(false);
     }
@@ -105,7 +114,7 @@ export default function UploadForm({ onUploaded }) {
         ⚡ Publication rapide d'une nouvelle œuvre (Sécurisée)
       </h3>
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px", alignItems: "center" }}>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "10px", alignItems: "center" }}>
         <input
           type="text"
           placeholder="Votre Nom / Pseudo"
@@ -120,15 +129,6 @@ export default function UploadForm({ onUploaded }) {
           onChange={(e) => setTitle(e.target.value)}
           style={{ padding: "8px 12px", borderRadius: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "13px" }}
         />
-        <select
-          value={specialty}
-          onChange={(e) => setSpecialty(e.target.value)}
-          style={{ padding: "8px 12px", borderRadius: "8px", background: "#1e293b", border: "1px solid #475569", color: "white", fontSize: "13px" }}
-        >
-          {specialtyOptions.map((spec) => (
-            <option key={spec} value={spec}>{spec}</option>
-          ))}
-        </select>
         <input
           type="text"
           placeholder="Prix (ex: 150)"
@@ -145,7 +145,7 @@ export default function UploadForm({ onUploaded }) {
         <button
           type="submit"
           disabled={loading}
-          style={{ background: "#06b6d4", color: "#020617", border: "none", padding: "9px 15px", borderRadius: "8px", fontWeight: "bold", fontSize: "13px", cursor: "pointer", gridColumn: "1 / -1" }}
+          style={{ background: "#06b6d4", color: "#020617", border: "none", padding: "9px 15px", borderRadius: "8px", fontWeight: "bold", fontSize: "13px", cursor: "pointer" }}
         >
           {loading ? "Publication..." : "🚀 Publier"}
         </button>

@@ -4,6 +4,7 @@ import ReactGA from "react-ga4";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
+import { UpgradeProvider } from "./context/UpgradeContext";
 
 import HomePage from "./components/HomePage";
 import CreatorDirectory from "./components/CreatorDirectory";
@@ -66,7 +67,7 @@ const halo = (rgb, a) =>
 const DISC_ORBS = [
   { s: "180px", x: "2%",  y: "-40%", bg: halo(AMBER, 0.35),       b: "blur-xl", d: 18, dl: 0 },
   { s: "140px", x: "22%", y: "-50%", bg: halo(QUARTZ, 0.25),      b: "blur-xl", d: 22, dl: -3 },
-  { s: "200px", x: "45%", y: "-45%", bg: halo(GOLD, 0.3),         b: "blur-2xl", d: 25, dl: -6 },
+  { s: "200px", x: "45%", y: "-45%", bg: halo(GOLD, 0.3),          b: "blur-2xl", d: 25, dl: -6 },
   { s: "160px", x: "70%", y: "-50%", bg: halo(CHAMPAGNE, 0.32), b: "blur-xl", d: 20, dl: -2 },
   { s: "190px", x: "90%", y: "-40%", bg: halo(AMBER, 0.3),        b: "blur-2xl", d: 24, dl: -5 },
 ];
@@ -197,19 +198,15 @@ function GlobalNavbar({ onOpenAuth }) {
   );
 }
 
-function AppShell() {
+function AppShell({ openAuth, closeAuth, showAuthModal }) {
   const { isLoggedIn } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
     ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
   }, [location]);
 
-  const openAuth = useCallback(() => setShowAuthModal(true), []);
-  const closeAuth = useCallback(() => setShowAuthModal(false), []);
-
-  useEffect(() => { if (isLoggedIn) setShowAuthModal(false); }, [isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) closeAuth(); }, [isLoggedIn, closeAuth]);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans">
@@ -240,14 +237,25 @@ function AppShell() {
 }
 
 export default function App() {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const openAuth = useCallback(() => setShowAuthModal(true), []);
+  const closeAuth = useCallback(() => setShowAuthModal(false), []);
+
   return (
     <LanguageProvider>
       <AuthProvider>
-        <CartProvider>
-          <Router>
-            <AppShell />
-          </Router>
-        </CartProvider>
+        <UpgradeProvider onRequireLogin={openAuth}>
+          <CartProvider>
+            <Router>
+              <AppShell 
+                openAuth={openAuth} 
+                closeAuth={closeAuth} 
+                showAuthModal={showAuthModal} 
+              />
+            </Router>
+          </CartProvider>
+        </UpgradeProvider>
       </AuthProvider>
     </LanguageProvider>
   );
