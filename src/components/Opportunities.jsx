@@ -24,10 +24,7 @@ const ORBS = [
   { s: "clamp(110px,15vw,220px)", x: "80%",  y: "18%",  bg: disc(GOLD, 0.35),      b: "blur-sm",    d: 18, dl: -6 },
 ];
 
-/* ------------------------------------------------------------------
-   DONNÉES DES OPPORTUNITÉS & COLLABORATIONS
-------------------------------------------------------------------- */
-const ALL_OPPORTUNITIES = [
+const INITIAL_OPPORTUNITIES = [
   {
     id: 1,
     type: "emploi",
@@ -39,7 +36,8 @@ const ALL_OPPORTUNITIES = [
     requiredPlan: "pro",
     summary: "Tournage d'une série documentaire de 4 épisodes. Expérience exigée en drone FPV et caméras cinéma grand capteur.",
     description: "Dans le cadre de la production d'une série documentaire sur le patrimoine de la côte méditerranéenne, nous recherchons un binôme ou un profil polyvalent Chef Opérateur + Pilote Drone certifié S1-S3. Matériel fourni ou défraiement.",
-    author: "Prod Riviera Films"
+    author: "Prod Riviera Films",
+    contact: "contact@rivierafilms.com"
   },
   {
     id: 2,
@@ -52,7 +50,8 @@ const ALL_OPPORTUNITIES = [
     requiredPlan: "pro",
     summary: "Shooting 2 jours en studio avec retouche HD pour une grande maison horlogère.",
     description: "Recherche d'un photographe expérimenté en gestion des réflexions sur surfaces métalliques et verre saphir. Éclairage broncolor fourni.",
-    author: "Maison Horlogère de Paris"
+    author: "Maison Horlogère de Paris",
+    contact: "casting@maisonhorlogere.fr"
   },
   {
     id: 3,
@@ -65,7 +64,8 @@ const ALL_OPPORTUNITIES = [
     requiredPlan: "free",
     summary: "Projet éditorial destiné à être soumis au magazine Blind. Thème : Lumières obliques et textures.",
     description: "Recherche d'une modèle professionnelle et d'une MUA pour une session de 4h en studio. Publication garantie et visuels HD fournis pour portfolios respectifs.",
-    author: "Marc L. (Membre Vérifié)"
+    author: "Marc L. (Membre Vérifié)",
+    contact: "marc.pro@gmail.com"
   },
   {
     id: 4,
@@ -78,7 +78,8 @@ const ALL_OPPORTUNITIES = [
     requiredPlan: "free",
     summary: "Renfort sur un tournage de clip musical indépendant à Bordeaux centre.",
     description: "Besoin d'un second cadreur équipé en Sony FX3 ou A7SIII pour assurer les plans de coupe et de coulisses lors du tournage nocturne.",
-    author: "Lucas M."
+    author: "Lucas M.",
+    contact: "lucas.video@outlook.fr"
   },
   {
     id: 5,
@@ -91,7 +92,8 @@ const ALL_OPPORTUNITIES = [
     requiredPlan: "free",
     summary: "Soumettez vos séries documentaires pour la sélection officielle Boké One 2027.",
     description: "Le comité d'évaluation Boké One sélectionne 5 lauréats pour une exposition collective en galerie physique à Paris et un accompagnement médiatique complet.",
-    author: "Comité Curation Boké One"
+    author: "Comité Curation Boké One",
+    contact: "curation@bokeone.com"
   }
 ];
 
@@ -101,15 +103,37 @@ export default function Opportunities() {
   const navigate = useNavigate();
   const isEn = lang === "en";
 
+  const [opportunities, setOpportunities] = useState(INITIAL_OPPORTUNITIES);
   const [filterType, setFilterType] = useState("all");
   const [selectedOp, setSelectedOp] = useState(null);
+  
+  // États pour l'édition Admin
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState(null);
 
   const userPlan = user?.user_metadata?.plan || "free"; 
+  const userEmail = user?.email || "";
+  
+  // Vérification si l'utilisateur connecté est l'administrateur maître
+  const isAdmin = userEmail.toLowerCase() === "admin@bokeone.com" || user?.role === "admin";
 
-  const filteredOpportunities = ALL_OPPORTUNITIES.filter((op) => {
+  const filteredOpportunities = opportunities.filter((op) => {
     if (filterType === "all") return true;
     return op.type === filterType;
   });
+
+  const handleOpenEdit = (op) => {
+    setEditForm(op);
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    setOpportunities(opportunities.map(item => item.id === editForm.id ? editForm : item));
+    setSelectedOp(editForm);
+    setIsEditing(false);
+    alert("Offre et coordonnées de contact mises à jour avec succès !");
+  };
 
   return (
     <div className="bg-neutral-950 min-h-screen text-neutral-200 font-sans pb-20 pt-8 relative isolate overflow-hidden">
@@ -168,7 +192,7 @@ export default function Opportunities() {
               filterType === "all" ? "bg-amber-500 text-neutral-950 shadow-md" : "text-neutral-400 hover:text-white"
             }`}
           >
-            Toutes les opportunités ({ALL_OPPORTUNITIES.length})
+            Toutes les opportunités ({opportunities.length})
           </button>
           <button
             onClick={() => setFilterType("emploi")}
@@ -201,7 +225,10 @@ export default function Opportunities() {
           {filteredOpportunities.map((op) => (
             <div
               key={op.id}
-              onClick={() => setSelectedOp(op)}
+              onClick={() => {
+                setSelectedOp(op);
+                setIsEditing(false);
+              }}
               className="bg-neutral-900/70 border border-neutral-800/80 hover:border-amber-500/40 rounded-2xl p-5 sm:p-6 transition-all duration-300 backdrop-blur-md shadow-xl cursor-pointer group flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
             >
               <div className="space-y-2 flex-1">
@@ -238,78 +265,204 @@ export default function Opportunities() {
 
       </div>
 
-      {/* MODALE DÉTAIL D'UNE OFFRE */}
+      {/* MODALE DÉTAIL / ÉDITION ADMIN D'UNE OFFRE */}
       {selectedOp && (
         <div
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={() => setSelectedOp(null)}
+          onClick={() => { setSelectedOp(null); setIsEditing(false); }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative"
+            className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto"
           >
             <button
-              onClick={() => setSelectedOp(null)}
+              onClick={() => { setSelectedOp(null); setIsEditing(false); }}
               className="absolute top-4 right-4 bg-neutral-800 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-neutral-700 transition cursor-pointer"
             >
               ✕
             </button>
 
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full">
-                {selectedOp.badge}
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-white pt-1">{selectedOp.title}</h2>
-              <div className="flex gap-4 text-xs text-neutral-400">
-                <span>📍 {selectedOp.location}</span>
-                <span className="text-emerald-400 font-bold">💰 {selectedOp.budget}</span>
-                <span>👤 Par {selectedOp.author}</span>
-              </div>
-            </div>
+            {!isEditing ? (
+              <>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full">
+                      {selectedOp.badge}
+                    </span>
 
-            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-xl text-xs text-neutral-300 leading-relaxed space-y-2">
-              <p className="font-semibold text-white">Description complète :</p>
-              <p>{selectedOp.description}</p>
-            </div>
+                    {/* BOUTON ADMIN POUR MODIFIER L'OFFRE EN CAS D'ERREUR */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleOpenEdit(selectedOp)}
+                        className="bg-amber-500 text-neutral-950 font-black px-3 py-1 rounded-lg text-xs hover:bg-amber-400 transition"
+                      >
+                        ✏️ Modifier cette offre (Admin)
+                      </button>
+                    )}
+                  </div>
 
-            {/* VÉRIFICATION DE LA SESSION ET DE L'ABONNEMENT */}
-            <div className="pt-2">
-              {!isLoggedIn ? (
-                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-center space-y-3">
-                  <p className="text-xs text-amber-300 font-semibold">
-                    🔒 Vous devez être connecté pour postuler ou contacter l'auteur de cette offre.
-                  </p>
+                  <h2 className="text-xl sm:text-2xl font-black text-white pt-1">{selectedOp.title}</h2>
+                  <div className="flex flex-wrap gap-4 text-xs text-neutral-400">
+                    <span>📍 {selectedOp.location}</span>
+                    <span className="text-emerald-400 font-bold">💰 {selectedOp.budget}</span>
+                    <span>👤 Par {selectedOp.author}</span>
+                  </div>
+                </div>
+
+                <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-xl text-xs text-neutral-300 leading-relaxed space-y-2">
+                  <p className="font-semibold text-white">Description complète :</p>
+                  <p>{selectedOp.description}</p>
+                </div>
+
+                <div className="bg-neutral-950/60 border border-neutral-800 p-3 rounded-xl text-xs text-neutral-400 flex items-center justify-between">
+                  <span>Contact / Référent de l'offre :</span>
+                  <strong className="text-amber-400">{selectedOp.contact}</strong>
+                </div>
+
+                {/* VÉRIFICATION DE LA SESSION ET DE L'ABONNEMENT */}
+                <div className="pt-2">
+                  {!isLoggedIn ? (
+                    <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-center space-y-3">
+                      <p className="text-xs text-amber-300 font-semibold">
+                        🔒 Vous devez être connecté pour postuler ou contacter l'auteur de cette offre.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setSelectedOp(null);
+                          navigate("/login");
+                        }}
+                        className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition"
+                      >
+                        Se connecter ➔
+                      </button>
+                    </div>
+                  ) : selectedOp.requiredPlan !== "free" && userPlan === "free" ? (
+                    <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-center space-y-3">
+                      <p className="text-xs text-amber-300 font-semibold">
+                        ⭐ Cette offre d'emploi est réservée aux abonnés Pro & Élite.
+                      </p>
+                      <Link
+                        to="/abonnes"
+                        className="inline-block bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition"
+                      >
+                        Mettre à niveau mon abonnement ➔
+                      </Link>
+                    </div>
+                  ) : (
+                    <a
+                      href={`mailto:${selectedOp.contact}?subject=Candidature: ${encodeURIComponent(selectedOp.title)}`}
+                      className="block w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black py-3.5 rounded-xl text-xs uppercase tracking-wider text-center transition shadow-lg"
+                    >
+                      ✉️ Postuler ou contacter ({selectedOp.contact})
+                    </a>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* FORMULAIRE DE MODIFICATION ADMIN */
+              <form onSubmit={handleSaveEdit} className="space-y-4">
+                <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
+                  <h3 className="text-sm font-black text-amber-400 uppercase">
+                    ✏️ Édition Administrateur de l'Offre
+                  </h3>
                   <button
-                    onClick={() => {
-                      setSelectedOp(null);
-                      navigate("/login");
-                    }}
-                    className="bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition"
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="text-xs text-neutral-400 hover:text-white"
                   >
-                    Se connecter ➔
+                    Annuler
                   </button>
                 </div>
-              ) : selectedOp.requiredPlan !== "free" && userPlan === "free" ? (
-                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-center space-y-3">
-                  <p className="text-xs text-amber-300 font-semibold">
-                    ⭐ Cette offre d'emploi est réservée aux abonnés Pro & Élite.
-                  </p>
-                  <Link
-                    to="/abonnes"
-                    className="inline-block bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition"
-                  >
-                    Mettre à niveau mon abonnement ➔
-                  </Link>
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-neutral-400 font-semibold mb-1">Titre de l'offre</label>
+                    <input
+                      type="text"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                      className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2.5 text-white"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-neutral-400 font-semibold mb-1">Budget / Rémunération</label>
+                      <input
+                        type="text"
+                        value={editForm.budget}
+                        onChange={(e) => setEditForm({...editForm, budget: e.target.value})}
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2.5 text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-neutral-400 font-semibold mb-1">Lieu / Région</label>
+                      <input
+                        type="text"
+                        value={editForm.location}
+                        onChange={(e) => setEditForm({...editForm, location: e.target.value})}
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2.5 text-white"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-neutral-400 font-semibold mb-1">Auteur / Société</label>
+                      <input
+                        type="text"
+                        value={editForm.author}
+                        onChange={(e) => setEditForm({...editForm, author: e.target.value})}
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2.5 text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-neutral-400 font-semibold mb-1">Contact (Email direct)</label>
+                      <input
+                        type="email"
+                        value={editForm.contact}
+                        onChange={(e) => setEditForm({...editForm, contact: e.target.value})}
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2.5 text-white"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-neutral-400 font-semibold mb-1">Résumé court</label>
+                    <input
+                      type="text"
+                      value={editForm.summary}
+                      onChange={(e) => setEditForm({...editForm, summary: e.target.value})}
+                      className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2.5 text-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-neutral-400 font-semibold mb-1">Description complète</label>
+                    <textarea
+                      rows={4}
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                      className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2.5 text-white"
+                      required
+                    />
+                  </div>
                 </div>
-              ) : (
-                <a
-                  href={`mailto:contact@bokeone.com?subject=Candidature: ${encodeURIComponent(selectedOp.title)}`}
-                  className="block w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black py-3.5 rounded-xl text-xs uppercase tracking-wider text-center transition shadow-lg"
+
+                <button
+                  type="submit"
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg"
                 >
-                  ✉️ Postuler directement à cette offre
-                </a>
-              )}
-            </div>
+                  💾 Enregistrer les modifications de l'offre
+                </button>
+              </form>
+            )}
 
           </div>
         </div>
